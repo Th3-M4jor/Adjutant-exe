@@ -20,4 +20,5 @@ config :nostrum,
 
 config :elixir_bot,
   prefix: "!",
-  ready_channel: 681_526_530_987_524_144
+  ready_channel: 681_526_530_987_524_144,
+  owner_id: 666

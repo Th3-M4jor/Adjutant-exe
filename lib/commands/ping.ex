@@ -1,9 +1,10 @@
 defmodule BnBBot.Commands.Ping do
   alias Nostrum.Api
+  alias Nostrum.Struct.Embed
   require Logger
 
   def help() do
-    {"ping", "Check message latency"}
+    {"ping", "Check bot latency"}
   end
 
   @spec call(%Nostrum.Struct.Message{}, [String.t()]) :: any()
@@ -21,6 +22,19 @@ defmodule BnBBot.Commands.Ping do
     elapsed = System.monotonic_time() - now
     milis = System.convert_time_unit(elapsed, :native, :microsecond) / 1000
     count = :erlang.float_to_binary(milis, decimals: 2)
-    Api.edit_message(response.channel_id, response.id, "\u{1F3D3} Pong! that took #{count} ms")
+
+    # zero since there should only need to be one shard
+    latency = Nostrum.Util.get_all_shard_latencies()[0]
+
+    ping_embed = %Embed{
+      title: "\u{1F3D3} Pong!",
+      color: 431_948,
+      fields: [
+        %Embed.Field{name: "API", value: "#{count} ms"},
+        %Embed.Field{name: "WS", value: "#{latency} ms"},
+      ]
+    }
+
+    Api.edit_message(response.channel_id, response.id, embeds: [ping_embed])
   end
 end

@@ -8,6 +8,7 @@ defmodule BnBBot.Commands.Dice do
 
   @spec call(%Nostrum.Struct.Message{}, [String.t()]) :: any()
   def call(%Nostrum.Struct.Message{} = msg, []) do
+    Logger.debug("Recieved a roll command, using default args")
     resp_str = roll_dice("1d20")
     Api.create_message(
       msg.channel_id,
@@ -17,7 +18,7 @@ defmodule BnBBot.Commands.Dice do
   end
 
   def call(%Nostrum.Struct.Message{} = msg, args) do
-
+    Logger.debug("Recieved a roll command, args were #{inspect(args)}")
     typing_task = Task.async(fn -> Api.start_typing!(msg.channel_id) end)
 
     die_str = Enum.join(args)

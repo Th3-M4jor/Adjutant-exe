@@ -11,7 +11,11 @@ defmodule BnBBot.Supervisor do
   @impl true
   def init(_init_arg) do
     Logger.debug("Starting Supervisor")
-    children = [BnBBot.Consumer]
+
+    # recommended to spawn one per scheduler (default is number of cores)
+    children =
+      for n <- 1..System.schedulers_online(),
+          do: Supervisor.child_spec({BnBBot.Consumer, []}, id: {:bnb_bot, :consumer, n})
 
     Supervisor.init(children, strategy: :one_for_one, restart: :temporary)
   end
@@ -37,26 +41,13 @@ defmodule BnBBot.Consumer do
   def handle_event({:MESSAGE_CREATE, %Nostrum.Struct.Message{} = msg, _ws_state}) do
     Logger.debug("Recieved a non-bot message")
 
-    # Task.start(fn ->
-    BnBBot.Commands.cmd_check(msg)
-    # end)
-
-    # case msg.content do
-    #   "!sleep" ->
-    #     Api.create_message(msg.channel_id, "Going to sleep...")
-    #     # This won't stop other events from being handled.
-    #     Process.sleep(3000)
-
-    #   "!ping" ->
-    #     Api.create_message(msg.channel_id, "pong!")
-    #     Logger.info("recieved a ping")
-    #   "!raise" ->
-    #     # This won't crash the entire Consumer.
-    #     raise "No problems here!"
-
-    #   _ ->
-    #     :ignore
-    # end
+    try do
+      BnBBot.Commands.cmd_check(msg)
+    rescue
+      e ->
+        Logger.error(Exception.format(:error, e, __STACKTRACE__))
+        Api.create_message(msg.channel_id, "An error has occurred, inform Major")
+    end
   end
 
   def handle_event({:READY, _ready_data, _ws_state}) do
