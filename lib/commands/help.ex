@@ -32,8 +32,8 @@ defmodule BnBBot.Commands.Help do
     }
 
     dm_task = Task.async(fn ->
-      channel = BnBBot.Util.find_dm_channel(msg.author.id)
-      Api.create_message!(channel.id, embeds: [help_embed])
+      channel_id = BnBBot.Util.find_dm_channel_id(msg.author.id)
+      Api.create_message!(channel_id, embeds: [help_embed])
     end)
 
     Task.await_many([react_task, dm_task], :infinity)

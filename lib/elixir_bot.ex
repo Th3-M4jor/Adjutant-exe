@@ -12,6 +12,7 @@ defmodule BnBBot.Supervisor do
   def init(_init_arg) do
     Logger.debug("Starting Supervisor")
 
+    :ets.new(:bnb_bot_data, [:set, :public, :named_table, read_concurrency: true])
     # recommended to spawn one per scheduler (default is number of cores)
     children =
       for n <- 1..System.schedulers_online(),
@@ -52,8 +53,14 @@ defmodule BnBBot.Consumer do
 
   def handle_event({:READY, _ready_data, _ws_state}) do
     Logger.info("Bot ready")
-    ready_channel = Application.fetch_env!(:elixir_bot, :ready_channel)
-    Api.create_message(ready_channel, "Bot ready")
+    # ready_channel = Application.fetch_env!(:elixir_bot, :ready_channel)
+    # Api.create_message(ready_channel, "Bot ready")
+    BnBBot.Util.dm_owner("Bot Ready")
+  end
+
+  def handle_event({:RESUMED, _resume_data, _ws_state}) do
+    Logger.info("Bot resumed")
+    BnBBot.Util.dm_owner("Bot Resumed")
   end
 
   def handle_event({:MESSAGE_REACTION_ADD, reaction, _was_state}) do

@@ -4,7 +4,7 @@ defmodule BnBBot.Commands.Ping do
   require Logger
 
   def help() do
-    {"ping", "Check bot latency"}
+    {"ping", "Check bot latency, and get other info"}
   end
 
   @spec call(%Nostrum.Struct.Message{}, [String.t()]) :: any()
@@ -15,7 +15,7 @@ defmodule BnBBot.Commands.Ping do
     {:ok, response} =
       Api.create_message(
         msg.channel_id,
-        content: "Checking times",
+        content: "Checking response times...",
         message_reference: %{message_id: msg.id}
       )
 
@@ -26,15 +26,40 @@ defmodule BnBBot.Commands.Ping do
     # zero since there should only need to be one shard
     latency = Nostrum.Util.get_all_shard_latencies()[0]
 
+    memory_usage = round(:erlang.memory(:total) / (1024 * 1024))
+
     ping_embed = %Embed{
       title: "\u{1F3D3} Pong!",
       color: 431_948,
       fields: [
         %Embed.Field{name: "API", value: "#{count} ms"},
         %Embed.Field{name: "WS", value: "#{latency} ms"},
+        %Embed.Field{
+          name: "Uptime:",
+          value: get_uptime_str()
+        },
+        %Embed.Field{name: "Memory:", value: "BEAM VM memory usage is #{memory_usage} MiB"},
       ]
     }
 
-    Api.edit_message(response.channel_id, response.id, embeds: [ping_embed])
+    Api.edit_message(response.channel_id, response.id, content: "", embeds: [ping_embed])
   end
+
+  defp get_uptime_str() do
+    Logger.debug("Generating system uptime")
+    {uptime, _} = :erlang.statistics(:wall_clock)
+    uptime_seconds = System.convert_time_unit(uptime, :millisecond, :second)
+
+    uptime_days = div(uptime_seconds, 24 * 60 * 60)
+    uptime_seconds = rem(uptime_seconds, 24 * 60 * 60)
+
+    uptime_hours = div(uptime_seconds, 60 * 60)
+    uptime_seconds = rem(uptime_seconds, 60 * 60)
+
+    uptime_minutes = div(uptime_seconds, 60)
+    uptime_seconds = rem(uptime_seconds, 60)
+
+    "Bot uptime is #{uptime_days}D:#{uptime_hours}H:#{uptime_minutes}M:#{uptime_seconds}S"
+  end
+
 end
