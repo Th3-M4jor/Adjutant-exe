@@ -51,15 +51,25 @@ defmodule BnBBot.Consumer do
     end
   end
 
-  def handle_event({:READY, _ready_data, _ws_state}) do
-    Logger.info("Bot ready")
-    # ready_channel = Application.fetch_env!(:elixir_bot, :ready_channel)
-    # Api.create_message(ready_channel, "Bot ready")
-    BnBBot.Util.dm_owner("Bot Ready")
+  def handle_event({:READY, ready_data, _ws_state}) do
+    Logger.debug("Bot ready")
+
+    {dm_msg, override} =
+      case :ets.lookup(:bnb_bot_data, :first_ready) do
+        [first_ready: false] ->
+          Logger.warn("Ready re-emitted #{inspect(ready_data)}")
+          {"ready re-emitted", true}
+
+        _ ->
+          :ets.insert(:bnb_bot_data, first_ready: false)
+          {"Bot Ready", false}
+      end
+
+    BnBBot.Util.dm_owner(dm_msg, override)
   end
 
   def handle_event({:RESUMED, _resume_data, _ws_state}) do
-    Logger.info("Bot resumed")
+    Logger.debug("Bot resumed")
     BnBBot.Util.dm_owner("Bot Resumed")
   end
 

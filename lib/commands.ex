@@ -54,6 +54,10 @@ defmodule BnBBot.Commands do
     Commands.ShutUp.call(msg, args)
   end
 
+  defp cmd_call("eval", %Nostrum.Struct.Message{} = msg, args) do
+    Commands.Eval.call(msg, args)
+  end
+
   defp cmd_call(:prefix_only, msg, []) do
     Logger.debug("Recieved a prefix only")
     Api.create_message(
