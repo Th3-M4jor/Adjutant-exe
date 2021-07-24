@@ -1,4 +1,6 @@
-#rename this file to "config.exs", replace the token and it'll run
+# rename this file to "config.exs", replace the token and it'll run
+# however it's recommended to have a "dev.exs" and a "prod.exs"
+# where the "config.exs" only does `import_config "#{config_env()}.exs"`
 import Config
 
 config :nostrum,

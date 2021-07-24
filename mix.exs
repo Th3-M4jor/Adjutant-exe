@@ -7,7 +7,16 @@ defmodule ElixirBot.MixProject do
       version: "0.1.0",
       elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      releases: [
+        bnb_bot: [
+          version: "0.1.0",
+          applications: [
+            elixir_bot: :permanent
+          ],
+          cookie: File.read!("COOKIE")
+        ]
+      ]
     ]
   end
 
@@ -18,6 +27,8 @@ defmodule ElixirBot.MixProject do
       extra_applications: [:logger]
     ]
   end
+
+
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do

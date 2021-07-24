@@ -26,5 +26,9 @@ elixir_bot-*.tar
 /tmp/
 
 config/config.exs
+config/dev.exs
+config/prod.exs
+config/test.exs
 
+COOKIE
 .env
