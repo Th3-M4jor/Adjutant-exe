@@ -1,6 +1,12 @@
 defmodule BnBBot.Commands.ShutUp do
   require Logger
 
+  @behaviour BnBBot.CommandFn
+
+  def help() do
+    {"shut_up", :owner, "Reduces the number of messages the bot DMs you"}
+  end
+
   def call(%Nostrum.Struct.Message{} = msg, _args) do
     Logger.debug("Recieved a shutup command")
 

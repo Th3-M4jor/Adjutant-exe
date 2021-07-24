@@ -38,6 +38,10 @@ defmodule BnBBot.Commands do
     Commands.Dice.call(msg, args)
   end
 
+  defp cmd_call("shuffle", %Nostrum.Struct.Message{} = msg, args) do
+    BnBBot.Commands.Shuffle.call(msg, args)
+  end
+
   defp cmd_call("help", %Nostrum.Struct.Message{} = msg, args) do
     Commands.Help.call(msg, args)
   end

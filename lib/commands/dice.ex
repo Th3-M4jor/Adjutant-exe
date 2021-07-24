@@ -2,8 +2,10 @@ defmodule BnBBot.Commands.Dice do
   alias Nostrum.Api
   require Logger
 
+  @behaviour BnBBot.CommandFn
+
   def help() do
-    {"roll", "rolls XdY dice, defaults to 1d20"}
+    {"roll", :everyone, "rolls XdY[ + X[dY]] dice, defaults to 1d20"}
   end
 
   @spec call(%Nostrum.Struct.Message{}, [String.t()]) :: any()
@@ -27,7 +29,7 @@ defmodule BnBBot.Commands.Dice do
       if String.match?(die_str, ~r/^(?:\d+d\d+|\d+)(?:\+\d+d\d+|\+\d+)*$/) do
         roll_dice(die_str)
       else
-        "An invalid character was found, must be in the format XdY + Z"
+        "An invalid character was found, must be in the format XdY[ + X[dY]]"
       end
 
     Task.await(typing_task)
@@ -46,6 +48,7 @@ defmodule BnBBot.Commands.Dice do
     case do_roll([], rolls) do
       res when is_list(res) ->
         die_result = Enum.sum(res)
+        res = Enum.reverse(res)
         "You rolled: #{die_result}\n#{inspect(res, charlists: :as_lists)}"
 
       res when is_bitstring(res) ->
@@ -68,8 +71,8 @@ defmodule BnBBot.Commands.Dice do
           roll_die(num, size, count)
 
         [num] ->
-          count ++ [num]
-
+          #count ++ [num]
+          [num | count]
         _ ->
           :error
       end
@@ -86,7 +89,7 @@ defmodule BnBBot.Commands.Dice do
 
   defp roll_die(num_rem, size, count) do
     result = Enum.random(1..size)
-    count = count ++ [result]
-    roll_die(num_rem - 1, size, count)
+    #count = count ++ [result]
+    roll_die(num_rem - 1, size, [result | count])
   end
 end

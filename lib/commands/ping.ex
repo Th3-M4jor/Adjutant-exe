@@ -3,8 +3,10 @@ defmodule BnBBot.Commands.Ping do
   alias Nostrum.Struct.Embed
   require Logger
 
+  @behaviour BnBBot.CommandFn
+
   def help() do
-    {"ping", "Check bot latency, and get other info"}
+    {"ping", :everyone, "Check bot latency, and get other info"}
   end
 
   @spec call(%Nostrum.Struct.Message{}, [String.t()]) :: any()
@@ -50,16 +52,19 @@ defmodule BnBBot.Commands.Ping do
     {uptime, _} = :erlang.statistics(:wall_clock)
     uptime_seconds = System.convert_time_unit(uptime, :millisecond, :second)
 
-    uptime_days = div(uptime_seconds, 24 * 60 * 60)
-    uptime_seconds = rem(uptime_seconds, 24 * 60 * 60)
+    #uptime_days = div(uptime_seconds, 24 * 60 * 60)
+    #uptime_seconds = rem(uptime_seconds, 24 * 60 * 60)
 
-    uptime_hours = div(uptime_seconds, 60 * 60)
-    uptime_seconds = rem(uptime_seconds, 60 * 60)
+    #uptime_hours = div(uptime_seconds, 60 * 60)
+    #uptime_seconds = rem(uptime_seconds, 60 * 60)
 
-    uptime_minutes = div(uptime_seconds, 60)
-    uptime_seconds = rem(uptime_seconds, 60)
+    #uptime_minutes = div(uptime_seconds, 60)
+    #uptime_seconds = rem(uptime_seconds, 60)
 
-    "Bot uptime is #{uptime_days}D:#{uptime_hours}H:#{uptime_minutes}M:#{uptime_seconds}S"
+    startup_time = System.os_time(:second) - uptime_seconds
+
+    #"Bot uptime is #{uptime_days}D:#{uptime_hours}H:#{uptime_minutes}M:#{uptime_seconds}S"
+    "Bot was last restarted <t:#{startup_time}:R>"
   end
 
 end

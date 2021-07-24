@@ -23,23 +23,20 @@ defmodule BnBBot.ReactionAwait do
     "\u{39}\u{fe0f}\u{20e3}"
   ]
 
-  @spec await_reaction_add(
-          Nostrum.Struct.Message.t(),
-          pos_integer(),
-          Nostrum.Snowflake.t() | Nostrum.Snowflake.external_snowflake()
-        ) ::
-          map() | nil
   @doc """
   Waits for a reaction add on the given message by someone with the given user_id if given, else awaits a reaction by anyone
   """
+  @spec await_reaction_add(
+          Nostrum.Struct.Message.t(),
+          pos_integer(),
+          Nostrum.Snowflake.t() | Nostrum.Snowflake.external_snowflake() | nil
+        ) ::
+          map() | nil
   def await_reaction_add(%Nostrum.Struct.Message{} = msg, count \\ 9, user_id \\ nil)
       when count in 1..9 do
     {:ok, user_id} = Nostrum.Snowflake.cast(user_id)
     Registry.register(:REACTION_COLLECTOR, msg.id, user_id)
-    res = await_reaction_add_inner(count)
-
-    # Registry.unregister(:REACTION_COLLECTOR, msg.id) #unecessary? since dead processes are unregistered automatically
-    res
+    await_reaction_add_inner(count)
   end
 
   @doc """

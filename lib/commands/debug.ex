@@ -2,6 +2,12 @@ defmodule BnBBot.Commands.Debug do
   alias Nostrum.Api
   require Logger
 
+  @behaviour BnBBot.CommandFn
+
+  def help() do
+    {"debug", :owner, "Enables or Disables debug logging"}
+  end
+
   @spec call(%Nostrum.Struct.Message{}, [String.t()]) :: any()
   def call(%Nostrum.Struct.Message{} = msg, []) do
     Logger.debug("Got a debug cmd with no args")
