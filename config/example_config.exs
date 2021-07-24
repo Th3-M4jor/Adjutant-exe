@@ -15,10 +15,17 @@ config :nostrum,
     :guilds
   ]
 
-# config :logger,
-#  level: :warn
+  config :logger,
+  level: :warn,
+  compile_time_purge_matching: [
+    [module: Nostrum, level_lower_than: :warn],
+    [module: Nostrum.Api, level_lower_than: :warn],
+    [module: Nostrum.Application, level_lower_than: :warn],
+    [module: Nostrum.Shard.Dispatch, level_lower_than: :warn],
+    [module: Nostrum.Shard.Event, level_lower_than: :warn]
+  ]
 
 config :elixir_bot,
   prefix: "!",
-  ready_channel: 681_526_530_987_524_144,
-  owner_id: 666
+  owner_id: 666,
+  admins: [667, 668]
