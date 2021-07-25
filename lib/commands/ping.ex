@@ -9,6 +9,14 @@ defmodule BnBBot.Commands.Ping do
     {"ping", :everyone, "Check bot latency, and get other info"}
   end
 
+  def get_name() do
+    "ping"
+  end
+
+  def full_help() do
+    "Returns the latency on creating a message, latency of the websocket, how long the bot has been online for, and it's total memory usage"
+  end
+
   @spec call(%Nostrum.Struct.Message{}, [String.t()]) :: any()
   def call(%Nostrum.Struct.Message{} = msg, _args) do
     Logger.debug("Recieved a ping command")

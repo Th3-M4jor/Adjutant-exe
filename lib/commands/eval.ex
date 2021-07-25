@@ -5,7 +5,15 @@ defmodule BnBBot.Commands.Eval do
   @behaviour BnBBot.CommandFn
 
   def help() do
-    {"eval", :owner, "Evaluates the given string, warning: dangerous"}
+    {"eval", :owner, "Evaluates the given string, **warning**: dangerous"}
+  end
+
+  def get_name() do
+    "eval"
+  end
+
+  def full_help() do
+    "Evaluates the given string as if it was a single elixir line, owner only (obviously)"
   end
 
   def call(%Nostrum.Struct.Message{} = msg, args) do

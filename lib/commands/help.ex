@@ -9,6 +9,14 @@ defmodule BnBBot.Commands.Help do
     {"help", :everyone, "prints this help message"}
   end
 
+  def get_name() do
+    "help"
+  end
+
+  def full_help() do
+    "You're a special case of stupid aren't you?"
+  end
+
   @spec call(%Nostrum.Struct.Message{}, [String.t()]) :: any()
   def call(%Nostrum.Struct.Message{} = msg, _args) do
     Logger.debug("Recieved a help command")

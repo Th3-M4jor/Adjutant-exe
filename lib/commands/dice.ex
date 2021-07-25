@@ -8,6 +8,14 @@ defmodule BnBBot.Commands.Dice do
     {"roll", :everyone, "rolls XdY[ + X[dY]] dice, defaults to 1d20"}
   end
 
+  def get_name() do
+    "roll"
+  end
+
+  def full_help() do
+    "rolls XdY[ + X[dY]] dice, defaults to 1d20. Includes a list of the rolls performed"
+  end
+
   @spec call(%Nostrum.Struct.Message{}, [String.t()]) :: any()
   def call(%Nostrum.Struct.Message{} = msg, []) do
     Logger.debug("Recieved a roll command, using default args")

@@ -8,6 +8,14 @@ defmodule BnBBot.Commands.Chip do
     {"chip", :everyone, "Get info about a battlechip"}
   end
 
+  def get_name() do
+    "chip"
+  end
+
+  def full_help() do
+    "Search for a chip with the given name, returns full data on it, currently unimplemented"
+  end
+
   @spec call(%Nostrum.Struct.Message{}, [String.t()]) :: any()
   def call(%Nostrum.Struct.Message{} = msg, _args) do
     Logger.debug("Recieved a chip command")

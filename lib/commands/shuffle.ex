@@ -8,6 +8,16 @@ defmodule BnBBot.Commands.Shuffle do
     {"shuffle", :everyone, "Shuffle a series of numbers"}
   end
 
+  def get_name() do
+    "shuffle"
+  end
+
+  def full_help() do
+    "Based on the number of arguments given, dones one of two things:
+      One argument: a shuffled list of numbers from 1 to N (inclusive)
+      Two arguments: a shuffled list of numbers from M to N (inclusive)"
+  end
+
   @spec call(Nostrum.Struct.Message.t(), [String.t()]) :: any()
   def call(%Nostrum.Struct.Message{} = msg, []) do
     Logger.debug("Recived a shuffle command with no args")
