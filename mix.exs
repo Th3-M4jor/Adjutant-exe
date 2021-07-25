@@ -4,7 +4,7 @@ defmodule ElixirBot.MixProject do
   def project do
     [
       app: :elixir_bot,
-      version: "0.1.0",
+      version: "0.1.1",
       elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -27,8 +27,6 @@ defmodule ElixirBot.MixProject do
       extra_applications: [:logger]
     ]
   end
-
-
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
