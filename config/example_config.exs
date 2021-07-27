@@ -30,4 +30,5 @@ config :nostrum,
 config :elixir_bot,
   prefix: "!",
   owner_id: 666,
-  admins: [667, 668]
+  admins: [667, 668],
+  ncp_url: "https://jin-tengai.dev/bnb/backend/fetch/ncps"

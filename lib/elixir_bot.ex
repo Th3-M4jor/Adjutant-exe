@@ -62,6 +62,7 @@ defmodule BnBBot.Consumer do
 
         _ ->
           :ets.insert(:bnb_bot_data, first_ready: false)
+          BnBBot.Library.NCP.load_ncps()
           {"Bot Ready", false}
       end
 

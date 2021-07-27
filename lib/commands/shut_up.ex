@@ -12,7 +12,7 @@ defmodule BnBBot.Commands.ShutUp do
   end
 
   def full_help() do
-    "Bot no longer DMs on resume events"
+    "Bot no longer DMs owner on resume events"
   end
 
   def call(%Nostrum.Struct.Message{} = msg, _args) do
