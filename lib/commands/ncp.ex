@@ -42,12 +42,11 @@ defmodule BnBBot.Commands.NCP do
     end
   end
 
-  defp send_found_ncp(%Nostrum.Struct.Message{} = msg, val) do
+  defp send_found_ncp(%Nostrum.Struct.Message{} = msg, %BnBBot.Library.NCP{} = ncp) do
     # "```\n#{val["Name"]} - (#{val["EBCost"]} EB) - #{val["Color"]}\n#{val["Description"]}\n```"
     Api.create_message(
       msg.channel_id,
-      content:
-        "```\n#{val["Name"]} - (#{val["EBCost"]} EB) - #{val["Color"]}\n#{val["Description"]}\n```",
+      content: "#{ncp}",
       message_reference: %{message_id: msg.id}
     )
   end
@@ -57,7 +56,7 @@ defmodule BnBBot.Commands.NCP do
 
     {ct, mapped} =
       Enum.reduce(opts, {1, []}, fn {_, ncp}, {ct, list} ->
-        str = "#{ct}: #{ncp["Name"]}"
+        str = "#{ct}: #{ncp.name}"
         {ct + 1, [str | list]}
       end)
 
@@ -78,8 +77,7 @@ defmodule BnBBot.Commands.NCP do
       {position, _} = Integer.parse(reaction.emoji.name)
       {_, val} = Enum.at(opts, position)
 
-      ncp =
-        "```\n#{val["Name"]} - (#{val["EBCost"]} EB) - #{val["Color"]}\n#{val["Description"]}\n```"
+      ncp = "#{val}"
 
       edit_task = Task.async(fn -> Api.edit_message(resp.channel_id, resp.id, ncp) end)
       Task.await_many([reaction_adder, edit_task], :infinity)
