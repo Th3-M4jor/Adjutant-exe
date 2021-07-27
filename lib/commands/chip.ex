@@ -21,10 +21,12 @@ defmodule BnBBot.Commands.Chip do
     Logger.debug("Recieved a chip command")
 
     react_task = Task.async(fn -> BnBBot.Util.react(msg, false) end)
-    dm_task = Task.async(fn ->
-      channel_id = BnBBot.Util.find_dm_channel_id(msg.author.id)
-      Api.create_message!(channel_id, "I'm sorry, this command isn't implemented yet")
-    end)
+
+    dm_task =
+      Task.async(fn ->
+        channel_id = BnBBot.Util.find_dm_channel_id(msg.author.id)
+        Api.create_message!(channel_id, "I'm sorry, this command isn't implemented yet")
+      end)
 
     Task.await_many([react_task, dm_task])
 

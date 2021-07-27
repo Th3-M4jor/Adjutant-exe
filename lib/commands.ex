@@ -66,12 +66,17 @@ defmodule BnBBot.Commands do
     Commands.ShutUp.call(msg, args)
   end
 
+  defp cmd_call("reload", %Nostrum.Struct.Message{} = msg, args) do
+    Commands.Reload.call(msg, args)
+  end
+
   defp cmd_call("eval", %Nostrum.Struct.Message{} = msg, args) do
     Commands.Eval.call(msg, args)
   end
 
   defp cmd_call(:prefix_only, msg, []) do
     Logger.debug("Recieved a prefix only")
+
     Api.create_message(
       msg.channel_id,
       content: "You gave me only my prefix, Try my help command for how I work",

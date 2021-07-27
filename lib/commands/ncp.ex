@@ -72,16 +72,9 @@ defmodule BnBBot.Commands.NCP do
 
     reaction_adder = Task.async(fn -> BnBBot.ReactionAwait.add_reaction_nums(resp, ct - 1) end)
 
-    #reaction_getter =
-    #  Task.async(fn -> BnBBot.ReactionAwait.await_reaction_add(resp, ct - 1, msg.author.id) end)
-
-    #[_, reaction] = Task.await_many([reaction_adder, reaction_getter], :infinity)
-
     reaction = BnBBot.ReactionAwait.await_reaction_add(resp, ct - 1, msg.author.id)
 
     unless is_nil(reaction) do
-
-
       {position, _} = Integer.parse(reaction.emoji.name)
       {_, val} = Enum.at(opts, position)
 
@@ -89,11 +82,11 @@ defmodule BnBBot.Commands.NCP do
         "```\n#{val["Name"]} - (#{val["EBCost"]} EB) - #{val["Color"]}\n#{val["Description"]}\n```"
 
       edit_task = Task.async(fn -> Api.edit_message(resp.channel_id, resp.id, ncp) end)
-      Task.await_many([reaction_adder, edit_task])
+      Task.await_many([reaction_adder, edit_task], :infinity)
       Api.delete_all_reactions(resp.channel_id, resp.id)
     else
       Logger.debug("Took too long to react")
-      Task.await(reaction_adder)
+      Task.await(reaction_adder, :infinity)
       Api.delete_all_reactions(resp.channel_id, resp.id)
     end
   end

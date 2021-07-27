@@ -37,5 +37,4 @@ defmodule BnBBot.CommandFn do
   The command function for the module
   """
   @callback call(%Nostrum.Struct.Message{}, [String.t()]) :: any
-
 end

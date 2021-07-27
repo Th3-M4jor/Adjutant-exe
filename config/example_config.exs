@@ -17,7 +17,7 @@ config :nostrum,
     :guilds
   ]
 
-  config :logger,
+config :logger,
   level: :warn,
   compile_time_purge_matching: [
     [module: Nostrum, level_lower_than: :warn],

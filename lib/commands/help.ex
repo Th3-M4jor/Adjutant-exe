@@ -119,10 +119,15 @@ defmodule BnBBot.Commands.Help do
 
   defp send_specific_resp(%Nostrum.Struct.Message{} = msg, :no_perms) do
     react_task = Task.async(fn -> BnBBot.Util.react(msg, false) end)
+
     dm_task =
       Task.async(fn ->
         channel_id = BnBBot.Util.find_dm_channel_id(msg.author.id)
-        Api.create_message!(channel_id, "I'm sorry, you don't have permission to use this command")
+
+        Api.create_message!(
+          channel_id,
+          "I'm sorry, you don't have permission to use this command"
+        )
       end)
 
     Task.await_many([react_task, dm_task])
@@ -130,10 +135,15 @@ defmodule BnBBot.Commands.Help do
 
   defp send_specific_resp(%Nostrum.Struct.Message{} = msg, :no_cmd) do
     react_task = Task.async(fn -> BnBBot.Util.react(msg, false) end)
+
     dm_task =
       Task.async(fn ->
         channel_id = BnBBot.Util.find_dm_channel_id(msg.author.id)
-        Api.create_message!(channel_id, "I'm sorry, either this command doesn't exist or doesn't have an help data")
+
+        Api.create_message!(
+          channel_id,
+          "I'm sorry, either this command doesn't exist or doesn't have an help data"
+        )
       end)
 
     Task.await_many([react_task, dm_task])

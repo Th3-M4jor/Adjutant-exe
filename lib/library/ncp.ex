@@ -31,19 +31,23 @@ defmodule BnBBot.Library.NCP do
   def get_ncp(name) do
     [ncps: all] = :ets.lookup(:bnb_bot_data, :ncps)
     lower_name = String.downcase(name, :ascii)
+
     case Map.get(all, lower_name) do
       nil ->
-        res = Map.to_list(all)
-        |> Enum.map(fn {key, value} -> {String.jaro_distance(key, lower_name), value} end)
-        |> Enum.sort_by(fn {d, _} -> d end, &>=/2)
-        |> Enum.take(9)
+        res =
+          Map.to_list(all)
+          |> Enum.map(fn {key, value} -> {String.jaro_distance(key, lower_name), value} end)
+          |> Enum.sort_by(fn {d, _} -> d end, &>=/2)
+          |> Enum.take(9)
+
         {:not_found, res}
-        #"No NCP with that name"
+
+      # "No NCP with that name"
       val ->
         {:found, val}
-        #"```\n#{val["Name"]} - (#{val["EBCost"]} EB) - #{val["Color"]}\n#{val["Description"]}\n```"
-    end
 
+        # "```\n#{val["Name"]} - (#{val["EBCost"]} EB) - #{val["Color"]}\n#{val["Description"]}\n```"
+    end
   end
 
   @spec decode_ncp_resp({:ok, %HTTPoison.Response{}} | {:error, %HTTPoison.Error{}}) ::

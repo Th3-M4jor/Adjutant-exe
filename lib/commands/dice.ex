@@ -20,6 +20,7 @@ defmodule BnBBot.Commands.Dice do
   def call(%Nostrum.Struct.Message{} = msg, []) do
     Logger.debug("Recieved a roll command, using default args")
     resp_str = roll_dice("1d20")
+
     Api.create_message(
       msg.channel_id,
       content: resp_str,
@@ -79,8 +80,9 @@ defmodule BnBBot.Commands.Dice do
           roll_die(num, size, count)
 
         [num] ->
-          #count ++ [num]
+          # count ++ [num]
           [num | count]
+
         _ ->
           :error
       end
@@ -97,7 +99,7 @@ defmodule BnBBot.Commands.Dice do
 
   defp roll_die(num_rem, size, count) do
     result = Enum.random(1..size)
-    #count = count ++ [result]
+    # count = count ++ [result]
     roll_die(num_rem - 1, size, [result | count])
   end
 end

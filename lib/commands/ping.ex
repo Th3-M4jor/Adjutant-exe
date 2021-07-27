@@ -48,7 +48,7 @@ defmodule BnBBot.Commands.Ping do
           name: "Uptime:",
           value: get_uptime_str()
         },
-        %Embed.Field{name: "Memory:", value: "BEAM VM memory usage is #{memory_usage} MiB"},
+        %Embed.Field{name: "Memory:", value: "BEAM VM memory usage is #{memory_usage} MiB"}
       ]
     }
 
@@ -60,19 +60,18 @@ defmodule BnBBot.Commands.Ping do
     {uptime, _} = :erlang.statistics(:wall_clock)
     uptime_seconds = System.convert_time_unit(uptime, :millisecond, :second)
 
-    #uptime_days = div(uptime_seconds, 24 * 60 * 60)
-    #uptime_seconds = rem(uptime_seconds, 24 * 60 * 60)
+    # uptime_days = div(uptime_seconds, 24 * 60 * 60)
+    # uptime_seconds = rem(uptime_seconds, 24 * 60 * 60)
 
-    #uptime_hours = div(uptime_seconds, 60 * 60)
-    #uptime_seconds = rem(uptime_seconds, 60 * 60)
+    # uptime_hours = div(uptime_seconds, 60 * 60)
+    # uptime_seconds = rem(uptime_seconds, 60 * 60)
 
-    #uptime_minutes = div(uptime_seconds, 60)
-    #uptime_seconds = rem(uptime_seconds, 60)
+    # uptime_minutes = div(uptime_seconds, 60)
+    # uptime_seconds = rem(uptime_seconds, 60)
 
     startup_time = System.os_time(:second) - uptime_seconds
 
-    #"Bot uptime is #{uptime_days}D:#{uptime_hours}H:#{uptime_minutes}M:#{uptime_seconds}S"
+    # "Bot uptime is #{uptime_days}D:#{uptime_hours}H:#{uptime_minutes}M:#{uptime_seconds}S"
     "Bot was last restarted <t:#{startup_time}:R>"
   end
-
 end

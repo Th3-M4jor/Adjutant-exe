@@ -26,13 +26,14 @@ defmodule BnBBot.Commands.Eval do
   end
 
   defp do_eval(msg, fn_txt) do
-    resp = try do
-      {res, _} = Code.eval_string(fn_txt, [msg: msg], __ENV__)
-      inspect(res, charlists: :as_lists)
-    rescue
-      e ->
-        inspect(e, charlists: :as_lists)
-    end
+    resp =
+      try do
+        {res, _} = Code.eval_string(fn_txt, [msg: msg], __ENV__)
+        inspect(res, charlists: :as_lists)
+      rescue
+        e ->
+          inspect(e, charlists: :as_lists)
+      end
 
     unless String.length(resp) > 1850 do
       Api.create_message(msg.channel_id, "```elixir\n#{resp}```")
@@ -40,5 +41,4 @@ defmodule BnBBot.Commands.Eval do
       Api.create_message(msg.channel_id, file: %{name: "result.txt", body: resp})
     end
   end
-
 end
