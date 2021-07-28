@@ -4,13 +4,13 @@ defmodule ElixirBot.MixProject do
   def project do
     [
       app: :elixir_bot,
-      version: "0.1.1",
+      version: "0.1.2",
       elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       releases: [
         bnb_bot: [
-          version: "0.1.1",
+          version: "0.1.2",
           applications: [
             elixir_bot: :permanent
           ],

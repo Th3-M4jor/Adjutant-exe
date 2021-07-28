@@ -103,8 +103,8 @@ defmodule BnBBot.Commands.NCP do
   end
 
   defp make_btn_response(%Nostrum.Struct.Message{} = msg, opts) do
-    button_desc = Enum.map(opts, fn {_, ncp} -> {ncp.name, String.downcase(ncp.name, :ascii), 1} end)
-    buttons = BnBBot.ButtonAwait.generate_msg_buttons(button_desc)
+    ncp_list = Enum.map(opts, fn {_, ncp} -> ncp end)
+    buttons = BnBBot.ButtonAwait.generate_msg_buttons(ncp_list)
 
     resp = Api.create_message!(msg.channel_id,
       content: "Did you mean:",
@@ -115,7 +115,9 @@ defmodule BnBBot.Commands.NCP do
     btn_response = BnBBot.ButtonAwait.await_btn_click(resp, msg.author.id)
 
     unless is_nil(btn_response) do
-      {:found, ncp} = BnBBot.Library.NCP.get_ncp(btn_response)
+      # ncp_buttons are prefixed with an "n_"
+      ["n", ncp]  = String.split(btn_response, "_", parts: 2)
+      {:found, ncp} = BnBBot.Library.NCP.get_ncp(ncp)
       Api.edit_message!(resp.channel_id, resp.id,
         content: "#{ncp}",
         components: []

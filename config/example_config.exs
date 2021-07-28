@@ -32,4 +32,20 @@ config :elixir_bot,
   owner_id: 666,
   admins: [667, 668],
   ncp_url: "https://jin-tengai.dev/bnb/backend/fetch/ncps",
-  phb: "https://jin-tengai.dev/bnb/#!/home"
+  phb: "https://jin-tengai.dev/bnb/#!/home",
+  ncp_emoji: %{
+    id: nil,
+
+    # jigsaw emoji
+    name: "\u{1F9E9}"
+  },
+  virus_emoji: %{
+    id: nil,
+
+    # space invader emoji
+    name: "\u{1F47E}"
+  },
+  chip_emoji: %{
+    id: "695852335943122974",
+    name: "SynchroChip"
+  }

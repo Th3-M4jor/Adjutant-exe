@@ -9,7 +9,7 @@ defmodule BnBBot.ButtonAwait do
 
   Raises if there are more than 10 buttons
   """
-  @spec generate_msg_buttons([{String.t(), String.t(), pos_integer()}]) :: any()
+  @spec generate_msg_buttons([struct()]) :: any()
   def generate_msg_buttons(content) when length(content) > 10 do
     raise "Too many buttons"
   end
@@ -18,7 +18,7 @@ defmodule BnBBot.ButtonAwait do
     row_chunks = Enum.chunk_every(content, 5)
 
     Enum.map(row_chunks, fn row ->
-      action_row = Enum.map(row, &tuple_to_btn/1)
+      action_row = Enum.map(row, &BnBBot.Library.LibObj.to_btn/1)
 
       %{
         type: 1,
@@ -27,14 +27,14 @@ defmodule BnBBot.ButtonAwait do
     end)
   end
 
-  defp tuple_to_btn({name, id, style}) do
-    %{
-      type: 2,
-      style: style,
-      label: name,
-      custom_id: id
-    }
-  end
+#  defp tuple_to_btn({name, id, style}) do
+#    %{
+#      type: 2,
+#      style: style,
+#      label: name,
+#      custom_id: id
+#    }
+#  end
 
   @doc """
   Awaits a button click on the given message from a user with the given ID (nil for any user)
