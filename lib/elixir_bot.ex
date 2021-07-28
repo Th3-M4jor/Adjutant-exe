@@ -91,9 +91,11 @@ defmodule BnBBot.Consumer do
 
   def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{} = inter, _ws_state})
       when inter.type == 3 do
-    Logger.debug("Got an interaction button click on #{inter.message.id}, ACK-ing and then checking")
+    Logger.debug(
+      "Got an interaction button click on #{inter.message.id}, ACK-ing and then checking"
+    )
 
-    # Logger.debug("#{inspect(inter, pretty: true)}")
+    Logger.debug("#{inspect(inter, pretty: true)}")
 
     ack_task =
       Task.async(fn ->
@@ -104,9 +106,13 @@ defmodule BnBBot.Consumer do
     inter_resp_task =
       Task.async(fn ->
         case Registry.lookup(:BUTTON_COLLECTOR, inter.message.id) do
-          [{pid, user_id}] when is_nil(user_id) or inter.member.user.id == user_id ->
+          [{pid, user_id}]
+          when is_nil(user_id) or inter.user.id == user_id ->
             send(pid, {:btn_click, inter})
 
+          [{pid, user_id}]
+          when inter.member.user.id == user_id ->
+            send(pid, {:btn_click, inter})
           _ ->
             Logger.debug("Interaction wasn't registered")
             nil
