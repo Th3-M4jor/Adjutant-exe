@@ -42,6 +42,10 @@ defmodule BnBBot.Commands do
     Commands.NCP.call(msg, args)
   end
 
+  defp cmd_call("phb", %Nostrum.Struct.Message{} = msg, args) do
+    Commands.PHB.call(msg, args)
+  end
+
   defp cmd_call("roll", %Nostrum.Struct.Message{} = msg, args) do
     Commands.Dice.call(msg, args)
   end

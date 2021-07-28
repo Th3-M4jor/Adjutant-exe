@@ -14,11 +14,10 @@ defmodule BnBBot.Commands.NCP do
   end
 
   def full_help() do
-    "Bot no longer DMs owner on resume events"
+    "Search for an NCP with the given name, \"Did you mean\"'s wait 30 seconds for a response"
   end
 
   @spec call(%Nostrum.Struct.Message{}, [String.t()]) :: any()
-
   def call(%Nostrum.Struct.Message{} = msg, []) do
     Logger.debug("Recieved an NCP command with no arguments")
 
@@ -54,38 +53,79 @@ defmodule BnBBot.Commands.NCP do
   defp handle_not_found_ncp(%Nostrum.Struct.Message{} = msg, opts) do
     Logger.debug("handling a not found ncp")
 
-    {ct, mapped} =
-      Enum.reduce(opts, {1, []}, fn {_, ncp}, {ct, list} ->
-        str = "#{ct}: #{ncp.name}"
-        {ct + 1, [str | list]}
-      end)
+    # remove all whose similarity is less than 0.61
+    filtered_opts = Enum.filter(opts, fn {dist, _} -> dist >= 0.7 end)
 
-    did_you_mean = Enum.reverse(mapped) |> Enum.join(", ")
+    make_btn_response(msg, filtered_opts)
 
-    resp =
-      Api.create_message!(
-        msg.channel_id,
-        content: "Did you mean: #{did_you_mean}",
-        message_reference: %{message_id: msg.id}
+
+    # {ct, mapped} =
+    #   Enum.reduce(opts, {1, []}, fn {_, ncp}, {ct, list} ->
+    #     str = "#{ct}: #{ncp.name}"
+    #     {ct + 1, [str | list]}
+    #   end)
+
+    # did_you_mean = Enum.reverse(mapped) |> Enum.join(", ")
+
+    # resp =
+    #   Api.create_message!(
+    #     msg.channel_id,
+    #     content: "Did you mean: #{did_you_mean}",
+    #     message_reference: %{message_id: msg.id}
+    #   )
+
+    # reaction_adder = Task.async(fn -> BnBBot.ReactionAwait.add_reaction_nums(resp, ct - 1) end)
+
+    # reaction = BnBBot.ReactionAwait.await_reaction_add(resp, ct - 1, msg.author.id)
+
+    # unless is_nil(reaction) do
+    #   {position, _} = Integer.parse(reaction.emoji.name)
+    #   {_, val} = Enum.at(opts, position)
+
+    #   ncp = "#{val}"
+
+    #   edit_task = Task.async(fn -> Api.edit_message(resp.channel_id, resp.id, ncp) end)
+    #   Task.await_many([reaction_adder, edit_task], :infinity)
+    #   Api.delete_all_reactions(resp.channel_id, resp.id)
+    # else
+    #   Logger.debug("Took too long to react")
+    #   Task.await(reaction_adder, :infinity)
+    #   Api.delete_all_reactions(resp.channel_id, resp.id)
+    # end
+
+  end
+
+  defp make_btn_response(%Nostrum.Struct.Message{} = msg, []) do
+    Api.create_message!(msg.channel_id,
+      content: "I'm sorry, there are no NCPs with a similar enough name",
+      message_reference: %{message_id: msg.id},
+    )
+  end
+
+  defp make_btn_response(%Nostrum.Struct.Message{} = msg, opts) do
+    button_desc = Enum.map(opts, fn {_, ncp} -> {ncp.name, String.downcase(ncp.name, :ascii), 1} end)
+    buttons = BnBBot.ButtonAwait.generate_msg_buttons(button_desc)
+
+    resp = Api.create_message!(msg.channel_id,
+      content: "Did you mean:",
+      message_reference: %{message_id: msg.id},
+      components: buttons
+    )
+
+    btn_response = BnBBot.ButtonAwait.await_btn_click(resp, msg.author.id)
+
+    unless is_nil(btn_response) do
+      {:found, ncp} = BnBBot.Library.NCP.get_ncp(btn_response)
+      Api.edit_message!(resp.channel_id, resp.id,
+        content: "#{ncp}",
+        components: []
       )
-
-    reaction_adder = Task.async(fn -> BnBBot.ReactionAwait.add_reaction_nums(resp, ct - 1) end)
-
-    reaction = BnBBot.ReactionAwait.await_reaction_add(resp, ct - 1, msg.author.id)
-
-    unless is_nil(reaction) do
-      {position, _} = Integer.parse(reaction.emoji.name)
-      {_, val} = Enum.at(opts, position)
-
-      ncp = "#{val}"
-
-      edit_task = Task.async(fn -> Api.edit_message(resp.channel_id, resp.id, ncp) end)
-      Task.await_many([reaction_adder, edit_task], :infinity)
-      Api.delete_all_reactions(resp.channel_id, resp.id)
     else
-      Logger.debug("Took too long to react")
-      Task.await(reaction_adder, :infinity)
-      Api.delete_all_reactions(resp.channel_id, resp.id)
+      Api.edit_message!(resp,
+        content: "Timed out waiting for response",
+        components: []
+      )
     end
   end
+
 end

@@ -6,6 +6,7 @@ defmodule BnBBot.Supervisor do
   def start_link(args) do
     Supervisor.start_link(__MODULE__, args, name: __MODULE__)
     Registry.start_link(keys: :unique, name: :REACTION_COLLECTOR)
+    Registry.start_link(keys: :unique, name: :BUTTON_COLLECTOR)
   end
 
   @impl true
@@ -18,7 +19,9 @@ defmodule BnBBot.Supervisor do
       for n <- 1..System.schedulers_online(),
           do: Supervisor.child_spec({BnBBot.Consumer, []}, id: {:bnb_bot, :consumer, n})
 
-    Supervisor.init(children, strategy: :one_for_one, restart: :temporary)
+    res = Supervisor.init(children, strategy: :one_for_one, restart: :temporary)
+    Logger.debug("Supervisor started")
+    res
   end
 end
 
@@ -74,7 +77,7 @@ defmodule BnBBot.Consumer do
     BnBBot.Util.dm_owner("Bot Resumed")
   end
 
-  def handle_event({:MESSAGE_REACTION_ADD, reaction, _was_state}) do
+  def handle_event({:MESSAGE_REACTION_ADD, reaction, _ws_state}) do
     Logger.debug("Got a reaction")
     # [{pid, user_id}] = Registry.lookup(:REACTION_COLLECTOR, reaction.message_id)
     case Registry.lookup(:REACTION_COLLECTOR, reaction.message_id) do
@@ -84,6 +87,33 @@ defmodule BnBBot.Consumer do
       _ ->
         nil
     end
+  end
+
+  def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{} = inter, _ws_state})
+      when inter.type == 3 do
+    Logger.debug("Got an interaction button click on #{inter.message.id}, ACK-ing and then checking")
+
+    # Logger.debug("#{inspect(inter, pretty: true)}")
+
+    ack_task =
+      Task.async(fn ->
+        # type 6 means ACK but do nothing
+        Api.create_interaction_response(inter, %{type: 6})
+      end)
+
+    inter_resp_task =
+      Task.async(fn ->
+        case Registry.lookup(:BUTTON_COLLECTOR, inter.message.id) do
+          [{pid, user_id}] when is_nil(user_id) or inter.member.user.id == user_id ->
+            send(pid, {:btn_click, inter})
+
+          _ ->
+            Logger.debug("Interaction wasn't registered")
+            nil
+        end
+      end)
+
+    Task.await_many([ack_task, inter_resp_task], :infinity)
   end
 
   # Default event handler, if you don't include this, your consumer WILL crash if

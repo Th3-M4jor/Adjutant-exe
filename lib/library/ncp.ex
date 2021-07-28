@@ -5,7 +5,14 @@ defmodule BnBBot.Library.NCP do
 
   @enforce_keys [:id, :name, :cost, :color, :description]
   defstruct [:id, :name, :cost, :color, :description]
-  @type t :: %__MODULE__{id: pos_integer(), name: String.t(), cost: pos_integer(), color: String.t(), description: String.t()}
+
+  @type t :: %__MODULE__{
+          id: pos_integer(),
+          name: String.t(),
+          cost: pos_integer(),
+          color: String.t(),
+          description: String.t()
+        }
 
   @spec load_ncps() :: {:ok, non_neg_integer()} | :http_err | :parse_err
   def load_ncps() do
@@ -25,23 +32,33 @@ defmodule BnBBot.Library.NCP do
         ncp_map =
           for ncp <- ncps, reduce: %{} do
             acc ->
-              ncp_struct = %NCP{id: ncp["Id"], name: ncp["Name"], cost: ncp["EBCost"], color: ncp["Color"], description: ncp["Description"]}
+              ncp_struct = %NCP{
+                id: ncp["Id"],
+                name: ncp["Name"],
+                cost: ncp["EBCost"],
+                color: ncp["Color"],
+                description: ncp["Description"]
+              }
+
               Map.put(acc, String.downcase(ncp["Name"], :ascii), ncp_struct)
           end
-
-        len = map_size(ncp_map)
-        :ets.insert(:bnb_bot_data, ncps: ncp_map)
-        {:ok, len}
+          len = map_size(ncp_map)
+          :ets.insert(:bnb_bot_data, ncps: ncp_map)
+          {:ok, len}
     end
   end
 
-  @spec get_ncp(String.t()) :: {:found, __MODULE__.t()} | {:not_found, [{float(), __MODULE__.t()}]}
+  @spec get_ncp(String.t()) ::
+          {:found, __MODULE__.t()} | {:not_found, [{float(), __MODULE__.t()}]}
   def get_ncp(name) do
-    [ncps: all] = :ets.lookup(:bnb_bot_data, :ncps)
     lower_name = String.downcase(name, :ascii)
 
-    case Map.get(all, lower_name) do
-      nil ->
+    # returns an empty list if no match
+    ncp = :ets.select(:bnb_bot_data, [{{:ncps, %{lower_name => :"$1"}}, [], [:"$1"]}])
+
+    case ncp do
+      [] ->
+        [ncps: all] = :ets.lookup(:bnb_bot_data, :ncps)
         res =
           Map.to_list(all)
           |> Enum.map(fn {key, value} -> {String.jaro_distance(key, lower_name), value} end)
@@ -51,8 +68,8 @@ defmodule BnBBot.Library.NCP do
         {:not_found, res}
 
       # "No NCP with that name"
-      val ->
-        {:found, val}
+      [ncp] ->
+        {:found, ncp}
 
         # "```\n#{val["Name"]} - (#{val["EBCost"]} EB) - #{val["Color"]}\n#{val["Description"]}\n```"
     end
