@@ -1,6 +1,6 @@
 defmodule BnBBot.ButtonAwait do
   require Logger
-  alias Nostrum.Api
+  # alias Nostrum.Api
 
   @doc """
   First string in the tuple is the Name on the button
@@ -9,7 +9,8 @@ defmodule BnBBot.ButtonAwait do
 
   Raises if there are more than 10 buttons
   """
-  @spec generate_msg_buttons([struct()]) :: any()
+  @spec generate_msg_buttons([struct()]) ::
+          [%{type: pos_integer(), components: [map()]}] | no_return()
   def generate_msg_buttons(content) when length(content) > 10 do
     raise "Too many buttons"
   end
@@ -27,32 +28,37 @@ defmodule BnBBot.ButtonAwait do
     end)
   end
 
-#  defp tuple_to_btn({name, id, style}) do
-#    %{
-#      type: 2,
-#      style: style,
-#      label: name,
-#      custom_id: id
-#    }
-#  end
+  #  defp tuple_to_btn({name, id, style}) do
+  #    %{
+  #      type: 2,
+  #      style: style,
+  #      label: name,
+  #      custom_id: id
+  #    }
+  #  end
 
   @doc """
   Awaits a button click on the given message from a user with the given ID (nil for any user)
   timeout is after 30 seconds
   """
-  @spec await_btn_click(Nostrum.Struct.Message.t(), Nostrum.Snowflake.t() | nil) :: String.t() | nil
+  @spec await_btn_click(Nostrum.Struct.Message.t(), Nostrum.Snowflake.t() | nil) ::
+          %Nostrum.Struct.Interaction{} | nil | no_return()
   def await_btn_click(%Nostrum.Struct.Message{} = msg, user_id \\ nil) do
     Registry.register(:BUTTON_COLLECTOR, msg.id, user_id)
     Logger.debug("Registering an await click on msg #{msg.id} for #{user_id}")
-    btn_id = await_btn_click_inner()
-    Logger.debug("Got a response to #{msg.id} of #{btn_id}")
-    btn_id
+    btn = await_btn_click_inner()
+    Logger.debug("Got a response to #{msg.id} of #{inspect(btn, pretty: true)}")
+    btn
   end
 
   defp await_btn_click_inner() do
     receive do
       {:btn_click, value} ->
-        value.data.custom_id
+        # value.data.custom_id
+        value
+
+      _ ->
+        raise "Inconcievable"
     after
       30_000 ->
         nil

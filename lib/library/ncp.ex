@@ -1,10 +1,10 @@
 defmodule BnBBot.Library.NCP do
   require Logger
 
-  alias __MODULE__
-
   @enforce_keys [:id, :name, :cost, :color, :description]
   defstruct [:id, :name, :cost, :color, :description]
+
+  @type colors :: :white | :pink | :yellow | :green | :blue | :red | :gray
 
   @type t :: %__MODULE__{
           id: pos_integer(),
@@ -14,7 +14,7 @@ defmodule BnBBot.Library.NCP do
           description: String.t()
         }
 
-  @spec load_ncps() :: {:ok, non_neg_integer()} | :http_err | :parse_err
+  @spec load_ncps() :: {:ok, non_neg_integer()} | :http_err
   def load_ncps() do
     Logger.debug("(Re)loading NCPs")
     ncp_url = Application.fetch_env!(:elixir_bot, :ncp_url)
@@ -25,26 +25,16 @@ defmodule BnBBot.Library.NCP do
       :http_err ->
         :http_err
 
-      :parse_err ->
-        :parse_err
-
       ncps ->
         ncp_map =
           for ncp <- ncps, reduce: %{} do
             acc ->
-              ncp_struct = %NCP{
-                id: ncp["Id"],
-                name: ncp["Name"],
-                cost: ncp["EBCost"],
-                color: ncp["Color"],
-                description: ncp["Description"]
-              }
-
-              Map.put(acc, String.downcase(ncp["Name"], :ascii), ncp_struct)
+              Map.put(acc, String.downcase(ncp.name, :ascii), ncp)
           end
-          len = map_size(ncp_map)
-          :ets.insert(:bnb_bot_data, ncps: ncp_map)
-          {:ok, len}
+
+        len = map_size(ncp_map)
+        :ets.insert(:bnb_bot_data, ncps: ncp_map)
+        {:ok, len}
     end
   end
 
@@ -59,6 +49,7 @@ defmodule BnBBot.Library.NCP do
     case ncp do
       [] ->
         [ncps: all] = :ets.lookup(:bnb_bot_data, :ncps)
+
         res =
           Map.to_list(all)
           |> Enum.map(fn {key, value} -> {String.jaro_distance(key, lower_name), value} end)
@@ -76,15 +67,12 @@ defmodule BnBBot.Library.NCP do
   end
 
   @spec decode_ncp_resp({:ok, %HTTPoison.Response{}} | {:error, %HTTPoison.Error{}}) ::
-          :http_err | :parse_err | any()
+          :http_err | [__MODULE__.t()] | no_return()
   defp decode_ncp_resp({:ok, %HTTPoison.Response{} = resp}) when resp.status_code in 200..299 do
-    case Poison.decode(resp.body) do
-      {:ok, values} ->
-        values
+    maps = :erlang.binary_to_term(resp.body)
 
-      {:error, _} ->
-        :parse_err
-    end
+    Enum.map(maps, fn ncp -> struct(BnBBot.Library.NCP, ncp) end)
+
   end
 
   defp decode_ncp_resp(_) do
@@ -93,26 +81,24 @@ defmodule BnBBot.Library.NCP do
 end
 
 defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
-    def type(_value), do: :ncp
+  def type(_value), do: :ncp
 
-    def to_btn(ncp) do
-      lower_name = "n_#{String.downcase(ncp.name, :ascii)}"
-      emoji = Application.fetch_env!(:elixir_bot, :ncp_emoji)
+  @spec to_btn(BnBBot.Library.NCP.t()) :: BnBBot.Library.LibObj.button()
+  def to_btn(ncp) do
+    lower_name = "n_#{String.downcase(ncp.name, :ascii)}"
+    emoji = Application.fetch_env!(:elixir_bot, :ncp_emoji)
 
-      %{
-        # type 2 for button
-        type: 2,
+    %{
+      # type 2 for button
+      type: 2,
 
-        # style 3 for green button
-        style: 3,
-        emoji: emoji,
-        label: ncp.name,
-        custom_id: lower_name
-
-      }
-
-    end
-
+      # style 3 for green button
+      style: 3,
+      emoji: emoji,
+      label: ncp.name,
+      custom_id: lower_name
+    }
+  end
 end
 
 defimpl String.Chars, for: BnBBot.Library.NCP do

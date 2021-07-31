@@ -4,6 +4,7 @@ defmodule BnBBot.Commands do
 
   require Logger
 
+  @spec cmd_check(Nostrum.Struct.Message.t()) :: :ignore | nil
   def cmd_check(%Nostrum.Struct.Message{} = msg) do
     contents = String.trim(msg.content)
     prefix = Application.fetch_env!(:elixir_bot, :prefix)
@@ -22,6 +23,7 @@ defmodule BnBBot.Commands do
         end
 
       cmd_call(cmd_name, msg, args)
+      :ignore
     end
   end
 

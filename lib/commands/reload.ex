@@ -33,9 +33,6 @@ defmodule BnBBot.Commands.Reload do
 
           :http_err ->
             "API Error occurred in reloading NCPs"
-
-          :parse_err ->
-            "Error in parsing response"
         end
 
       Api.create_message!(msg.channel_id, ncp_msg)

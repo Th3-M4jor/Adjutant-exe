@@ -21,6 +21,7 @@ defmodule BnBBot.Supervisor do
 
     res = Supervisor.init(children, strategy: :one_for_one, restart: :temporary)
     Logger.debug("Supervisor started")
+    # :ignore
     res
   end
 end
@@ -60,20 +61,21 @@ defmodule BnBBot.Consumer do
     {dm_msg, override} =
       case :ets.lookup(:bnb_bot_data, :first_ready) do
         [first_ready: false] ->
-          Logger.warn("Ready re-emitted #{inspect(ready_data)}")
+          Logger.warn("Ready re-emitted #{inspect(ready_data, pretty: true)}")
           {"ready re-emitted", true}
 
         _ ->
           :ets.insert(:bnb_bot_data, first_ready: false)
           BnBBot.Library.NCP.load_ncps()
+          Logger.debug("Ready #{inspect(ready_data, pretty: true)}")
           {"Bot Ready", false}
       end
 
     BnBBot.Util.dm_owner(dm_msg, override)
   end
 
-  def handle_event({:RESUMED, _resume_data, _ws_state}) do
-    Logger.debug("Bot resumed")
+  def handle_event({:RESUMED, resume_data, _ws_state}) do
+    Logger.debug("Bot resumed #{inspect(resume_data, pretty: true)}")
     BnBBot.Util.dm_owner("Bot Resumed")
   end
 
@@ -81,7 +83,9 @@ defmodule BnBBot.Consumer do
     Logger.debug("Got a reaction")
     # [{pid, user_id}] = Registry.lookup(:REACTION_COLLECTOR, reaction.message_id)
     case Registry.lookup(:REACTION_COLLECTOR, reaction.message_id) do
-      [{pid, user_id}] when is_nil(user_id) or reaction.user_id == user_id ->
+      [{pid, user_id}]
+      when is_nil(user_id)
+      when reaction.user_id == user_id ->
         send(pid, {:reaction, reaction})
 
       _ ->
@@ -91,35 +95,20 @@ defmodule BnBBot.Consumer do
 
   def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{} = inter, _ws_state})
       when inter.type == 3 do
-    Logger.debug(
-      "Got an interaction button click on #{inter.message.id}, ACK-ing and then checking"
-    )
-
+    Logger.debug("Got an interaction button click on #{inter.message.id}")
     Logger.debug("#{inspect(inter, pretty: true)}")
 
-    ack_task =
-      Task.async(fn ->
-        # type 6 means ACK but do nothing
+    case Registry.lookup(:BUTTON_COLLECTOR, inter.message.id) do
+      [{pid, user_id}]
+      when is_nil(user_id)
+      when inter.user.id == user_id
+      when inter.member.user.id == user_id ->
+        send(pid, {:btn_click, inter})
+      _ ->
+        Logger.debug("Interaction wasn't registered, or wasn't for said user")
         Api.create_interaction_response(inter, %{type: 6})
-      end)
+    end
 
-    inter_resp_task =
-      Task.async(fn ->
-        case Registry.lookup(:BUTTON_COLLECTOR, inter.message.id) do
-          [{pid, user_id}]
-          when is_nil(user_id) or inter.user.id == user_id ->
-            send(pid, {:btn_click, inter})
-
-          [{pid, user_id}]
-          when inter.member.user.id == user_id ->
-            send(pid, {:btn_click, inter})
-          _ ->
-            Logger.debug("Interaction wasn't registered")
-            nil
-        end
-      end)
-
-    Task.await_many([ack_task, inter_resp_task], :infinity)
   end
 
   # Default event handler, if you don't include this, your consumer WILL crash if
