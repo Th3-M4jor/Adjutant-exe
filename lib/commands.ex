@@ -36,6 +36,10 @@ defmodule BnBBot.Commands do
     Commands.Chip.call(msg, args)
   end
 
+  defp cmd_call("c", %Nostrum.Struct.Message{} = msg, args) do
+    Commands.Chip.call(msg, args)
+  end
+
   defp cmd_call("ncp", %Nostrum.Struct.Message{} = msg, args) do
     Commands.NCP.call(msg, args)
   end

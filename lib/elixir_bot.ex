@@ -66,7 +66,10 @@ defmodule BnBBot.Consumer do
 
         _ ->
           :ets.insert(:bnb_bot_data, first_ready: false)
-          BnBBot.Library.NCP.load_ncps()
+
+          ncp_task = Task.async(fn -> BnBBot.Library.NCP.load_ncps() end)
+          chips_task = Task.async(fn -> BnBBot.Library.Battlechip.load_chips() end)
+          Task.await_many([ncp_task, chips_task], :infinity)
           Logger.debug("Ready #{inspect(ready_data, pretty: true)}")
           {"Bot Ready", false}
       end

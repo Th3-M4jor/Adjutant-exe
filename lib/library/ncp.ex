@@ -72,7 +72,6 @@ defmodule BnBBot.Library.NCP do
     maps = :erlang.binary_to_term(resp.body)
 
     Enum.map(maps, fn ncp -> struct(BnBBot.Library.NCP, ncp) end)
-
   end
 
   defp decode_ncp_resp(_) do
