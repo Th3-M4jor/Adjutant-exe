@@ -28,62 +28,6 @@ defmodule BnBBot.Commands do
   end
 
   @spec cmd_call(String.t() | :prefix_only, %Nostrum.Struct.Message{}, [String.t()]) :: any()
-  defp cmd_call("ping", %Nostrum.Struct.Message{} = msg, args) do
-    Commands.Ping.call(msg, args)
-  end
-
-  defp cmd_call("chip", %Nostrum.Struct.Message{} = msg, args) do
-    Commands.Chip.call(msg, args)
-  end
-
-  defp cmd_call("c", %Nostrum.Struct.Message{} = msg, args) do
-    Commands.Chip.call(msg, args)
-  end
-
-  defp cmd_call("ncp", %Nostrum.Struct.Message{} = msg, args) do
-    Commands.NCP.call(msg, args)
-  end
-
-  defp cmd_call("n", %Nostrum.Struct.Message{} = msg, args) do
-    Commands.NCP.call(msg, args)
-  end
-
-  defp cmd_call("phb", %Nostrum.Struct.Message{} = msg, args) do
-    Commands.PHB.call(msg, args)
-  end
-
-  defp cmd_call("roll", %Nostrum.Struct.Message{} = msg, args) do
-    Commands.Dice.call(msg, args)
-  end
-
-  defp cmd_call("shuffle", %Nostrum.Struct.Message{} = msg, args) do
-    BnBBot.Commands.Shuffle.call(msg, args)
-  end
-
-  defp cmd_call("help", %Nostrum.Struct.Message{} = msg, args) do
-    Commands.Help.call(msg, args)
-  end
-
-  defp cmd_call("die", %Nostrum.Struct.Message{} = msg, args) do
-    Commands.Die.call(msg, args)
-  end
-
-  defp cmd_call("debug", %Nostrum.Struct.Message{} = msg, args) do
-    Commands.Debug.call(msg, args)
-  end
-
-  defp cmd_call("shut_up", %Nostrum.Struct.Message{} = msg, args) do
-    Commands.ShutUp.call(msg, args)
-  end
-
-  defp cmd_call("reload", %Nostrum.Struct.Message{} = msg, args) do
-    Commands.Reload.call(msg, args)
-  end
-
-  defp cmd_call("eval", %Nostrum.Struct.Message{} = msg, args) do
-    Commands.Eval.call(msg, args)
-  end
-
   defp cmd_call(:prefix_only, msg, []) do
     Logger.debug("Recieved a prefix only")
 
@@ -94,13 +38,70 @@ defmodule BnBBot.Commands do
     )
   end
 
-  # default no args
-  defp cmd_call(name, _msg, []) do
-    Logger.debug("Command #{name} is unrecognized")
+  defp cmd_call("ping", msg, args) do
+    Commands.Ping.call(msg, args)
+  end
+
+  defp cmd_call("chip", msg, args) do
+    Commands.Chip.call(msg, args)
+  end
+
+  defp cmd_call("c", msg, args) do
+    Commands.Chip.call(msg, args)
+  end
+
+  defp cmd_call("ncp", msg, args) do
+    Commands.NCP.call(msg, args)
+  end
+
+  defp cmd_call("n", msg, args) do
+    Commands.NCP.call(msg, args)
+  end
+
+  defp cmd_call("phb", msg, args) do
+    Commands.PHB.call(msg, args)
+  end
+
+  defp cmd_call("roll", msg, args) do
+    Commands.Dice.call(msg, args)
+  end
+
+  defp cmd_call("shuffle", msg, args) do
+    Commands.Shuffle.call(msg, args)
+  end
+
+  defp cmd_call("help", msg, args) do
+    Commands.Help.call(msg, args)
+  end
+
+  defp cmd_call("die", msg, args) do
+    Commands.Die.call(msg, args)
+  end
+
+  defp cmd_call("debug", msg, args) do
+    Commands.Debug.call(msg, args)
+  end
+
+  defp cmd_call("shut_up", msg, args) do
+    Commands.ShutUp.call(msg, args)
+  end
+
+  defp cmd_call("reload", msg, args) do
+    Commands.Reload.call(msg, args)
+  end
+
+  defp cmd_call("eval", msg, args) do
+    Commands.Eval.call(msg, args)
   end
 
   # default
   defp cmd_call(name, _msg, args) do
-    Logger.debug("Command #{name} is unrecognized, args were #{inspect(args)}")
+    case args do
+      [] ->
+        Logger.debug(["Command \"", name, "\" is unrecognized"])
+
+      _ ->
+        Logger.debug(["Command \"", name, "\" is unrecognized, args were ", inspect(args)])
+    end
   end
 end

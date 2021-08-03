@@ -33,6 +33,7 @@ defmodule ElixirBot.MixProject do
     [
       #{:nostrum, "~> 0.4"},
       {:nostrum, git: "https://github.com/Kraigie/nostrum.git"},
+      #{:nostrum, path: "../nostrum/"},
       {:dotenv, "~> 3.1"},
       {:httpoison, "~> 1.7"},
       {:poison, "~> 3.0"},

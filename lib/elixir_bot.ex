@@ -58,6 +58,10 @@ defmodule BnBBot.Consumer do
   def handle_event({:READY, ready_data, _ws_state}) do
     Logger.debug("Bot ready")
 
+    prefix = Application.fetch_env!(:elixir_bot, :prefix)
+
+    Api.update_status(:online, "#{prefix}help for a list of commands")
+
     {dm_msg, override} =
       case :ets.lookup(:bnb_bot_data, :first_ready) do
         [first_ready: false] ->

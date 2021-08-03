@@ -66,6 +66,18 @@ defmodule BnBBot.Library.NCP do
     end
   end
 
+  def ncp_color_to_string(%BnBBot.Library.NCP{} = ncp) do
+    case ncp.color do
+      :white -> "White"
+      :pink -> "Pink"
+      :yellow -> "Yellow"
+      :green -> "Green"
+      :blue -> "Blue"
+      :red -> "Red"
+      :gray -> "Gray"
+    end
+  end
+
   @spec decode_ncp_resp({:ok, %HTTPoison.Response{}} | {:error, %HTTPoison.Error{}}) ::
           :http_err | [__MODULE__.t()] | no_return()
   defp decode_ncp_resp({:ok, %HTTPoison.Response{} = resp}) when resp.status_code in 200..299 do
@@ -101,8 +113,22 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
 end
 
 defimpl String.Chars, for: BnBBot.Library.NCP do
-  @spec to_string(BnBBot.Library.NCP.t()) :: String.t()
   def to_string(%BnBBot.Library.NCP{} = ncp) do
-    "```\n#{ncp.name} - (#{ncp.cost} EB) - #{ncp.color}\n#{ncp.description}\n```"
+    # Same as but faster due to how Elixir works
+    # "```\n#{ncp.name} - (#{ncp.cost} EB) - #{ncp.color}\n#{ncp.description}\n```"
+
+    io_list = [
+      "```\n",
+      ncp.name,
+      " - (",
+      Kernel.to_string(ncp.cost),
+      " EB) - ",
+      BnBBot.Library.NCP.ncp_color_to_string(ncp),
+      "\n",
+      ncp.description,
+      "\n```"
+    ]
+
+    IO.chardata_to_string(io_list)
   end
 end

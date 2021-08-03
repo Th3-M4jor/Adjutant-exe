@@ -53,15 +53,22 @@ defmodule BnBBot.ButtonAwait do
 
   defp await_btn_click_inner() do
     receive do
-      {:btn_click, value} ->
-        # value.data.custom_id
-        value
-
-      _ ->
-        raise "Inconcievable"
+      value ->
+        handle_btn_click(value)
     after
+      # after 30 seconds, timeout
       30_000 ->
         nil
     end
   end
+
+  defp handle_btn_click({:btn_click, %Nostrum.Struct.Interaction{} = value}) do
+    value
+  end
+
+  defp handle_btn_click(other) do
+    Logger.error("Recieved message that wasn't a btn click: #{inspect(other)}")
+    raise "Inconcievable"
+  end
+
 end

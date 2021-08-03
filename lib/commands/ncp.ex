@@ -30,7 +30,7 @@ defmodule BnBBot.Commands.NCP do
 
   def call(%Nostrum.Struct.Message{} = msg, name_list) do
     name = Enum.join(name_list, " ")
-    Logger.debug("Searching for the following NCP: #{name}")
+    Logger.debug(["Searching for the following NCP: ", name])
 
     case BnBBot.Library.NCP.get_ncp(name) do
       {:found, ncp} ->
@@ -45,7 +45,7 @@ defmodule BnBBot.Commands.NCP do
     # "```\n#{val["Name"]} - (#{val["EBCost"]} EB) - #{val["Color"]}\n#{val["Description"]}\n```"
     Api.create_message(
       msg.channel_id,
-      content: "#{ncp}",
+      content: to_string(ncp),
       message_reference: %{message_id: msg.id}
     )
   end
@@ -90,7 +90,7 @@ defmodule BnBBot.Commands.NCP do
           %{
             type: 7,
             data: %{
-              content: "#{ncp}",
+              content: to_string(ncp),
               components: []
             }
           }

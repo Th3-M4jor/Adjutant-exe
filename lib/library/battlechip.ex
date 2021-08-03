@@ -145,17 +145,22 @@ defimpl String.Chars, for: BnBBot.Library.Battlechip do
     hits = if chip.hits == "1" do
       "1 hit"
     else
-      "#{chip.hits} hits"
+      [chip.hits , " hits"]
     end
 
     targets = if chip.targets == 1 do
       "1 target"
     else
-      "#{chip.targets} targets"
+      [Kernel.to_string(chip.targets), " targets"]
     end
 
     damage = unless is_nil(chip.damage) do
-      "#{chip.damage[:dienum]}d#{chip.damage[:dietype]} damage"
+      [
+        Kernel.to_string(chip.damage[:dienum]),
+        "d",
+        Kernel.to_string(chip.damage[:dietype]),
+        " damage"
+      ]
     else
       "--"
     end
@@ -163,10 +168,38 @@ defimpl String.Chars, for: BnBBot.Library.Battlechip do
     class = if chip.class == :standard do
       ""
     else
-      " | " <> String.capitalize(Kernel.to_string(chip.class), :ascii)
+      [" | ", String.capitalize(Kernel.to_string(chip.class), :ascii)]
     end
 
-    "```\n#{chip.name} - #{elems} | #{skill} | #{range} | #{damage} | #{hits} | #{targets} | #{kind}#{class}\n#{chip.description}\n```"
+
+    # same as below except faster because of how elixir handles string concat
+    # "```\n#{chip.name} - #{elems} | #{skill} | #{range} | #{damage} | #{hits} | #{targets} | #{kind}#{class}\n#{chip.description}\n```"
+
+    io_list = [
+      "```\n",
+      chip.name,
+      " - ",
+      elems,
+      " | ",
+      skill,
+      " | ",
+      range,
+      " | ",
+      damage,
+      " | ",
+      hits,
+      " | ",
+      targets,
+      " | ",
+      kind,
+      class,
+      "\n",
+      chip.description,
+      "\n```"
+    ]
+
+    IO.chardata_to_string(io_list)
+
   end
 
 end

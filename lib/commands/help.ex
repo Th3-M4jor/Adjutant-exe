@@ -53,7 +53,7 @@ defmodule BnBBot.Commands.Help do
   end
 
   def call(%Nostrum.Struct.Message{} = msg, [name]) do
-    Logger.debug("Recieved a help command with #{name} as the argument")
+    Logger.debug(["Recieved a help command with ", name, " as the argument"])
 
     # get every module in the project that's not a dep
     {:ok, modules} = :application.get_key(:elixir_bot, :modules)
