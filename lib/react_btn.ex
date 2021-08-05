@@ -10,7 +10,7 @@ defmodule BnBBot.ButtonAwait do
   Raises if there are more than 10 buttons
   """
   @spec generate_msg_buttons([struct()]) ::
-          [%{type: pos_integer(), components: [map()]}] | no_return()
+          [%{type: pos_integer(), components: [BnBBot.Library.LibObj.button() | BnBBot.Library.LibObj.link_button()]}] | no_return()
   def generate_msg_buttons(content) when length(content) > 10 do
     raise "Too many buttons"
   end

@@ -51,7 +51,10 @@ defmodule BnBBot.Util do
       end
 
     if res or override do
-      {:ok, owner_id} = Nostrum.Snowflake.cast(Application.fetch_env!(:elixir_bot, :owner_id))
+      {:ok, owner_id} =
+        Application.fetch_env!(:elixir_bot, :owner_id)
+        |> Nostrum.Snowflake.cast()
+
       dm_channel_id = find_dm_channel_id(owner_id)
       Api.create_message(dm_channel_id, to_say)
     end

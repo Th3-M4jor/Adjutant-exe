@@ -5,7 +5,7 @@ defmodule BnBBot.Supervisor do
 
   def start_link(args) do
     Supervisor.start_link(__MODULE__, args, name: __MODULE__)
-    Registry.start_link(keys: :unique, name: :REACTION_COLLECTOR)
+    # Registry.start_link(keys: :unique, name: :REACTION_COLLECTOR)
     Registry.start_link(keys: :unique, name: :BUTTON_COLLECTOR)
   end
 
@@ -46,6 +46,10 @@ defmodule BnBBot.Consumer do
   def handle_event({:MESSAGE_CREATE, %Nostrum.Struct.Message{} = msg, _ws_state}) do
     Logger.debug("Recieved a non-bot message")
 
+    if is_nil(msg.guild_id) do
+      Task.start(fn -> BnBBot.DmLogger.log_dm(msg) end)
+    end
+
     try do
       BnBBot.Commands.cmd_check(msg)
     rescue
@@ -73,9 +77,9 @@ defmodule BnBBot.Consumer do
 
           ncp_task = Task.async(fn -> BnBBot.Library.NCP.load_ncps() end)
           chips_task = Task.async(fn -> BnBBot.Library.Battlechip.load_chips() end)
-          Task.await_many([ncp_task, chips_task], :infinity)
+          [ok: ncp_ct, ok: chip_ct] = Task.await_many([ncp_task, chips_task], :infinity)
           Logger.debug("Ready #{inspect(ready_data, pretty: true)}")
-          {"Bot Ready", false}
+          {"Bot Ready\n#{chip_ct} chips loaded\n#{ncp_ct} ncps loaded", false}
       end
 
     BnBBot.Util.dm_owner(dm_msg, override)
@@ -86,18 +90,18 @@ defmodule BnBBot.Consumer do
     BnBBot.Util.dm_owner("Bot Resumed")
   end
 
-  def handle_event({:MESSAGE_REACTION_ADD, reaction, _ws_state}) do
-    Logger.debug("Got a reaction")
+  def handle_event({:MESSAGE_REACTION_ADD, _reaction, _ws_state}) do
+    # Logger.debug("Got a reaction")
     # [{pid, user_id}] = Registry.lookup(:REACTION_COLLECTOR, reaction.message_id)
-    case Registry.lookup(:REACTION_COLLECTOR, reaction.message_id) do
-      [{pid, user_id}]
-      when is_nil(user_id)
-      when reaction.user_id == user_id ->
-        send(pid, {:reaction, reaction})
+    # case Registry.lookup(:REACTION_COLLECTOR, reaction.message_id) do
+    #  [{pid, user_id}]
+    #  when is_nil(user_id)
+    #  when reaction.user_id == user_id ->
+    #    send(pid, {:reaction, reaction})
 
-      _ ->
-        nil
-    end
+    #  _ ->
+    #    nil
+    :noop
   end
 
   def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{} = inter, _ws_state})
@@ -111,11 +115,11 @@ defmodule BnBBot.Consumer do
       when inter.user.id == user_id
       when inter.member.user.id == user_id ->
         send(pid, {:btn_click, inter})
+
       _ ->
         Logger.debug("Interaction wasn't registered, or wasn't for said user")
         Api.create_interaction_response(inter, %{type: 6})
     end
-
   end
 
   # Default event handler, if you don't include this, your consumer WILL crash if

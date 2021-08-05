@@ -24,9 +24,11 @@ defmodule BnBBot.Commands.Help do
     # get every module in the project that's not a dep
     {:ok, modules} = :application.get_key(:elixir_bot, :modules)
 
-    react_task = Task.async(fn -> BnBBot.Util.react(msg) end)
+    # react_task = Task.async(fn -> BnBBot.Util.react(msg) end)
 
-    user_perm_num = permission_to_num(BnBBot.Util.get_user_perms(msg))
+    Task.start(fn -> BnBBot.Util.react(msg) end)
+
+    user_perm_num = BnBBot.Util.get_user_perms(msg) |> permission_to_num()
 
     # yes this is inefficient but there are so few commands it's kinda irrelevant
     help_vals =
@@ -43,13 +45,8 @@ defmodule BnBBot.Commands.Help do
       fields: help_vals
     }
 
-    dm_task =
-      Task.async(fn ->
-        channel_id = BnBBot.Util.find_dm_channel_id(msg.author.id)
-        Api.create_message!(channel_id, embeds: [help_embed])
-      end)
-
-    Task.await_many([react_task, dm_task], :infinity)
+    BnBBot.Util.find_dm_channel_id(msg.author.id)
+    |> Api.create_message!(embeds: [help_embed])
   end
 
   def call(%Nostrum.Struct.Message{} = msg, [name]) do

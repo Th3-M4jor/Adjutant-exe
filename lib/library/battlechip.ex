@@ -17,6 +17,7 @@ defmodule BnBBot.Library.Battlechip do
     :kind,
     :class
   ]
+  @derive [Inspect]
   defstruct [
     :id,
     :name,

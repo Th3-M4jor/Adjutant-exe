@@ -2,6 +2,7 @@ defmodule BnBBot.Library.NCP do
   require Logger
 
   @enforce_keys [:id, :name, :cost, :color, :description]
+  @derive [Inspect]
   defstruct [:id, :name, :cost, :color, :description]
 
   @type colors :: :white | :pink | :yellow | :green | :blue | :red | :gray
