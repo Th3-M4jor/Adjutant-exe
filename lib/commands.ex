@@ -95,13 +95,19 @@ defmodule BnBBot.Commands do
   end
 
   # default
-  defp cmd_call(name, _msg, args) do
-    case args do
-      [] ->
-        Logger.debug(["Command \"", name, "\" is unrecognized"])
+  defp cmd_call(name, msg, args) do
 
-      _ ->
-        Logger.debug(["Command \"", name, "\" is unrecognized, args were ", inspect(args)])
-    end
+    # few enough args so it should be fine
+    args = [name] ++ args
+
+    Commands.All.search(msg, args)
+
+    #case args do
+    #  [] ->
+    #    Logger.debug(["Command \"", name, "\" is unrecognized"])
+    #
+    #  _ ->
+    #    Logger.debug(["Command \"", name, "\" is unrecognized, args were ", inspect(args)])
+    #end
   end
 end

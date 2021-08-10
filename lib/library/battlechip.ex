@@ -107,14 +107,46 @@ defmodule BnBBot.Library.Battlechip do
 
   defp decode_chip_resp({:ok, %HTTPoison.Response{} = resp})
        when resp.status_code in 200..299 do
-    maps = :erlang.binary_to_term(resp.body)
+    maps = Poison.Parser.parse!(resp.body, keys: :atoms)
 
-    Enum.map(maps, fn ncp -> struct(BnBBot.Library.Battlechip, ncp) end)
+    Enum.map(maps, fn chip ->
+      elem = chip[:elem] |> string_list_to_atoms()
+      skill = chip[:skill] |> string_list_to_atoms()
+      range = chip[:range] |> String.to_atom()
+      kind = chip[:kind] |> String.to_atom()
+      class = chip[:class] |> String.to_atom()
+      %BnBBot.Library.Battlechip{
+        id: chip[:id],
+        name: chip[:name],
+        elem: elem,
+        skill: skill,
+        range: range,
+        hits: chip[:hits],
+        targets: chip[:targets],
+        description: chip[:description],
+        effect: chip[:effect],
+        effduration: chip[:effduration],
+        blight: chip[:blight],
+        damage: chip[:damage],
+        kind: kind,
+        class: class
+      }
+    end)
   end
 
   defp decode_chip_resp(_err) do
     :http_err
   end
+
+  defp string_list_to_atoms(nil) do
+    nil
+  end
+
+  defp string_list_to_atoms(list) do
+    Enum.map(list, fn x -> String.to_atom(x) end)
+  end
+
+
 end
 
 defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Battlechip do

@@ -118,7 +118,19 @@ defmodule BnBBot.Consumer do
 
       _ ->
         Logger.debug("Interaction wasn't registered, or wasn't for said user")
-        Api.create_interaction_response(inter, %{type: 6})
+
+        Api.create_interaction_response(
+          inter,
+          %{
+            type: 4,
+            data: %{
+              content:
+                "You're not the one that I created this for, so you cannot interact with it, sorry",
+              # 64 is the flag for ephemeral messages
+              flags: 64
+            }
+          }
+        )
     end
   end
 

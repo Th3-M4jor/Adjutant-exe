@@ -82,9 +82,13 @@ defmodule BnBBot.Library.NCP do
   @spec decode_ncp_resp({:ok, %HTTPoison.Response{}} | {:error, %HTTPoison.Error{}}) ::
           :http_err | [__MODULE__.t()] | no_return()
   defp decode_ncp_resp({:ok, %HTTPoison.Response{} = resp}) when resp.status_code in 200..299 do
-    maps = :erlang.binary_to_term(resp.body)
+    maps = Poison.Parser.parse!(resp.body, keys: :atoms)
 
-    Enum.map(maps, fn ncp -> struct(BnBBot.Library.NCP, ncp) end)
+    Enum.map(maps, fn ncp ->
+      color = String.to_atom(ncp[:color])
+      ncp_map = Map.put(ncp, :color, color)
+      struct(BnBBot.Library.NCP, ncp_map)
+    end)
   end
 
   defp decode_ncp_resp(_) do
