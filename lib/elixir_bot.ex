@@ -62,7 +62,7 @@ defmodule BnBBot.Consumer do
 
     # prefix = Application.fetch_env!(:elixir_bot, :prefix)
 
-    Api.update_status(:online, "I have slash commands now")
+    Api.update_status(:online, "Now with Slash Commands")
 
     {dm_msg, override} =
       case :ets.lookup(:bnb_bot_data, :first_ready) do
