@@ -64,7 +64,8 @@ defmodule BnBBot.Commands.NCP do
         %{
           type: 3,
           name: "name",
-          description: "The name of the NCP to search for"
+          description: "The name of the NCP to search for",
+          required: true
         }
       ]
     }

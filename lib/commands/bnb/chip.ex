@@ -73,7 +73,8 @@ defmodule BnBBot.Commands.Chip do
         %{
           type: 3,
           name: "name",
-          description: "The name of the chip to search for"
+          description: "The name of the chip to search for",
+          required: true,
         }
       ]
     }

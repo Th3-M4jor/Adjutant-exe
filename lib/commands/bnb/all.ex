@@ -25,7 +25,8 @@ defmodule BnBBot.Commands.All do
         %{
           type: 3,
           name: "name",
-          description: "The name of item to search for"
+          description: "The name of item to search for",
+          required: true
         }
       ]
     }
