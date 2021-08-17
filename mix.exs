@@ -10,7 +10,7 @@ defmodule ElixirBot.MixProject do
       deps: deps(),
       releases: [
         bnb_bot: [
-          version: "0.1.2",
+          version: "0.2.0",
           applications: [
             elixir_bot: :permanent
           ],
