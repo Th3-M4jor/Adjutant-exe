@@ -152,6 +152,7 @@ end
 defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Battlechip do
   def type(_value), do: :chip
 
+  @spec to_btn(BnBBot.Library.Battlechip.t()) :: BnBBot.Library.LibObj.button()
   def to_btn(chip) do
     lower_name = "c_#{String.downcase(chip.name, :ascii)}"
     emoji = Application.fetch_env!(:elixir_bot, :chip_emoji)
@@ -164,6 +165,21 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Battlechip do
       custom_id: lower_name
     }
   end
+
+  @spec to_btn(BnBBot.Library.Battlechip.t(), pos_integer()) :: BnBBot.Library.LibObj.button()
+  def to_btn(chip, uuid) do
+    lower_name = "#{uuid}_c_#{String.downcase(chip.name, :ascii)}"
+    emoji = Application.fetch_env!(:elixir_bot, :chip_emoji)
+
+    %{
+      type: 2,
+      style: 2,
+      emoji: emoji,
+      label: chip.name,
+      custom_id: lower_name
+    }
+  end
+
 end
 
 defimpl String.Chars, for: BnBBot.Library.Battlechip do

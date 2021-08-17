@@ -40,12 +40,10 @@ defmodule BnBBot.Consumer do
 
   def handle_event({:MESSAGE_CREATE, %Nostrum.Struct.Message{} = msg, _ws_state})
       when msg.author.bot do
-    Logger.debug("Recieved a bot message")
+    :noop
   end
 
   def handle_event({:MESSAGE_CREATE, %Nostrum.Struct.Message{} = msg, _ws_state}) do
-    Logger.debug("Recieved a non-bot message")
-
     if is_nil(msg.guild_id) do
       Task.start(fn -> BnBBot.DmLogger.log_dm(msg) end)
     end
@@ -60,11 +58,11 @@ defmodule BnBBot.Consumer do
   end
 
   def handle_event({:READY, ready_data, _ws_state}) do
-    Logger.debug("Bot ready")
+    # Logger.debug("Bot ready")
 
-    prefix = Application.fetch_env!(:elixir_bot, :prefix)
+    # prefix = Application.fetch_env!(:elixir_bot, :prefix)
 
-    Api.update_status(:online, "#{prefix}help for a list of commands")
+    Api.update_status(:online, "I have slash commands now")
 
     {dm_msg, override} =
       case :ets.lookup(:bnb_bot_data, :first_ready) do
@@ -90,26 +88,22 @@ defmodule BnBBot.Consumer do
     BnBBot.Util.dm_owner("Bot Resumed")
   end
 
-  def handle_event({:MESSAGE_REACTION_ADD, _reaction, _ws_state}) do
-    # Logger.debug("Got a reaction")
-    # [{pid, user_id}] = Registry.lookup(:REACTION_COLLECTOR, reaction.message_id)
-    # case Registry.lookup(:REACTION_COLLECTOR, reaction.message_id) do
-    #  [{pid, user_id}]
-    #  when is_nil(user_id)
-    #  when reaction.user_id == user_id ->
-    #    send(pid, {:reaction, reaction})
-
-    #  _ ->
-    #    nil
-    :noop
-  end
-
   def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{} = inter, _ws_state})
       when inter.type == 3 do
     Logger.debug("Got an interaction button click on #{inter.message.id}")
     Logger.debug("#{inspect(inter, pretty: true)}")
 
-    case Registry.lookup(:BUTTON_COLLECTOR, inter.message.id) do
+    to_lookup =
+      case String.split(inter.data.custom_id, "_", parts: 3) do
+        # Ensure that the custom_id starts with a number before trying to parse
+        [<<head, _rest::binary>> = id, _, _] when head in ?1..?9 ->
+          String.to_integer(id)
+
+        _ ->
+          inter.message.id
+      end
+
+    case Registry.lookup(:BUTTON_COLLECTOR, to_lookup) do
       [{pid, user_id}]
       when is_nil(user_id)
       when inter.user.id == user_id
@@ -125,7 +119,7 @@ defmodule BnBBot.Consumer do
             type: 4,
             data: %{
               content:
-                "You're not the one that I created this for, so you cannot interact with it, sorry",
+                "You're not the one that I created this for, or I'm no longer listening for events on it, sorry",
               # 64 is the flag for ephemeral messages
               flags: 64
             }
@@ -134,9 +128,44 @@ defmodule BnBBot.Consumer do
     end
   end
 
+  def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{} = inter, _ws_state})
+      when inter.type == 2 do
+    Logger.debug("Got an interaction command")
+    Logger.debug("#{inspect(inter, pretty: true)}")
+
+    try do
+      BnBBot.SlashCommands.handle_command(inter)
+    rescue
+      e ->
+        Logger.error(Exception.format(:error, e, __STACKTRACE__))
+
+        Api.create_interaction_response(
+          inter,
+          %{
+            type: 4,
+            data: %{
+              content: "An error has occurred, inform Major",
+              flags: 64
+            }
+          }
+        )
+    end
+
+    # Api.create_interaction_response(
+    #  inter,
+    #  %{
+    #    type: 4,
+    #    data: %{
+    #      content: "Pong!"
+    #    }
+    #  }
+    # )
+  end
+
   # Default event handler, if you don't include this, your consumer WILL crash if
   # you don't have a method definition for each event type.
   def handle_event(_event) do
+    # Logger.debug("Got event #{inspect(event, pretty: true)}")
     :noop
   end
 end

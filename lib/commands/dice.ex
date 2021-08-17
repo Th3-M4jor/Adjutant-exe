@@ -34,11 +34,11 @@ defmodule BnBBot.Commands.Dice do
 
     die_str = Enum.join(args)
 
-    resp_str =
+    {_, resp_str} =
       if String.match?(die_str, ~r/^(?:\d+d\d+|\d+)(?:\+\d+d\d+|\+\d+)*$/) do
         roll_dice(die_str)
       else
-        "An invalid character was found, must be in the format XdY[ + X[dY]]"
+        {:error, "An invalid character was found, must be in the format XdY[ + X[dY]]"}
       end
 
     Task.await(typing_task)
@@ -50,7 +50,77 @@ defmodule BnBBot.Commands.Dice do
     )
   end
 
-  @spec roll_dice(String.t()) :: String.t()
+  def call_slash(%Nostrum.Struct.Interaction{} = inter) do
+    #resp_task =
+    #  Task.async(fn ->
+    #    Api.create_interaction_response(inter, %{
+    #      type: 5
+    #    })
+    #  end)
+
+    opts = inter.data.options
+
+    die_str = (opts && List.first(opts) && List.first(opts).value) || "1d20"
+      #if is_nil(inter.data.options) or Enum.empty?(inter.data.options) do
+      #  "1d20"
+      #else
+      #  val = Enum.at(inter.data.options, 0)
+      #  val.value
+      #end
+
+    roll_result =
+      if String.match?(die_str, ~r/^(?:\d+d\d+|\d+)(?:\+\d+d\d+|\+\d+)*$/) do
+        roll_dice(die_str)
+      else
+        {:error, "An invalid character was found, must be in the format XdY[ + X[dY]]"}
+      end
+
+    case roll_result do
+      {:error, text} ->
+        Api.create_interaction_response(inter, %{
+          type: 4,
+          data: %{
+            content: text,
+            flags: 64,
+          }
+        })
+      {:ok, roll} ->
+        Api.create_interaction_response(inter, %{
+          type: 4,
+          data: %{
+            content: roll,
+          }
+        })
+    end
+
+    #Task.await(resp_task)
+
+    # Api.execute_webhook(
+    #   inter.application_id,
+    #   inter.token,
+    #   %{
+    #     content: resp_str
+    #   },
+    #   true
+    # )
+  end
+
+  def get_create_map() do
+    %{
+      type: 1,
+      name: "roll",
+      description: "rolls XdY[ + X[dY]] dice, defaults to 1d20",
+      options: [
+        %{
+          type: 3,
+          name: "to-roll",
+          description: "The dice to roll"
+        }
+      ]
+    }
+  end
+
+  @spec roll_dice(String.t()) :: {:ok, String.t()} | {:error, String.t()}
   defp roll_dice(die_str) do
     rolls = String.split(die_str, "+")
 
@@ -58,10 +128,10 @@ defmodule BnBBot.Commands.Dice do
       res when is_list(res) ->
         die_result = Enum.sum(res)
         res = Enum.reverse(res)
-        "You rolled: #{die_result}\n#{inspect(res, charlists: :as_lists)}"
+        {:ok, "On #{die_str}, you rolled: #{die_result}\n#{inspect(res, charlists: :as_lists)}"}
 
       res when is_bitstring(res) ->
-        res
+        {:error, res}
     end
   end
 

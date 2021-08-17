@@ -10,7 +10,13 @@ defmodule BnBBot.ButtonAwait do
   Raises if there are more than 10 buttons
   """
   @spec generate_msg_buttons([struct()]) ::
-          [%{type: pos_integer(), components: [BnBBot.Library.LibObj.button() | BnBBot.Library.LibObj.link_button()]}] | no_return()
+          [
+            %{
+              type: pos_integer(),
+              components: [BnBBot.Library.LibObj.button() | BnBBot.Library.LibObj.link_button()]
+            }
+          ]
+          | no_return()
   def generate_msg_buttons(content) when length(content) > 10 do
     raise "Too many buttons"
   end
@@ -20,6 +26,35 @@ defmodule BnBBot.ButtonAwait do
 
     Enum.map(row_chunks, fn row ->
       action_row = Enum.map(row, &BnBBot.Library.LibObj.to_btn/1)
+
+      %{
+        type: 1,
+        components: action_row
+      }
+    end)
+  end
+
+  @spec generate_msg_buttons_with_uuid([struct()], pos_integer()) ::
+          [
+            %{
+              type: pos_integer(),
+              components: [BnBBot.Library.LibObj.button() | BnBBot.Library.LibObj.link_button()]
+            }
+          ]
+          | no_return()
+  def generate_msg_buttons_with_uuid(content, _uuid) when length(content) > 10 do
+    raise "Too many buttons"
+  end
+
+  def generate_msg_buttons_with_uuid(content, uuid) do
+    #uuid = System.unique_integer([:positive]) |> rem(1000)
+    row_chunks = Enum.chunk_every(content, 5)
+
+    Enum.map(row_chunks, fn row ->
+      action_row =
+        Enum.map(row, fn obj ->
+          BnBBot.Library.LibObj.to_btn(obj, uuid)
+        end)
 
       %{
         type: 1,
@@ -41,13 +76,13 @@ defmodule BnBBot.ButtonAwait do
   Awaits a button click on the given message from a user with the given ID (nil for any user)
   timeout is after 30 seconds
   """
-  @spec await_btn_click(Nostrum.Struct.Message.t(), Nostrum.Snowflake.t() | nil) ::
+  @spec await_btn_click(pos_integer() | Nostrum.Snowflake.t(), Nostrum.Snowflake.t() | nil) ::
           %Nostrum.Struct.Interaction{} | nil | no_return()
-  def await_btn_click(%Nostrum.Struct.Message{} = msg, user_id \\ nil) do
-    Registry.register(:BUTTON_COLLECTOR, msg.id, user_id)
-    Logger.debug("Registering an await click on msg #{msg.id} for #{user_id}")
+  def await_btn_click(uuid, user_id \\ nil) do
+    Registry.register(:BUTTON_COLLECTOR, uuid, user_id)
+    Logger.debug("Registering an await click on #{uuid} for #{user_id}")
     btn = await_btn_click_inner()
-    Logger.debug("Got a response to #{msg.id} of #{inspect(btn, pretty: true)}")
+    Logger.debug("Got a response to #{uuid} of #{inspect(btn, pretty: true)}")
     btn
   end
 
@@ -70,5 +105,4 @@ defmodule BnBBot.ButtonAwait do
     Logger.error("Recieved message that wasn't a btn click: #{inspect(other)}")
     raise "Inconcievable"
   end
-
 end

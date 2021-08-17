@@ -115,6 +115,24 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
       custom_id: lower_name
     }
   end
+
+  @spec to_btn(BnBBot.Library.NCP.t(), pos_integer()) :: BnBBot.Library.LibObj.button()
+  def to_btn(ncp, uuid) do
+    lower_name = "#{uuid}_n_#{String.downcase(ncp.name, :ascii)}"
+    emoji = Application.fetch_env!(:elixir_bot, :ncp_emoji)
+
+    %{
+      # type 2 for button
+      type: 2,
+
+      # style 3 for green button
+      style: 3,
+      emoji: emoji,
+      label: ncp.name,
+      custom_id: lower_name
+    }
+  end
+
 end
 
 defimpl String.Chars, for: BnBBot.Library.NCP do
