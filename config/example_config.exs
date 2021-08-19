@@ -7,7 +7,7 @@ config :nostrum,
   # The token of your bot as a string
   token: "token_here",
   # The number of shards you want to run your bot under, or :auto.
-  num_shards: 1,
+  num_shards: :auto,
   gateway_intents: [
     :direct_messages,
     :guild_bans,

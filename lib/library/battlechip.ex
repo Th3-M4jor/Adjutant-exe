@@ -96,7 +96,7 @@ defmodule BnBBot.Library.Battlechip do
           Map.to_list(all)
           |> Enum.map(fn {key, value} -> {String.jaro_distance(key, lower_name), value} end)
           |> Enum.sort_by(fn {d, _} -> d end, &>=/2)
-          |> Enum.take(9)
+          |> Enum.take(25)
 
         {:not_found, res}
 

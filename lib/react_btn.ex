@@ -7,7 +7,7 @@ defmodule BnBBot.ButtonAwait do
   Second string is the id of the button
   integer is the style of the button
 
-  Raises if there are more than 10 buttons
+  Raises if there are more than 25 buttons
   """
   @spec generate_msg_buttons([struct()]) ::
           [
@@ -17,7 +17,11 @@ defmodule BnBBot.ButtonAwait do
             }
           ]
           | no_return()
-  def generate_msg_buttons(content) when length(content) > 10 do
+  def generate_msg_buttons([]) do
+    raise "Empty List"
+  end
+
+  def generate_msg_buttons(content) when length(content) > 25 do
     raise "Too many buttons"
   end
 
@@ -42,12 +46,17 @@ defmodule BnBBot.ButtonAwait do
             }
           ]
           | no_return()
-  def generate_msg_buttons_with_uuid(content, _uuid) when length(content) > 10 do
+
+  def generate_msg_buttons_with_uuid([], _uuid) do
+    raise "Empty List"
+  end
+
+  def generate_msg_buttons_with_uuid(content, _uuid) when length(content) > 25 do
     raise "Too many buttons"
   end
 
   def generate_msg_buttons_with_uuid(content, uuid) do
-    #uuid = System.unique_integer([:positive]) |> rem(1000)
+    # uuid = System.unique_integer([:positive]) |> rem(1000)
     row_chunks = Enum.chunk_every(content, 5)
 
     Enum.map(row_chunks, fn row ->

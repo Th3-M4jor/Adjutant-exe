@@ -36,30 +36,44 @@ defmodule BnBBot.Commands.All do
   end
 
   defp search_inner(msg_inter, to_search) do
-    chips =
-      case BnBBot.Library.Battlechip.get_chip(to_search) do
-        {:found, chip} ->
-          [{1.0, chip}]
+    chips_task =
+      Task.async(fn ->
+        case BnBBot.Library.Battlechip.get_chip(to_search) do
+          {:found, chip} ->
+            [{1.0, chip}]
 
-        {:not_found, chips} ->
-          Enum.filter(chips, fn {dist, _} -> dist >= 0.7 end)
-      end
+          {:not_found, chips} ->
+            Enum.filter(chips, fn {dist, _} -> dist >= 0.7 end)
+        end
+      end)
 
-    ncps =
-      case BnBBot.Library.NCP.get_ncp(to_search) do
-        {:found, ncp} ->
-          [{1.0, ncp}]
 
-        {:not_found, ncps} ->
-          Enum.filter(ncps, fn {dist, _} -> dist >= 0.7 end)
-      end
+
+    ncps_task =
+      Task.async(fn ->
+        case BnBBot.Library.NCP.get_ncp(to_search) do
+          {:found, ncp} ->
+            [{1.0, ncp}]
+
+          {:not_found, ncps} ->
+            Enum.filter(ncps, fn {dist, _} -> dist >= 0.7 end)
+        end
+      end)
+
+    all_pos = Task.await_many([chips_task, ncps_task], :infinity)
 
     possibilities =
-      Enum.concat([chips, ncps])
+      Enum.concat(all_pos)
       |> Enum.sort_by(fn {dist, _} -> dist end, &>=/2)
-      |> Enum.take(9)
+      |> Enum.take(25)
 
-    do_response(msg_inter, possibilities)
+    exact_matches = Enum.filter(possibilities, fn {dist, _} -> dist == 1.0 end)
+
+    unless Enum.empty?(exact_matches) do
+      do_response(msg_inter, exact_matches)
+    else
+      do_response(msg_inter, possibilities)
+    end
   end
 
   # nothing within 0.7 of the search
