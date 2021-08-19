@@ -4,6 +4,8 @@ defmodule BnBBot.Commands.Shuffle do
 
   @behaviour BnBBot.CommandFn
 
+  @behaviour BnBBot.SlashCmdFn
+
   def help() do
     {"shuffle", :everyone, "Shuffle a series of numbers"}
   end
@@ -112,7 +114,7 @@ defmodule BnBBot.Commands.Shuffle do
         }
       }
     )
-
+    :ignore
   end
 
   def get_create_map() do

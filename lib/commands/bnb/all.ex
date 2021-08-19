@@ -2,6 +2,8 @@ defmodule BnBBot.Commands.All do
   alias Nostrum.Api
   require Logger
 
+  @behaviour BnBBot.SlashCmdFn
+
   @spec search(%Nostrum.Struct.Message{}, [String.t()]) :: any()
   def search(%Nostrum.Struct.Message{} = msg, args) do
     to_search = Enum.join(args, " ")
@@ -14,6 +16,7 @@ defmodule BnBBot.Commands.All do
     Logger.debug(["Searching for: ", to_search])
 
     search_inner(inter, to_search)
+    :ignore
   end
 
   def get_create_map() do

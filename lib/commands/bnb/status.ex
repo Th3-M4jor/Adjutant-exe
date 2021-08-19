@@ -2,6 +2,8 @@ defmodule BnBBot.Commands.Statuses do
   alias Nostrum.Api
   require Logger
 
+  @behaviour BnBBot.SlashCmdFn
+
   @status_names [
     "Angry",
     "Aura",
@@ -60,6 +62,7 @@ defmodule BnBBot.Commands.Statuses do
         }
       }
     )
+    :ignore
   end
 
   def get_create_map() do

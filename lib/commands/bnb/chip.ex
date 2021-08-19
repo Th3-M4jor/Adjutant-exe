@@ -4,6 +4,8 @@ defmodule BnBBot.Commands.Chip do
 
   @behaviour BnBBot.CommandFn
 
+  @behaviour BnBBot.SlashCmdFn
+
   def help() do
     {"chip", :everyone, "Get info about a battlechip"}
   end

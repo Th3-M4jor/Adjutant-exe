@@ -4,6 +4,8 @@ defmodule BnBBot.Commands.Dice do
 
   @behaviour BnBBot.CommandFn
 
+  @behaviour BnBBot.SlashCmdFn
+
   def help() do
     {"roll", :everyone, "rolls XdY[ + X[dY]] dice, defaults to 1d20"}
   end
@@ -92,6 +94,8 @@ defmodule BnBBot.Commands.Dice do
           }
         })
     end
+
+    :ignore
 
     #Task.await(resp_task)
 

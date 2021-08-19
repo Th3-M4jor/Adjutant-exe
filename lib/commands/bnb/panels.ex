@@ -2,6 +2,8 @@ defmodule BnBBot.Commands.Panels do
   alias Nostrum.Api
   require Logger
 
+  @behaviour BnBBot.SlashCmdFn
+
   @panels [
     "Cracked",
     "Grass",
@@ -45,6 +47,7 @@ defmodule BnBBot.Commands.Panels do
         }
       }
     )
+    :ignore
   end
 
   def get_create_map() do

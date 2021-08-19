@@ -5,6 +5,8 @@ defmodule BnBBot.Commands.NCP do
 
   @behaviour BnBBot.CommandFn
 
+  @behaviour BnBBot.SlashCmdFn
+
   def help() do
     {"ncp", :everyone, "Searches for a particular NCP"}
   end
@@ -53,6 +55,7 @@ defmodule BnBBot.Commands.NCP do
       {:not_found, possibilities} ->
         handle_not_found_ncp(inter, possibilities)
     end
+    :ignore
   end
 
   def get_create_map() do

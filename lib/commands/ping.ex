@@ -5,6 +5,8 @@ defmodule BnBBot.Commands.Ping do
 
   @behaviour BnBBot.CommandFn
 
+  @behaviour BnBBot.SlashCmdFn
+
   def help() do
     {"ping", :everyone, "Check bot latency, and get other info"}
   end

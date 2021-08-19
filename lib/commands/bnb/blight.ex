@@ -2,6 +2,8 @@ defmodule BnBBot.Commands.Blight do
   alias Nostrum.Api
   require Logger
 
+  @behaviour BnBBot.SlashCmdFn
+
   @blight_elements [
     "Fire",
     "Aqua",
@@ -47,6 +49,8 @@ defmodule BnBBot.Commands.Blight do
         }
       }
     )
+
+    :ignore
   end
 
   def get_create_map() do

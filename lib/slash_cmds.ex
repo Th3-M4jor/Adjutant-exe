@@ -5,6 +5,7 @@ defmodule BnBBot.SlashCommands do
 
   require Logger
 
+  @spec create_all_slash_commands :: any()
   def create_all_slash_commands() do
     me_id = Nostrum.Cache.Me.get().id
     route = "/applications/#{me_id}/commands"
@@ -25,7 +26,7 @@ defmodule BnBBot.SlashCommands do
     Api.request(:put, route, body)
   end
 
-  @spec create_all_slash_commands(Nostrum.Snowflake.t()) :: any
+  @spec create_all_slash_commands(Nostrum.Snowflake.t()) :: any()
   def create_all_slash_commands(guild_id) do
     me_id = Nostrum.Cache.Me.get().id
     route = "/applications/#{me_id}/guilds/#{guild_id}/commands"
@@ -52,6 +53,7 @@ defmodule BnBBot.SlashCommands do
     handle_slash_command(name, inter)
   end
 
+  @spec handle_slash_command(String.t(), Nostrum.Struct.Interaction.t()) :: :ignore
   defp handle_slash_command("ping", inter) do
     Commands.Ping.call_slash(inter)
   end

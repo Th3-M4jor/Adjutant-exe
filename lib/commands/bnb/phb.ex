@@ -5,6 +5,8 @@ defmodule BnBBot.Commands.PHB do
 
   @behaviour BnBBot.CommandFn
 
+  @behaviour BnBBot.SlashCmdFn
+
   def help() do
     {"phb", :everyone, "Get a link to the PHB"}
   end
@@ -65,6 +67,7 @@ defmodule BnBBot.Commands.PHB do
         }
       }
     )
+    :ignore
   end
 
   def get_create_map() do

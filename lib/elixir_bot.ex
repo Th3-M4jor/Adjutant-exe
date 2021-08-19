@@ -88,6 +88,7 @@ defmodule BnBBot.Consumer do
     BnBBot.Util.dm_owner("Bot Resumed")
   end
 
+  #button clicks
   def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{} = inter, _ws_state})
       when inter.type == 3 do
     Logger.debug("Got an interaction button click on #{inter.message.id}")
@@ -128,6 +129,7 @@ defmodule BnBBot.Consumer do
     end
   end
 
+  #slash commands and context menu
   def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{} = inter, _ws_state})
       when inter.type == 2 do
     Logger.debug("Got an interaction command")
