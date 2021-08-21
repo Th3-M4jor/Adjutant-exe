@@ -74,53 +74,6 @@ defmodule BnBBot.Commands do
     )
   end
 
-  @spec cmd_call(String.t() | :prefix_only, %Nostrum.Struct.Message{}, [String.t()]) :: any()
-  defp cmd_call(:prefix_only, msg, []) do
-    Logger.debug("Recieved a prefix only")
-
-    Api.create_message(
-      msg.channel_id,
-      content: "You gave me only my prefix, Try my help command for how I work",
-      message_reference: %{message_id: msg.id}
-    )
-  end
-
-  # defp cmd_call("ping", msg, args) do
-  #   Commands.Ping.call(msg, args)
-  # end
-  #
-  # defp cmd_call("chip", msg, args) do
-  #   Commands.Chip.call(msg, args)
-  # end
-  #
-  # defp cmd_call("c", msg, args) do
-  #   Commands.Chip.call(msg, args)
-  # end
-  #
-  # defp cmd_call("ncp", msg, args) do
-  #   Commands.NCP.call(msg, args)
-  # end
-  #
-  # defp cmd_call("n", msg, args) do
-  #   Commands.NCP.call(msg, args)
-  # end
-  #
-  # defp cmd_call("phb", msg, args) do
-  #   Commands.PHB.call(msg, args)
-  # end
-  #
-  # defp cmd_call("roll", msg, args) do
-  #   Commands.Dice.call(msg, args)
-  # end
-  #
-  # defp cmd_call("shuffle", msg, args) do
-  #   Commands.Shuffle.call(msg, args)
-  # end
-  #
-  # defp cmd_call("help", msg, args) do
-  #   Commands.Help.call(msg, args)
-  # end
-
   defp cmd_call("die", msg, args) do
     Commands.Die.call(msg, args)
   end

@@ -2,77 +2,17 @@ defmodule BnBBot.Commands.Dice do
   alias Nostrum.Api
   require Logger
 
-  @behaviour BnBBot.CommandFn
-
   @behaviour BnBBot.SlashCmdFn
 
-  def help() do
-    {"roll", :everyone, "rolls XdY[ + X[dY]] dice, defaults to 1d20"}
-  end
-
-  def get_name() do
-    "roll"
-  end
-
-  def full_help() do
-    "rolls XdY[ + X[dY]] dice, defaults to 1d20. Includes a list of the rolls performed"
-  end
-
-  @spec call(%Nostrum.Struct.Message{}, [String.t()]) :: any()
-  def call(%Nostrum.Struct.Message{} = msg, []) do
-    Logger.debug("Recieved a roll command, using default args")
-    resp_str = roll_dice("1d20")
-
-    Api.create_message(
-      msg.channel_id,
-      content: resp_str,
-      message_reference: %{message_id: msg.id}
-    )
-  end
-
-  def call(%Nostrum.Struct.Message{} = msg, args) do
-    Logger.debug("Recieved a roll command, args were #{inspect(args)}")
-    typing_task = Task.async(fn -> Api.start_typing!(msg.channel_id) end)
-
-    die_str = Enum.join(args)
-
-    {_, resp_str} =
-      if String.match?(die_str, ~r/^(?:\d+d\d+|\d+)(?:\+\d+d\d+|\+\d+)*$/) do
-        roll_dice(die_str)
-      else
-        {:error, "An invalid character was found, must be in the format XdY[ + X[dY]]"}
-      end
-
-    Task.await(typing_task)
-
-    Api.create_message(
-      msg.channel_id,
-      content: resp_str,
-      message_reference: %{message_id: msg.id}
-    )
-  end
-
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
-    #resp_task =
-    #  Task.async(fn ->
-    #    Api.create_interaction_response(inter, %{
-    #      type: 5
-    #    })
-    #  end)
 
     opts = inter.data.options
 
     die_str = (opts && List.first(opts) && List.first(opts).value) || "1d20"
-      #if is_nil(inter.data.options) or Enum.empty?(inter.data.options) do
-      #  "1d20"
-      #else
-      #  val = Enum.at(inter.data.options, 0)
-      #  val.value
-      #end
 
     roll_result =
-      if String.match?(die_str, ~r/^(?:\d+d\d+|\d+)(?:\+\d+d\d+|\+\d+)*$/) do
-        roll_dice(die_str)
+      if String.match?(die_str, ~r/^(?:\d+d\d+|\d+)(?:\s*\+\s*\d+d\d+|\s*\+\s*\d+)*$/) do
+        String.replace(die_str, ~r/\s+/, "") |> roll_dice()
       else
         {:error, "An invalid character was found, must be in the format XdY[ + X[dY]]"}
       end
@@ -83,21 +23,22 @@ defmodule BnBBot.Commands.Dice do
           type: 4,
           data: %{
             content: text,
-            flags: 64,
+            flags: 64
           }
         })
+
       {:ok, roll} ->
         Api.create_interaction_response(inter, %{
           type: 4,
           data: %{
-            content: roll,
+            content: roll
           }
         })
     end
 
     :ignore
 
-    #Task.await(resp_task)
+    # Task.await(resp_task)
 
     # Api.execute_webhook(
     #   inter.application_id,
