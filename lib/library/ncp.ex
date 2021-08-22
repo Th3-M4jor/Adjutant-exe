@@ -11,7 +11,7 @@ defmodule BnBBot.Library.NCP do
           id: pos_integer(),
           name: String.t(),
           cost: pos_integer(),
-          color: String.t(),
+          color: colors(),
           description: String.t()
         }
 
@@ -20,8 +20,8 @@ defmodule BnBBot.Library.NCP do
     GenServer.call(:ncp_table, :reload, :infinity)
   end
 
-  @spec get_ncp(String.t()) ::
-          {:found, __MODULE__.t()} | {:not_found, [{float(), __MODULE__.t()}]}
+  @spec get_ncp(String.t(), float()) ::
+          {:found, t()} | {:not_found, [{float(), t()}]}
   def get_ncp(name, min_dist \\ 0.7) when min_dist >= 0.0 and min_dist <= 1.0 do
     GenServer.call(:ncp_table, {:get, name, min_dist})
   end
@@ -31,6 +31,7 @@ defmodule BnBBot.Library.NCP do
     GenServer.call(:ncp_table, :len, :infinity)
   end
 
+  @spec ncp_color_to_string(BnBBot.Library.NCP.t()) :: String.t()
   def ncp_color_to_string(%BnBBot.Library.NCP{} = ncp) do
     case ncp.color do
       :white -> "White"
