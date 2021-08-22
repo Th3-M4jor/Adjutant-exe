@@ -37,7 +37,7 @@ defmodule BnBBot.Commands.All do
             [{1.0, chip}]
 
           {:not_found, chips} ->
-            Enum.filter(chips, fn {dist, _} -> dist >= 0.7 end)
+            chips
         end
       end)
 
@@ -48,27 +48,29 @@ defmodule BnBBot.Commands.All do
             [{1.0, ncp}]
 
           {:not_found, ncps} ->
-            Enum.filter(ncps, fn {dist, _} -> dist >= 0.7 end)
+            ncps
         end
       end)
 
-    all_pos = Task.await_many([chips_task, ncps_task], :infinity)
+    all_pos = Task.await_many([chips_task, ncps_task], :infinity) |> Enum.concat()
 
-    possibilities =
-      Enum.concat(all_pos)
-      |> Enum.sort_by(fn {dist, _} -> dist end, &>=/2)
-      |> Enum.take(25)
-
-    exact_matches = Enum.filter(possibilities, fn {dist, _} -> dist == 1.0 end)
+    exact_matches = Enum.filter(all_pos, fn {dist, _} -> dist == 1.0 end)
 
     unless Enum.empty?(exact_matches) do
-      do_response(msg_inter, exact_matches)
+      do_btn_response(msg_inter, exact_matches)
     else
-      do_response(msg_inter, possibilities)
+      possibilities =
+        Enum.sort_by(all_pos, fn {dist, _} -> dist end, &>=/2)
+        |> Enum.take(25)
+
+      do_btn_response(msg_inter, possibilities)
     end
   end
 
-  defp do_response(%Nostrum.Struct.Interaction{} = inter, []) do
+  @spec do_btn_response(Nostrum.Struct.Interaction.t(), [
+          {float(), BnBBot.Library.NCP.t() | BnBBot.Library.Battlechip.t()}
+        ]) :: :ignore
+  def do_btn_response(%Nostrum.Struct.Interaction{} = inter, []) do
     Api.create_interaction_response(inter, %{
       type: 4,
       data: %{
@@ -76,18 +78,22 @@ defmodule BnBBot.Commands.All do
         flags: 64
       }
     })
+
+    :ignore
   end
 
-  defp do_response(%Nostrum.Struct.Interaction{} = inter, [{_, opt}]) do
+  def do_btn_response(%Nostrum.Struct.Interaction{} = inter, [{_, opt}]) do
     Api.create_interaction_response(inter, %{
       type: 4,
       data: %{
         content: "#{opt}"
       }
     })
+
+    :ignore
   end
 
-  defp do_response(%Nostrum.Struct.Interaction{} = inter, all) do
+  def do_btn_response(%Nostrum.Struct.Interaction{} = inter, all) do
     obj_list = Enum.map(all, fn {_, opt} -> opt end)
     uuid = System.unique_integer([:positive]) |> rem(1000)
     buttons = BnBBot.ButtonAwait.generate_msg_buttons_with_uuid(obj_list, uuid)
@@ -133,23 +139,27 @@ defmodule BnBBot.Commands.All do
 
       resp_task =
         Task.async(fn ->
-          resp_text = if is_nil(inter.user) do
-            "<@#{inter.member.user.id}> used `/search`\n#{lib_obj}"
-          else
-            "<@#{inter.user.id}> used `/search`\n#{lib_obj}"
-          end
+          name = inter.data.name
+          resp_text =
+            if is_nil(inter.user) do
+              "<@#{inter.member.user.id}> used `#{name}`\n#{lib_obj}"
+            else
+              "<@#{inter.user.id}> used `#{name}`\n#{lib_obj}"
+            end
+
           Api.execute_webhook(inter.application_id, inter.token, %{
             content: resp_text
           })
         end)
 
       Task.await_many([edit_task, resp_task], :infinity)
-
-      else
-        Api.request(:patch, route, %{
-          content: "Timed out waiting for response",
-          components: []
-        })
+    else
+      Api.request(:patch, route, %{
+        content: "Timed out waiting for response",
+        components: []
+      })
     end
+
+    :ignore
   end
 end

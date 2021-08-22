@@ -5,6 +5,7 @@ defmodule BnBBot.Supervisor do
 
   def start_link(args) do
     Supervisor.start_link(__MODULE__, args, name: __MODULE__)
+
     # Registry.start_link(keys: :unique, name: :REACTION_COLLECTOR)
     Registry.start_link(keys: :unique, name: :BUTTON_COLLECTOR)
   end
@@ -16,10 +17,35 @@ defmodule BnBBot.Supervisor do
     :ets.new(:bnb_bot_data, [:set, :public, :named_table, read_concurrency: true])
     # recommended to spawn one per scheduler (default is number of cores)
     children =
-      for n <- 1..System.schedulers_online(),
-          do: Supervisor.child_spec({BnBBot.Consumer, []}, id: {:bnb_bot, :consumer, n})
+      for n <- 1..System.schedulers_online() do
+        Supervisor.child_spec(
+          {BnBBot.Consumer, []},
+          id: {:bnb_bot, :consumer, n},
+          restart: :temporary
+        )
+      end
 
-    res = Supervisor.init(children, strategy: :one_for_one, restart: :temporary)
+    # Logger.debug(inspect(children))
+
+    ncp =
+      Supervisor.child_spec(
+        {BnBBot.Library.NCPTable, []},
+        id: {:bnb_bot, :ncp_table},
+        restart: :transient
+      )
+
+    chips =
+      Supervisor.child_spec(
+        {BnBBot.Library.BattlechipTable, []},
+        id: {:bnb_bot, :chip_table},
+        restart: :transient
+      )
+
+    children = [ncp | children]
+    children = [chips | children]
+    Logger.debug(inspect(children, pretty: true))
+
+    res = Supervisor.init(children, strategy: :one_for_one)
     Logger.debug("Supervisor started")
     # :ignore
     res
@@ -58,7 +84,7 @@ defmodule BnBBot.Consumer do
   end
 
   def handle_event({:READY, ready_data, _ws_state}) do
-    # Logger.debug("Bot ready")
+    Logger.debug("Bot ready")
 
     # prefix = Application.fetch_env!(:elixir_bot, :prefix)
 
@@ -73,9 +99,11 @@ defmodule BnBBot.Consumer do
         _ ->
           :ets.insert(:bnb_bot_data, first_ready: false)
 
-          ncp_task = Task.async(fn -> BnBBot.Library.NCP.load_ncps() end)
-          chips_task = Task.async(fn -> BnBBot.Library.Battlechip.load_chips() end)
-          [ok: ncp_ct, ok: chip_ct] = Task.await_many([ncp_task, chips_task], :infinity)
+          # ncp_task = Task.async(fn -> BnBBot.Library.NCP.load_ncps() end)
+          # chips_task = Task.async(fn -> BnBBot.Library.Battlechip.load_chips() end)
+          chip_ct = BnBBot.Library.Battlechip.get_chip_ct()
+          ncp_ct = BnBBot.Library.NCP.get_ncp_ct()
+          # [ok: ncp_ct, ok: chip_ct] = Task.await_many([ncp_task, chips_task], :infinity)
           Logger.debug("Ready #{inspect(ready_data, pretty: true)}")
           {"Bot Ready\n#{chip_ct} chips loaded\n#{ncp_ct} ncps loaded", false}
       end
@@ -88,7 +116,7 @@ defmodule BnBBot.Consumer do
     BnBBot.Util.dm_owner("Bot Resumed")
   end
 
-  #button clicks
+  # button clicks
   def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{} = inter, _ws_state})
       when inter.type == 3 do
     Logger.debug("Got an interaction button click on #{inter.message.id}")
@@ -129,7 +157,7 @@ defmodule BnBBot.Consumer do
     end
   end
 
-  #slash commands and context menu
+  # slash commands and context menu
   def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{} = inter, _ws_state})
       when inter.type == 2 do
     Logger.debug("Got an interaction command")

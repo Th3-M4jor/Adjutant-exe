@@ -26,29 +26,21 @@ defmodule BnBBot.Commands.Reload do
     if perms_level == :owner or perms_level == :admin do
       Task.start(fn -> Api.start_typing(msg.channel_id) end)
 
-      ncp_task = Task.async(fn -> Library.NCP.load_ncps() end)
-      chip_task = Task.async(fn -> Library.Battlechip.load_chips() end)
+      ncp_task =
+        Task.async(fn ->
+          {:ok} = Library.NCP.load_ncps()
+          Library.NCP.get_ncp_ct()
+        end)
 
-      [ncp_res, chip_res] = Task.await_many([ncp_task, chip_task], :infinity)
+      chip_task =
+        Task.async(fn ->
+          {:ok} = Library.Battlechip.load_chips()
+          Library.Battlechip.get_chip_ct()
+        end)
 
-      ncp_msg =
-        case ncp_res do
-          {:ok, len} ->
-            "#{len} NCPs loaded"
+      [ncp_len, chip_len] = Task.await_many([ncp_task, chip_task], :infinity)
 
-          :http_err ->
-            "Error occurred in reloading NCPs"
-        end
-
-        chip_msg =
-          case chip_res do
-          {:ok, len} ->
-            "#{len} Battlechips loaded"
-          :http_err ->
-            "Error occurred in reloading Battlechips"
-        end
-
-        reload_msg = "#{chip_msg}\n#{ncp_msg}"
+      reload_msg = "#{chip_len} Battlechips loaded\n#{ncp_len} NCPs loaded"
 
       Api.create_message!(msg.channel_id, reload_msg)
     end
