@@ -11,13 +11,8 @@ defmodule BnBBot.Commands.Chip do
 
     case BnBBot.Library.Battlechip.get_chip(name) do
       {:found, chip} ->
-        Api.create_interaction_response(
-          inter,
-          %{
-            type: 4,
-            content: to_string(chip)
-          }
-        )
+        Logger.debug(["Found the following chip: ", chip.name])
+        send_found_chip(inter, chip)
 
       {:not_found, possibilities} ->
         handle_not_found(inter, possibilities)
@@ -38,6 +33,18 @@ defmodule BnBBot.Commands.Chip do
         }
       ]
     }
+  end
+
+  def send_found_chip(%Nostrum.Struct.Interaction{} = inter, %BnBBot.Library.Battlechip{} = chip) do
+    Api.create_interaction_response(
+      inter,
+      %{
+        type: 4,
+        data: %{
+          content: to_string(chip)
+        }
+      }
+    )
   end
 
   defp handle_not_found(inter, opts) do
