@@ -44,6 +44,47 @@ defmodule BnBBot.Library.Shared do
 
   @type kind :: :burst | :construct | :melee | :projectile | :wave | :recovery | :summon | :trap
 
+  @spec dice_to_io_list(nil | dice(), iodata()) :: iolist()
+  def dice_to_io_list(dice, last \\ "")
+  def dice_to_io_list(nil, _last) do
+    ["--"]
+  end
+
+  def dice_to_io_list(%{dienum: dienum, dietype: 1}, last) do
+    [
+      to_string(dienum),
+      last
+    ]
+  end
+
+  def dice_to_io_list(%{dienum: dienum, dietype: dietype}, last) do
+    [
+      to_string(dienum),
+      "d",
+      to_string(dietype),
+      last
+    ]
+  end
+
+  @spec blight_to_io_list(blight() | nil, iodata()) :: iolist()
+  def blight_to_io_list(blight, last \\ "")
+  def blight_to_io_list(nil, _last) do
+    []
+  end
+
+  def blight_to_io_list(%{elem: elem, dmg: dmg, duration: duration}, last) do
+    [
+      "Blight (",
+      to_string(elem) |> String.capitalize(),
+      "): ",
+      dice_to_io_list(dmg, " damage"),
+      " for ",
+      dice_to_io_list(duration, " rounds"),
+      last
+    ]
+  end
+
+
 end
 
 defprotocol BnBBot.Library.LibObj do

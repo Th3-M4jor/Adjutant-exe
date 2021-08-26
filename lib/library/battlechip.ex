@@ -70,6 +70,27 @@ defmodule BnBBot.Library.Battlechip do
   def get_chip(name, min_dist \\ 0.7) when min_dist >= 0.0 and min_dist <= 1.0 do
     GenServer.call(:chip_table, {:get, name, min_dist})
   end
+
+  @spec effect_to_io_list(BnBBot.Library.Battlechip.t()) :: iolist()
+  def effect_to_io_list(%BnBBot.Library.Battlechip{effect: nil, effduration: nil}) do
+    []
+  end
+
+  def effect_to_io_list(%BnBBot.Library.Battlechip{effect: effect, effduration: effduration})
+  when is_nil(effduration) or effduration == 0 do
+    ["Effect: ", effect]
+  end
+
+  def effect_to_io_list(%BnBBot.Library.Battlechip{effect: effect, effduration: effduration}) do
+    [
+      "Effect: ",
+      effect,
+      " for ",
+      to_string(effduration),
+      " round(s)"
+    ]
+  end
+
 end
 
 defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Battlechip do
@@ -128,17 +149,27 @@ defimpl String.Chars, for: BnBBot.Library.Battlechip do
         [Kernel.to_string(chip.targets), " targets"]
       end
 
-    damage =
-      unless is_nil(chip.damage) do
-        [
-          Kernel.to_string(chip.damage[:dienum]),
-          "d",
-          Kernel.to_string(chip.damage[:dietype]),
-          " damage"
-        ]
-      else
-        "--"
-      end
+    damage = BnBBot.Library.Shared.dice_to_io_list(chip.damage, " damage")
+      #unless is_nil(chip.damage) do
+      #  [
+      #    Kernel.to_string(chip.damage[:dienum]),
+      #    "d",
+      #    Kernel.to_string(chip.damage[:dietype]),
+      #    " damage"
+      #  ]
+      #else
+      #  "--"
+      #end
+
+    #blight = unless is_nil(chip.blight) do
+    #  ["\n", BnBBot.Library.Shared.blight_to_io_list(chip.blight)]
+    #else
+    #  []
+    #end
+
+    blight = ["\n", BnBBot.Library.Shared.blight_to_io_list(chip.blight)]
+
+    effect = ["\n", BnBBot.Library.Battlechip.effect_to_io_list(chip)]
 
     class =
       if chip.class == :standard do
@@ -170,6 +201,8 @@ defimpl String.Chars, for: BnBBot.Library.Battlechip do
       class,
       "\n",
       chip.description,
+      blight,
+      effect,
       "\n```"
     ]
 

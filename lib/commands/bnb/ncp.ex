@@ -17,6 +17,7 @@ defmodule BnBBot.Commands.NCP do
       {:not_found, possibilities} ->
         handle_not_found_ncp(inter, possibilities)
     end
+
     :ignore
   end
 
@@ -50,5 +51,4 @@ defmodule BnBBot.Commands.NCP do
 
     BnBBot.Commands.All.do_btn_response(inter, opts)
   end
-
 end
