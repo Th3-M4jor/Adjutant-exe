@@ -44,6 +44,24 @@ defmodule BnBBot.Library.Shared do
 
   @type kind :: :burst | :construct | :melee | :projectile | :wave | :recovery | :summon | :trap
 
+  @spec element_to_string(element) :: String.t()
+  def element_to_string(element) do
+    case element do
+      :fire -> "Fire"
+      :aqua -> "Aqua"
+      :elec -> "Elec"
+      :wood -> "Wood"
+      :wind -> "Wind"
+      :sword -> "Sword"
+      :break -> "Break"
+      :cursor -> "Cursor"
+      :recov -> "Recov"
+      :invis -> "Invis"
+      :object -> "Object"
+      :null -> "Null"
+    end
+  end
+
   @spec dice_to_io_list(nil | dice(), iodata()) :: iolist()
   def dice_to_io_list(dice, last \\ "")
   def dice_to_io_list(nil, _last) do

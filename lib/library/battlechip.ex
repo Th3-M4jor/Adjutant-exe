@@ -46,7 +46,7 @@ defmodule BnBBot.Library.Battlechip do
           hits: non_neg_integer() | String.t(),
           targets: non_neg_integer(),
           description: String.t(),
-          effect: String.t() | nil,
+          effect: [String.t()] | nil,
           effduration: non_neg_integer() | nil,
           blight: BnBBot.Library.Shared.blight() | nil,
           damage: BnBBot.Library.Shared.dice() | nil,
@@ -78,13 +78,15 @@ defmodule BnBBot.Library.Battlechip do
 
   def effect_to_io_list(%BnBBot.Library.Battlechip{effect: effect, effduration: effduration})
   when is_nil(effduration) or effduration == 0 do
-    ["Effect: ", effect]
+    eff_list = Enum.intersperse(effect, ", ")
+    ["Effect: ", eff_list]
   end
 
   def effect_to_io_list(%BnBBot.Library.Battlechip{effect: effect, effduration: effduration}) do
+    eff_list = Enum.intersperse(effect, ", ")
     [
       "Effect: ",
-      effect,
+      eff_list,
       " for ",
       to_string(effduration),
       " round(s)"
@@ -128,8 +130,8 @@ end
 defimpl String.Chars, for: BnBBot.Library.Battlechip do
   def to_string(%BnBBot.Library.Battlechip{} = chip) do
     elems =
-      Enum.map(chip.elem, fn elem -> Kernel.to_string(elem) |> String.capitalize() end)
-      |> Enum.join(", ")
+      Enum.map(chip.elem, fn elem -> BnBBot.Library.Shared.element_to_string(elem) end)
+      |> Enum.intersperse(", ")
 
     skill = String.upcase(Enum.join(chip.skill, ", "), :ascii)
     range = String.capitalize(Kernel.to_string(chip.range), :ascii)
