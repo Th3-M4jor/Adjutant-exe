@@ -38,7 +38,7 @@ defmodule BnBBot.Commands.NCP do
   end
 
   defp send_found_ncp(%Nostrum.Struct.Interaction{} = inter, %BnBBot.Library.NCP{} = ncp) do
-    Api.create_interaction_response(inter, %{
+    {:ok} = Api.create_interaction_response(inter, %{
       type: 4,
       data: %{
         content: to_string(ncp)

@@ -36,7 +36,7 @@ defmodule BnBBot.Commands.Chip do
   end
 
   def send_found_chip(%Nostrum.Struct.Interaction{} = inter, %BnBBot.Library.Battlechip{} = chip) do
-    Api.create_interaction_response(
+    {:ok} = Api.create_interaction_response(
       inter,
       %{
         type: 4,

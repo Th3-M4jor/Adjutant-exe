@@ -8,7 +8,7 @@ defmodule BnBBot.Commands.PHB do
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     phb_url = Application.fetch_env!(:elixir_bot, :phb)
 
-    Api.create_interaction_response(
+    {:ok} = Api.create_interaction_response(
       inter,
       %{
         type: 4,

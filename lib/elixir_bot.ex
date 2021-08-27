@@ -142,7 +142,7 @@ defmodule BnBBot.Consumer do
       _ ->
         Logger.debug("Interaction wasn't registered, or wasn't for said user")
 
-        Api.create_interaction_response(
+        {:ok} = Api.create_interaction_response(
           inter,
           %{
             type: 4,
@@ -169,7 +169,7 @@ defmodule BnBBot.Consumer do
       e ->
         Logger.error(Exception.format(:error, e, __STACKTRACE__))
 
-        Api.create_interaction_response(
+        {:ok} = Api.create_interaction_response(
           inter,
           %{
             type: 4,
@@ -180,16 +180,6 @@ defmodule BnBBot.Consumer do
           }
         )
     end
-
-    # Api.create_interaction_response(
-    #  inter,
-    #  %{
-    #    type: 4,
-    #    data: %{
-    #      content: "Pong!"
-    #    }
-    #  }
-    # )
   end
 
   # Default event handler, if you don't include this, your consumer WILL crash if

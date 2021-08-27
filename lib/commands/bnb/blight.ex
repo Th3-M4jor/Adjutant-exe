@@ -40,7 +40,7 @@ defmodule BnBBot.Commands.Blight do
           "An unknown error has occurred"
       end
 
-    Api.create_interaction_response(
+    {:ok} = Api.create_interaction_response(
       inter,
       %{
         type: 4,

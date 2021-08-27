@@ -71,7 +71,8 @@ defmodule BnBBot.Commands.All do
           {float(), BnBBot.Library.NCP.t() | BnBBot.Library.Battlechip.t()}
         ]) :: :ignore
   def do_btn_response(%Nostrum.Struct.Interaction{} = inter, []) do
-    Api.create_interaction_response(inter, %{
+    Logger.debug("Nothing similar enough found")
+    {:ok} = Api.create_interaction_response(inter, %{
       type: 4,
       data: %{
         content: "I'm sorry, I couldn't find anything with a similar enough name",
@@ -83,7 +84,8 @@ defmodule BnBBot.Commands.All do
   end
 
   def do_btn_response(%Nostrum.Struct.Interaction{} = inter, [{_, opt}]) do
-    Api.create_interaction_response(inter, %{
+    Logger.debug("Found only one option that was similar enough")
+    {:ok} = Api.create_interaction_response(inter, %{
       type: 4,
       data: %{
         content: "#{opt}"
@@ -94,11 +96,13 @@ defmodule BnBBot.Commands.All do
   end
 
   def do_btn_response(%Nostrum.Struct.Interaction{} = inter, all) do
+    Logger.debug(["Found ", to_string(length(all)), " options that were similar enough"])
+
     obj_list = Enum.map(all, fn {_, opt} -> opt end)
     uuid = System.unique_integer([:positive]) |> rem(1000)
     buttons = BnBBot.ButtonAwait.generate_msg_buttons_with_uuid(obj_list, uuid)
 
-    Api.create_interaction_response(
+    {:ok} = Api.create_interaction_response(
       inter,
       %{
         type: 4,

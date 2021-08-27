@@ -11,7 +11,7 @@ defmodule BnBBot.Commands.Ping do
 
     now = System.monotonic_time()
 
-    Api.create_interaction_response(inter, %{
+    {:ok} = Api.create_interaction_response(inter, %{
       type: 5
     })
 
@@ -52,7 +52,7 @@ defmodule BnBBot.Commands.Ping do
   #    flags: 0,
   #  })
 
-    Api.execute_webhook(
+    {:ok} = Api.execute_webhook(
       inter.application_id,
       inter.token,
       %{
