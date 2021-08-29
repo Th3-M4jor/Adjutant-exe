@@ -70,45 +70,42 @@ defmodule BnBBot.Library.Virus do
 
   def skills_to_io_list(%BnBBot.Library.Virus{} = virus) do
 
-    per = to_string(virus.skills[:per] || 0)
-    inf = to_string(virus.skills[:inf] || 0)
-    tch = to_string(virus.skills[:tch] || 0)
-    str = to_string(virus.skills[:str] || 0)
-    agi = to_string(virus.skills[:agi] || 0)
-    endr = to_string(virus.skills[:end] || 0)
-    chm = to_string(virus.skills[:chm] || 0)
-    vlr = to_string(virus.skills[:vlr] || 0)
-    aff = to_string(virus.skills[:aff] || 0)
+    per = num_to_2_digit_string(virus.skills[:per] || 0)
+    inf = num_to_2_digit_string(virus.skills[:inf] || 0)
+    tch = num_to_2_digit_string(virus.skills[:tch] || 0)
+    str = num_to_2_digit_string(virus.skills[:str] || 0)
+    agi = num_to_2_digit_string(virus.skills[:agi] || 0)
+    endr = num_to_2_digit_string(virus.skills[:end] || 0)
+    chm = num_to_2_digit_string(virus.skills[:chm] || 0)
+    vlr = num_to_2_digit_string(virus.skills[:vlr] || 0)
+    aff = num_to_2_digit_string(virus.skills[:aff] || 0)
 
     [
       "PER: ",
       per,
       " | ",
-      "INF: ",
-      inf,
-      " | ",
-      "TCH: ",
-      tch,
-      " | ",
       "STR: ",
       str,
+      " | ",
+      "CHM: ",
+      chm,
+      "\nINF: ",
+      inf,
       " | ",
       "AGI: ",
       agi,
       " | ",
-      "END: ",
-      endr,
-      " | ",
-      "CHM: ",
-      chm,
-      " | ",
       "VLR: ",
       vlr,
+      "\nTCH: ",
+      tch,
+      " | ",
+      "END: ",
+      endr,
       " | ",
       "AFF: ",
       aff
     ]
-
 
     #Map.to_list(virus.skills)
     #|> Enum.sort_by(fn {skill, _} ->
@@ -133,6 +130,15 @@ defmodule BnBBot.Library.Virus do
     end)
     |> Enum.intersperse(" | ")
   end
+
+  defp num_to_2_digit_string(num) do
+    if num < 10 do
+      "0#{num}"
+    else
+      "#{num}"
+    end
+  end
+
 end
 
 defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Virus do
