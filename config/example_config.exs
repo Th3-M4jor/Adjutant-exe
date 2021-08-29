@@ -33,6 +33,7 @@ config :elixir_bot,
   admins: [667, 668],
   ncp_url: "https://jin-tengai.dev/bnb/backend/fetch/ncps",
   chip_url: "https://jin-tengai.dev/bnb/backend/fetch/chips",
+  virus_url: "https://jin-tengai.dev/bnb/backend/fetch/viruses",
   phb: "https://jin-tengai.dev/bnb/#!/home",
   ncp_emoji: %{
     id: nil,
