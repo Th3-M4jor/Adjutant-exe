@@ -69,16 +69,57 @@ defmodule BnBBot.Library.Virus do
   end
 
   def skills_to_io_list(%BnBBot.Library.Virus{} = virus) do
-    Map.to_list(virus.skills)
-    |> Enum.sort_by(fn {skill, _} ->
-      BnBBot.Library.Shared.skill_to_sort_pos(skill)
-    end)
-    |> Enum.map(fn {skill, num} ->
-      skill = to_string(skill) |> String.upcase(:ascii)
-      num = to_string(num)
-      [skill, ": ", num]
-    end)
-    |> Enum.intersperse(" | ")
+
+    per = to_string(virus.skills[:per] || 0)
+    inf = to_string(virus.skills[:inf] || 0)
+    tch = to_string(virus.skills[:tch] || 0)
+    str = to_string(virus.skills[:str] || 0)
+    agi = to_string(virus.skills[:agi] || 0)
+    endr = to_string(virus.skills[:end] || 0)
+    chm = to_string(virus.skills[:chm] || 0)
+    vlr = to_string(virus.skills[:vlr] || 0)
+    aff = to_string(virus.skills[:aff] || 0)
+
+    [
+      "PER: ",
+      per,
+      " | ",
+      "INF: ",
+      inf,
+      " | ",
+      "TCH: ",
+      tch,
+      " | ",
+      "STR: ",
+      str,
+      " | ",
+      "AGI: ",
+      agi,
+      " | ",
+      "END: ",
+      endr,
+      " | ",
+      "CHM: ",
+      chm,
+      " | ",
+      "VLR: ",
+      vlr,
+      " | ",
+      "AFF: ",
+      aff
+    ]
+
+
+    #Map.to_list(virus.skills)
+    #|> Enum.sort_by(fn {skill, _} ->
+    #  BnBBot.Library.Shared.skill_to_sort_pos(skill)
+    #end)
+    #|> Enum.map(fn {skill, num} ->
+    #  skill = to_string(skill) |> String.upcase(:ascii)
+    #  num = to_string(num)
+    #  [skill, ": ", num]
+    #end)
+    #|> Enum.intersperse(" | ")
   end
 
   def drops_to_io_list(%BnBBot.Library.Virus{} = virus) do
