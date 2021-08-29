@@ -151,7 +151,7 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Virus do
 
     %{
       type: 2,
-      style: 2,
+      style: 4,
       emoji: emoji,
       label: virus.name,
       custom_id: lower_name
@@ -165,7 +165,7 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Virus do
 
     %{
       type: 2,
-      style: 2,
+      style: 4,
       emoji: emoji,
       label: virus.name,
       custom_id: lower_name
