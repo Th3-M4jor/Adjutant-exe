@@ -17,6 +17,7 @@ defmodule BnBBot.SlashCommands do
       Commands.PHB.get_create_map(),
       Commands.NCP.get_create_map(),
       Commands.Chip.get_create_map(),
+      Commands.Virus.get_create_map(),
       Commands.All.get_create_map(),
       Commands.Statuses.get_create_map(),
       Commands.Blight.get_create_map(),
@@ -38,6 +39,7 @@ defmodule BnBBot.SlashCommands do
       Commands.PHB.get_create_map(),
       Commands.NCP.get_create_map(),
       Commands.Chip.get_create_map(),
+      Commands.Virus.get_create_map(),
       Commands.All.get_create_map(),
       Commands.Statuses.get_create_map(),
       Commands.Blight.get_create_map(),
@@ -76,6 +78,10 @@ defmodule BnBBot.SlashCommands do
 
   defp handle_slash_command("chip", inter) do
     Commands.Chip.call_slash(inter)
+  end
+
+  defp handle_slash_command("virus", inter) do
+    Commands.Virus.call_slash(inter)
   end
 
   defp handle_slash_command("search", inter) do

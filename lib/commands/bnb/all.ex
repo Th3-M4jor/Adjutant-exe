@@ -52,7 +52,18 @@ defmodule BnBBot.Commands.All do
         end
       end)
 
-    all_pos = Task.await_many([chips_task, ncps_task], :infinity) |> Enum.concat()
+    viruses_task =
+      Task.async(fn ->
+        case BnBBot.Library.Virus.get_virus(to_search) do
+          {:found, virus} ->
+            [{1.0, virus}]
+
+          {:not_found, viruses} ->
+            viruses
+        end
+      end)
+
+    all_pos = Task.await_many([chips_task, ncps_task, viruses_task], :infinity) |> Enum.concat()
 
     exact_matches = Enum.filter(all_pos, fn {dist, _} -> dist == 1.0 end)
 
@@ -72,25 +83,29 @@ defmodule BnBBot.Commands.All do
         ]) :: :ignore
   def do_btn_response(%Nostrum.Struct.Interaction{} = inter, []) do
     Logger.debug("Nothing similar enough found")
-    {:ok} = Api.create_interaction_response(inter, %{
-      type: 4,
-      data: %{
-        content: "I'm sorry, I couldn't find anything with a similar enough name",
-        flags: 64
-      }
-    })
+
+    {:ok} =
+      Api.create_interaction_response(inter, %{
+        type: 4,
+        data: %{
+          content: "I'm sorry, I couldn't find anything with a similar enough name",
+          flags: 64
+        }
+      })
 
     :ignore
   end
 
   def do_btn_response(%Nostrum.Struct.Interaction{} = inter, [{_, opt}]) do
     Logger.debug("Found only one option that was similar enough")
-    {:ok} = Api.create_interaction_response(inter, %{
-      type: 4,
-      data: %{
-        content: "#{opt}"
-      }
-    })
+
+    {:ok} =
+      Api.create_interaction_response(inter, %{
+        type: 4,
+        data: %{
+          content: "#{opt}"
+        }
+      })
 
     :ignore
   end
@@ -102,17 +117,18 @@ defmodule BnBBot.Commands.All do
     uuid = System.unique_integer([:positive]) |> rem(1000)
     buttons = BnBBot.ButtonAwait.generate_msg_buttons_with_uuid(obj_list, uuid)
 
-    {:ok} = Api.create_interaction_response(
-      inter,
-      %{
-        type: 4,
-        data: %{
-          content: "Did you mean:",
-          flags: 64,
-          components: buttons
+    {:ok} =
+      Api.create_interaction_response(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: "Did you mean:",
+            flags: 64,
+            components: buttons
+          }
         }
-      }
-    )
+      )
 
     btn_response = BnBBot.ButtonAwait.await_btn_click(uuid, nil)
 
@@ -129,8 +145,9 @@ defmodule BnBBot.Commands.All do
             {:found, ncp} = BnBBot.Library.NCP.get_ncp(ncp)
             ncp
 
-          [_, "v", _virus] ->
-            raise "Unimplemented"
+          [_, "v", virus] ->
+            {:found, virus} = BnBBot.Library.Virus.get_virus(virus)
+            virus
         end
 
       edit_task =
@@ -144,6 +161,7 @@ defmodule BnBBot.Commands.All do
       resp_task =
         Task.async(fn ->
           name = inter.data.name
+
           resp_text =
             if is_nil(inter.user) do
               "<@#{inter.member.user.id}> used `#{name}`\n#{lib_obj}"

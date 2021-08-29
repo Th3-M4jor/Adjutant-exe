@@ -102,6 +102,20 @@ defmodule BnBBot.Library.Shared do
     ]
   end
 
+  @spec skill_to_sort_pos(skill()) :: pos_integer()
+  def skill_to_sort_pos(skill) do
+    case skill do
+      :per -> 0
+      :inf -> 1
+      :tch -> 2
+      :str -> 3
+      :agi -> 4
+      :end -> 5
+      :chm -> 6
+      :vlr -> 7
+      :aff -> 8
+    end
+  end
 
 end
 

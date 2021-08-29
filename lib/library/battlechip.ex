@@ -71,19 +71,25 @@ defmodule BnBBot.Library.Battlechip do
     GenServer.call(:chip_table, {:get, name, min_dist})
   end
 
+  @spec exists?(String.t()) :: boolean()
+  def exists?(name) do
+    GenServer.call(:chip_table, {:exists, name})
+  end
+
   @spec effect_to_io_list(BnBBot.Library.Battlechip.t()) :: iolist()
   def effect_to_io_list(%BnBBot.Library.Battlechip{effect: nil, effduration: nil}) do
     []
   end
 
   def effect_to_io_list(%BnBBot.Library.Battlechip{effect: effect, effduration: effduration})
-  when is_nil(effduration) or effduration == 0 do
+      when is_nil(effduration) or effduration == 0 do
     eff_list = Enum.intersperse(effect, ", ")
     ["Effect: ", eff_list]
   end
 
   def effect_to_io_list(%BnBBot.Library.Battlechip{effect: effect, effduration: effduration}) do
     eff_list = Enum.intersperse(effect, ", ")
+
     [
       "Effect: ",
       eff_list,
@@ -92,7 +98,6 @@ defmodule BnBBot.Library.Battlechip do
       " round(s)"
     ]
   end
-
 end
 
 defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Battlechip do
@@ -152,26 +157,32 @@ defimpl String.Chars, for: BnBBot.Library.Battlechip do
       end
 
     damage = BnBBot.Library.Shared.dice_to_io_list(chip.damage, " damage")
-      #unless is_nil(chip.damage) do
-      #  [
-      #    Kernel.to_string(chip.damage[:dienum]),
-      #    "d",
-      #    Kernel.to_string(chip.damage[:dietype]),
-      #    " damage"
-      #  ]
-      #else
-      #  "--"
-      #end
+    # unless is_nil(chip.damage) do
+    #  [
+    #    Kernel.to_string(chip.damage[:dienum]),
+    #    "d",
+    #    Kernel.to_string(chip.damage[:dietype]),
+    #    " damage"
+    #  ]
+    # else
+    #  "--"
+    # end
 
-    #blight = unless is_nil(chip.blight) do
-    #  ["\n", BnBBot.Library.Shared.blight_to_io_list(chip.blight)]
-    #else
-    #  []
-    #end
+    blight =
+      unless is_nil(chip.blight) do
+        ["\n", BnBBot.Library.Shared.blight_to_io_list(chip.blight)]
+      else
+        []
+      end
 
-    blight = ["\n", BnBBot.Library.Shared.blight_to_io_list(chip.blight)]
+    # blight = ["\n", BnBBot.Library.Shared.blight_to_io_list(chip.blight)]
 
-    effect = ["\n", BnBBot.Library.Battlechip.effect_to_io_list(chip)]
+    effect =
+      unless is_nil(chip.effect) do
+        ["\n", BnBBot.Library.Battlechip.effect_to_io_list(chip)]
+      else
+        []
+      end
 
     class =
       if chip.class == :standard do
@@ -258,20 +269,29 @@ defmodule BnBBot.Library.BattlechipTable do
     {:reply, resp, state}
   end
 
-  @spec handle_call(:reload, GenServer.from(), map()) :: {:reply, {:ok} | {:error, String.t()}, map()}
+  @spec handle_call(:reload, GenServer.from(), map()) ::
+          {:reply, {:ok} | {:error, String.t()}, map()}
   def handle_call(:reload, _from, _state) do
     case load_chips() do
       {:ok, chips} ->
         {:reply, {:ok}, chips}
+
       {:error, reason} ->
         {:reply, {:error, reason}, Map.new()}
     end
   end
 
-  @spec handle_call(:len , GenServer.from(), map()) :: {:reply, non_neg_integer(), map()}
+  @spec handle_call(:len, GenServer.from(), map()) :: {:reply, non_neg_integer(), map()}
   def handle_call(:len, _from, state) do
     size = map_size(state)
     {:reply, size, state}
+  end
+
+  @spec handle_call({:exists, String.t()}, GenServer.from(), map()) :: {:reply, boolean(), map()}
+  def handle_call({:exists, name}, _from, state) do
+    lower_name = String.downcase(name, :ascii)
+    exists = Map.has_key?(state, lower_name)
+    {:reply, exists, state}
   end
 
   defp load_chips() do

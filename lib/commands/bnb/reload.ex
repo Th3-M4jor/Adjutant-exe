@@ -38,9 +38,15 @@ defmodule BnBBot.Commands.Reload do
           Library.Battlechip.get_chip_ct()
         end)
 
-      [ncp_len, chip_len] = Task.await_many([ncp_task, chip_task], :infinity)
+      virus_task =
+        Task.async(fn ->
+          {:ok} = Library.Virus.load_viruses()
+          Library.Virus.get_virus_ct()
+        end)
 
-      reload_msg = "#{chip_len} Battlechips loaded\n#{ncp_len} NCPs loaded"
+      [ncp_len, chip_len, virus_len] = Task.await_many([ncp_task, chip_task, virus_task], :infinity)
+
+      reload_msg = "#{chip_len} Battlechips loaded\n#{virus_len} Viruses loaded\n#{ncp_len} NCPs loaded"
 
       Api.create_message!(msg.channel_id, reload_msg)
     end

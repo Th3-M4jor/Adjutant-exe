@@ -41,8 +41,15 @@ defmodule BnBBot.Supervisor do
         restart: :transient
       )
 
+    viruses = Supervisor.child_spec(
+      {BnBBot.Library.VirusTable, []},
+      id: {:bnb_bot, :virus_table},
+      restart: :transient
+    )
+
     children = [ncp | children]
     children = [chips | children]
+    children = [viruses | children]
     Logger.debug(inspect(children, pretty: true))
 
     res = Supervisor.init(children, strategy: :one_for_one)
@@ -103,9 +110,10 @@ defmodule BnBBot.Consumer do
           # chips_task = Task.async(fn -> BnBBot.Library.Battlechip.load_chips() end)
           chip_ct = BnBBot.Library.Battlechip.get_chip_ct()
           ncp_ct = BnBBot.Library.NCP.get_ncp_ct()
+          virus_ct = BnBBot.Library.Virus.get_virus_ct()
           # [ok: ncp_ct, ok: chip_ct] = Task.await_many([ncp_task, chips_task], :infinity)
           Logger.debug("Ready #{inspect(ready_data, pretty: true)}")
-          {"Bot Ready\n#{chip_ct} chips loaded\n#{ncp_ct} ncps loaded", false}
+          {"Bot Ready\n#{chip_ct} chips loaded\n#{virus_ct} viruses loaded\n#{ncp_ct} ncps loaded", false}
       end
 
     BnBBot.Util.dm_owner(dm_msg, override)
