@@ -208,10 +208,12 @@ defimpl String.Chars, for: BnBBot.Library.Virus do
     damage_elem = unless is_nil(virus.dmgelem) do
       [
         "Damage Element(s): ",
-        Enum.map(virus.element, fn elem -> BnBBot.Library.Shared.element_to_string(elem) end)
+        Enum.map(virus.dmgelem, fn elem -> BnBBot.Library.Shared.element_to_string(elem) end)
         |> Enum.intersperse(", "),
         "\n"
       ]
+    else
+      []
     end
 
     blight = unless is_nil(virus.blight) do
