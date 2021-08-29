@@ -41,11 +41,12 @@ defmodule BnBBot.Supervisor do
         restart: :transient
       )
 
-    viruses = Supervisor.child_spec(
-      {BnBBot.Library.VirusTable, []},
-      id: {:bnb_bot, :virus_table},
-      restart: :transient
-    )
+    viruses =
+      Supervisor.child_spec(
+        {BnBBot.Library.VirusTable, []},
+        id: {:bnb_bot, :virus_table},
+        restart: :transient
+      )
 
     children = [ncp | children]
     children = [chips | children]
@@ -113,7 +114,9 @@ defmodule BnBBot.Consumer do
           virus_ct = BnBBot.Library.Virus.get_virus_ct()
           # [ok: ncp_ct, ok: chip_ct] = Task.await_many([ncp_task, chips_task], :infinity)
           Logger.debug("Ready #{inspect(ready_data, pretty: true)}")
-          {"Bot Ready\n#{chip_ct} chips loaded\n#{virus_ct} viruses loaded\n#{ncp_ct} ncps loaded", false}
+
+          {"Bot Ready\n#{chip_ct} chips loaded\n#{virus_ct} viruses loaded\n#{ncp_ct} ncps loaded",
+           false}
       end
 
     BnBBot.Util.dm_owner(dm_msg, override)
@@ -130,38 +133,47 @@ defmodule BnBBot.Consumer do
     Logger.debug("Got an interaction button click on #{inter.message.id}")
     Logger.debug("#{inspect(inter, pretty: true)}")
 
-    to_lookup =
-      case String.split(inter.data.custom_id, "_", parts: 3) do
-        # Ensure that the custom_id starts with a number before trying to parse
-        [<<head, _rest::binary>> = id, _, _] when head in ?1..?9 ->
-          String.to_integer(id)
+    case String.split(inter.data.custom_id, "_", parts: 3) do
+      # Ensure that the custom_id starts with a number before trying to parse
+      [<<head, _rest::binary>> = id, _, _] when head in ?1..?9 ->
+        id = String.to_integer(id)
+        BnBBot.ButtonAwait.resp_to_btn(inter, id)
 
-        _ ->
-          inter.message.id
-      end
-
-    case Registry.lookup(:BUTTON_COLLECTOR, to_lookup) do
-      [{pid, user_id}]
-      when is_nil(user_id)
-      when inter.user.id == user_id
-      when inter.member.user.id == user_id ->
-        send(pid, {:btn_click, inter})
-
-      _ ->
-        Logger.debug("Interaction wasn't registered, or wasn't for said user")
-
-        {:ok} = Api.create_interaction_response(
-          inter,
+      ["cr", chip_name] ->
+        {:found, chip} = BnBBot.Library.Battlechip.get_chip(chip_name)
+        Api.create_interaction_response(inter,
           %{
             type: 4,
             data: %{
-              content:
-                "You're not the one that I created this for, or I'm no longer listening for events on it, sorry",
-              # 64 is the flag for ephemeral messages
-              flags: 64
+              content: "#{chip}"
             }
           }
         )
+
+      ["nr", ncp_name] ->
+        {:found, ncp} = BnBBot.Library.NCP.get_ncp(ncp_name)
+        Api.create_interaction_response(inter,
+          %{
+            type: 4,
+            data: %{
+              content: "#{ncp}"
+            }
+          }
+        )
+
+      ["vr", virus_name] ->
+        {:found, virus} = BnBBot.Library.Virus.get_virus(virus_name)
+        Api.create_interaction_response(inter,
+          %{
+            type: 4,
+            data: %{
+              content: "#{virus}"
+            }
+          }
+        )
+
+      _ ->
+        BnBBot.ButtonAwait.resp_to_btn(inter, inter.message.id)
     end
   end
 
@@ -177,16 +189,17 @@ defmodule BnBBot.Consumer do
       e ->
         Logger.error(Exception.format(:error, e, __STACKTRACE__))
 
-        {:ok} = Api.create_interaction_response(
-          inter,
-          %{
-            type: 4,
-            data: %{
-              content: "An error has occurred, inform Major",
-              flags: 64
+        {:ok} =
+          Api.create_interaction_response(
+            inter,
+            %{
+              type: 4,
+              data: %{
+                content: "An error has occurred, inform Major",
+                flags: 64
+              }
             }
-          }
-        )
+          )
     end
   end
 

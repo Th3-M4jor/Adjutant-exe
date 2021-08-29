@@ -52,7 +52,7 @@ defmodule BnBBot.Commands.Ping do
   #    flags: 0,
   #  })
 
-    {:ok} = Api.execute_webhook(
+    Api.execute_webhook(
       inter.application_id,
       inter.token,
       %{

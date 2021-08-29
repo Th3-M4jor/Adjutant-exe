@@ -160,4 +160,7 @@ defprotocol BnBBot.Library.LibObj do
   @spec to_btn(t, pos_integer()) :: button() | link_button()
   def to_btn(value, uuid)
 
+  @spec to_persistent_btn(t) :: button() | link_button()
+  def to_persistent_btn(value)
+
 end

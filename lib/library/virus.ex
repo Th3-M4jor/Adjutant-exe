@@ -68,6 +68,11 @@ defmodule BnBBot.Library.Virus do
     GenServer.call(:virus_table, {:get, name, min_dist})
   end
 
+  @spec get_cr_list(pos_integer()) :: [BnBBot.Library.Virus.t()]
+  def get_cr_list(cr) do
+    GenServer.call(:virus_table, {:cr, cr})
+  end
+
   def skills_to_io_list(%BnBBot.Library.Virus{} = virus) do
 
     per = num_to_2_digit_string(virus.skills[:per] || 0)
@@ -107,16 +112,6 @@ defmodule BnBBot.Library.Virus do
       aff
     ]
 
-    #Map.to_list(virus.skills)
-    #|> Enum.sort_by(fn {skill, _} ->
-    #  BnBBot.Library.Shared.skill_to_sort_pos(skill)
-    #end)
-    #|> Enum.map(fn {skill, num} ->
-    #  skill = to_string(skill) |> String.upcase(:ascii)
-    #  num = to_string(num)
-    #  [skill, ": ", num]
-    #end)
-    #|> Enum.intersperse(" | ")
   end
 
   def drops_to_io_list(%BnBBot.Library.Virus{} = virus) do
@@ -171,6 +166,21 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Virus do
       custom_id: lower_name
     }
   end
+
+  @spec to_persistent_btn(BnBBot.Library.Virus.t()) :: BnBBot.Library.LibObj.button()
+  def to_persistent_btn(virus) do
+    lower_name = "vr_#{String.downcase(virus.name, :ascii)}"
+    emoji = Application.fetch_env!(:elixir_bot, :virus_emoji)
+
+    %{
+      type: 2,
+      style: 4,
+      emoji: emoji,
+      label: virus.name,
+      custom_id: lower_name,
+    }
+  end
+
 end
 
 defimpl String.Chars, for: BnBBot.Library.Virus do
@@ -322,6 +332,16 @@ defmodule BnBBot.Library.VirusTable do
   def handle_call(:len, _from, state) do
     size = map_size(state)
     {:reply, size, state}
+  end
+
+  @spec handle_call({:cr, pos_integer()}, GenServer.from(), map()) :: {:reply, [BnBBot.Library.Virus.t()], map()}
+  def handle_call({:cr, cr}, _from, state) do
+    viruses =
+      Map.values(state)
+      |> Enum.filter(fn virus -> virus.cr == cr end)
+      |> Enum.sort_by(fn virus -> virus.name end)
+
+    {:reply, viruses, state}
   end
 
   defp load_viruses() do

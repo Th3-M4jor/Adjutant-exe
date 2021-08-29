@@ -89,7 +89,8 @@ defmodule BnBBot.SlashCmdFn do
           required(:name) => String.t(),
           required(:description) => String.t(),
           optional(:required) => boolean(),
-          optional(:choices) => [slash_choices(), ...]
+          optional(:choices) => [slash_choices(), ...],
+          optional(:options) => [slash_opts(), ...]
         }
 
   @typedoc """

@@ -26,6 +26,11 @@ defmodule BnBBot.Library.NCP do
     GenServer.call(:ncp_table, {:get, name, min_dist})
   end
 
+  @spec get_ncps_by_color(colors()) :: [t()]
+  def get_ncps_by_color(color) do
+    GenServer.call(:ncp_table, {:color, color})
+  end
+
   @spec get_ncp_ct() :: non_neg_integer()
   def get_ncp_ct() do
     GenServer.call(:ncp_table, :len, :infinity)
@@ -81,6 +86,24 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
       custom_id: lower_name
     }
   end
+
+  @spec to_persistent_btn(BnBBot.Library.NCP.t()) :: BnBBot.Library.LibObj.button()
+  def to_persistent_btn(ncp) do
+    lower_name = "nr_#{String.downcase(ncp.name, :ascii)}"
+    emoji = Application.fetch_env!(:elixir_bot, :ncp_emoji)
+
+    %{
+      # type 2 for button
+      type: 2,
+
+      # style 3 for green button
+      style: 3,
+      emoji: emoji,
+      label: ncp.name,
+      custom_id: lower_name
+    }
+  end
+
 end
 
 defimpl String.Chars, for: BnBBot.Library.NCP do
@@ -148,6 +171,15 @@ defmodule BnBBot.Library.NCPTable do
       end
 
     {:reply, resp, state}
+  end
+
+  @spec handle_call({:color, String.t()}, GenServer.from(), map()) :: {:reply, [BnBBot.Library.NCP.t()], map()}
+  def handle_call({:color, color}, _from, state) do
+    resp = Map.values(state)
+      |> Enum.filter(fn ncp -> ncp.color == color end)
+      |> Enum.sort_by(fn ncp -> ncp.name end)
+
+      {:reply, resp, state}
   end
 
   @spec handle_call(:reload, GenServer.from(), map()) :: {:reply, {:ok} | {:error, String.t()}, map()}

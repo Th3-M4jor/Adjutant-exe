@@ -130,6 +130,21 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Battlechip do
       custom_id: lower_name
     }
   end
+
+  @spec to_persistent_btn(BnBBot.Library.Battlechip.t()) :: BnBBot.Library.LibObj.button()
+  def to_persistent_btn(chip) do
+    lower_name = "cr_#{String.downcase(chip.name, :ascii)}"
+    emoji = Application.fetch_env!(:elixir_bot, :chip_emoji)
+
+    %{
+      type: 2,
+      style: 2,
+      emoji: emoji,
+      label: chip.name,
+      custom_id: lower_name
+    }
+  end
+
 end
 
 defimpl String.Chars, for: BnBBot.Library.Battlechip do

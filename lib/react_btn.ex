@@ -72,6 +72,35 @@ defmodule BnBBot.ButtonAwait do
     end)
   end
 
+  @spec generate_persistent_buttons([struct()]) ::
+          [
+            %{
+              type: pos_integer(),
+              components: [BnBBot.Library.LibObj.button() | BnBBot.Library.LibObj.link_button()]
+            }
+          ]
+          | no_return()
+  def generate_persistent_buttons([]) do
+    raise "Empty List"
+  end
+
+  def generate_persistent_buttons(content) when length(content) > 25 do
+    raise "Too many buttons"
+  end
+
+  def generate_persistent_buttons(content) do
+    row_chunks = Enum.chunk_every(content, 5)
+
+    Enum.map(row_chunks, fn row ->
+      action_row = Enum.map(row, &BnBBot.Library.LibObj.to_persistent_btn/1)
+
+      %{
+        type: 1,
+        components: action_row
+      }
+    end)
+  end
+
   #  defp tuple_to_btn({name, id, style}) do
   #    %{
   #      type: 2,
@@ -93,6 +122,32 @@ defmodule BnBBot.ButtonAwait do
     btn = await_btn_click_inner()
     Logger.debug("Got a response to #{uuid} of #{inspect(btn, pretty: true)}")
     btn
+  end
+
+  def resp_to_btn(%Nostrum.Struct.Interaction{} = inter, id) do
+    case Registry.lookup(:BUTTON_COLLECTOR, id) do
+      [{pid, user_id}]
+      when is_nil(user_id)
+      when inter.user.id == user_id
+      when inter.member.user.id == user_id ->
+        send(pid, {:btn_click, inter})
+
+      _ ->
+        Logger.debug("Interaction wasn't registered, or wasn't for said user")
+
+        {:ok} = Nostrum.Api.create_interaction_response(
+          inter,
+          %{
+            type: 4,
+            data: %{
+              content:
+                "You're not the one that I created this for, or I'm no longer listening for events on it, sorry",
+              # 64 is the flag for ephemeral messages
+              flags: 64
+            }
+          }
+        )
+    end
   end
 
   defp await_btn_click_inner() do
