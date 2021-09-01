@@ -91,6 +91,21 @@ defmodule BnBBot.Consumer do
     end
   end
 
+  def handle_event({:GUILD_MEMBER_ADD, {guild_id, %Nostrum.Struct.Guild.Member{} = member}, _ws_state}) do
+    if guild_id == Application.fetch_env!(:elixir_bot, :primary_guild_id) do
+      primary_guild_channel = Application.fetch_env!(:elixir_bot, :primary_guild_channel_id)
+      primary_guild_role_channel = Application.fetch_env!(:elixir_bot, :primary_guild_role_channel_id)
+      text = "Welcome to the Busters & Battlechips Discord <@#{member.user.id}>. Assign yourself roles in <##{primary_guild_role_channel}>"
+      Api.create_message!(primary_guild_channel, text)
+    end
+  end
+
+  def handle_event({:GUILD_MEMBER_REMOVE, {guild_id, %Nostrum.Struct.Guild.Member{} = member}, _ws_state}) do
+    log_channel_id = Application.fetch_env!(:elixir_bot, :dm_log_Id)
+    text = "#{member.user.username} has left #{guild_id}"
+    Api.create_message!(log_channel_id, text)
+  end
+
   def handle_event({:READY, ready_data, _ws_state}) do
     Logger.debug("Bot ready")
 
@@ -171,6 +186,9 @@ defmodule BnBBot.Consumer do
             }
           }
         )
+
+      ["r", id] ->
+        BnBBot.RoleBtn.handle_role_btn_click(inter, id)
 
       _ ->
         BnBBot.ButtonAwait.resp_to_btn(inter, inter.message.id)

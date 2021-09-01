@@ -98,9 +98,10 @@ defmodule BnBBot.SlashCmdFn do
   Desc must be between 1 and 100 characters long.
   """
   @type slash_cmd_map :: %{
-          required(:type) => 1,
           required(:name) => String.t(),
           required(:description) => String.t(),
+          optional(:type) => 1..3,
+          optional(:default_permission) => boolean(),
           optional(:options) => [slash_opts(), ...]
         }
 
