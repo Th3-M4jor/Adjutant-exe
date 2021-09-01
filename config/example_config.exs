@@ -31,6 +31,10 @@ config :elixir_bot,
   prefix: "!",
   owner_id: 666,
   admins: [667, 668],
+  dm_log_id: 999,
+  primary_guild_id: 555,
+  primary_guild_channel_id: 12354456457567,
+  primary_guild_role_channel_id: 669,
   ncp_url: "https://jin-tengai.dev/bnb/backend/fetch/ncps",
   chip_url: "https://jin-tengai.dev/bnb/backend/fetch/chips",
   virus_url: "https://jin-tengai.dev/bnb/backend/fetch/viruses",
@@ -50,4 +54,15 @@ config :elixir_bot,
   chip_emoji: %{
     id: "695852335943122974",
     name: "SynchroChip"
-  }
+  },
+  roles: [
+    %{
+      id: "579769580441042945",
+      name: "Role Name",
+      emoji: %{
+        id: "695852335943122974",
+        name: "SynchroChip"
+      },
+      style: 1
+    }
+  ]
