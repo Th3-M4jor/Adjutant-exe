@@ -128,9 +128,6 @@ defmodule BnBBot.Commands.Virus do
         }
       )
 
-    # five minutes
-    Process.sleep(300_000)
-
     names =
       Enum.map(cr_list, fn virus ->
         virus.name
@@ -138,6 +135,9 @@ defmodule BnBBot.Commands.Virus do
       |> Enum.join(", ")
 
     route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
+
+    # five minutes
+    Process.sleep(300_000)
 
     Api.request(:patch, route, %{
       content: "These viruses are in CR #{cr}:\n#{names}",
@@ -160,7 +160,12 @@ defmodule BnBBot.Commands.Virus do
   end
 
   defp build_encounter(inter, [count, cr]) do
-    Logger.debug(["Building an encounter with ", "#{count.value}", " viruses in CR ", "#{cr.value}"])
+    Logger.debug([
+      "Building an encounter with ",
+      "#{count.value}",
+      " viruses in CR ",
+      "#{cr.value}"
+    ])
 
     viruses = Virus.make_encounter(count.value, cr.value)
 

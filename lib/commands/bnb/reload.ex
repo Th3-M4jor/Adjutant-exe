@@ -46,7 +46,12 @@ defmodule BnBBot.Commands.Reload do
 
       [ncp_len, chip_len, virus_len] = Task.await_many([ncp_task, chip_task, virus_task], :infinity)
 
-      reload_msg = "#{chip_len} Battlechips loaded\n#{virus_len} Viruses loaded\n#{ncp_len} NCPs loaded"
+      validation_msg = case Library.Virus.validate_virus_drops() do
+        {:ok} -> "All virus drops exist"
+        {:error, msg} -> msg
+      end
+
+      reload_msg = "#{chip_len} Battlechips loaded\n#{virus_len} Viruses loaded\n#{ncp_len} NCPs loaded\n#{validation_msg}"
 
       Api.create_message!(msg.channel_id, reload_msg)
     end

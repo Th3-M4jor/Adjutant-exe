@@ -12,6 +12,11 @@ defmodule BnBBot.Commands.Chip do
         [opt] = sub_cmd.options
         name = opt.value
         search_chip(inter, name)
+
+      "dropped-by" ->
+        [opt] = sub_cmd.options
+        name = opt.value
+        locate_drops(inter, name)
     end
   end
 
@@ -30,6 +35,19 @@ defmodule BnBBot.Commands.Chip do
               type: 3,
               name: "name",
               description: "The name of the chip to search for",
+              required: true
+            }
+          ]
+        },
+        %{
+          type: 1,
+          name: "dropped-by",
+          description: "List all viruses that drop a particular chip",
+          options: [
+            %{
+              type: 3,
+              name: "chip-name",
+              description: "The name of the chip",
               required: true
             }
           ]
@@ -62,6 +80,165 @@ defmodule BnBBot.Commands.Chip do
           }
         }
       )
+  end
+
+  def locate_drops(%Nostrum.Struct.Interaction{} = inter, name) do
+    Logger.debug(["Locating drops for the following chip: ", name])
+
+    case BnBBot.Library.Battlechip.get_chip(name) do
+      {:found, chip} ->
+        send_drops(inter, chip)
+
+      {:not_found, possibilities} ->
+        handle_chip_not_found(inter, possibilities)
+    end
+  end
+
+  def send_drops(%Nostrum.Struct.Interaction{} = inter, %BnBBot.Library.Battlechip{} = chip) do
+    drops = BnBBot.Library.Virus.locate_by_drop(chip)
+
+    unless Enum.empty?(drops) do
+      buttons = BnBBot.ButtonAwait.generate_persistent_buttons(drops)
+
+      {:ok} =
+        Api.create_interaction_response(
+          inter,
+          %{
+            type: 4,
+            data: %{
+              content: "The following viruses drop #{chip.name}:",
+              components: buttons
+            }
+          }
+        )
+
+      route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
+
+      names =
+        Enum.map(drops, fn virus ->
+          virus.name
+        end) |> Enum.join(", ")
+
+      # five minutes
+      Process.sleep(300_000)
+
+      Api.request(:patch, route, %{
+        content: "The following viruses drop #{chip.name}:\n#{names}",
+        components: []
+      })
+    else
+      {:ok} =
+        Api.create_interaction_response(
+          inter,
+          %{
+            type: 4,
+            data: %{
+              content: "No viruses drop #{chip.name}."
+            }
+          }
+        )
+    end
+  end
+
+  def send_drops_found(%Nostrum.Struct.Interaction{} = inter, %BnBBot.Library.Battlechip{} = chip) do
+    drops = BnBBot.Library.Virus.locate_by_drop(chip)
+
+    route = "/webhooks/#{inter.application_id}/#{inter.token}"
+
+    unless Enum.empty?(drops) do
+      buttons = BnBBot.ButtonAwait.generate_persistent_buttons(drops)
+
+      {:ok, resp} =
+        Api.request(:post, route, %{
+          content: "The following viruses drop #{chip.name}:",
+          components: buttons
+        })
+
+      resp = Poison.decode!(resp)
+
+      edit_route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/#{resp["id"]}"
+
+      names =
+        Enum.map(drops, fn virus ->
+          virus.name
+        end) |> Enum.join(", ")
+
+      # five minutes
+      Process.sleep(300_000)
+
+      Api.request(:patch, edit_route, %{
+        content: "The following viruses drop #{chip.name}:\n#{names}",
+        components: []
+      })
+
+      # Logger.debug(["Got the following response: ", inspect(resp, pretty: true)])
+    else
+      {:ok, _resp} =
+        Api.request(:post, route, %{
+          content: "No known viruses drop #{chip.name}."
+        })
+
+      # Logger.debug(["Got the following response: ", inspect(resp, pretty: true)])
+    end
+  end
+
+  defp handle_chip_not_found(%Nostrum.Struct.Interaction{} = inter, []) do
+    {:ok} =
+      Api.create_interaction_response(inter, %{
+        type: 4,
+        data: %{
+          content: "I'm sorry, I couldn't find anything with a similar enough name",
+          flags: 64
+        }
+      })
+
+    :ignore
+  end
+
+  defp handle_chip_not_found(%Nostrum.Struct.Interaction{} = inter, [{_, chip}]) do
+    send_drops(inter, chip)
+  end
+
+  defp handle_chip_not_found(%Nostrum.Struct.Interaction{} = inter, possibilities) do
+    obj_list = Enum.map(possibilities, fn {_, opt} -> opt end)
+    uuid = System.unique_integer([:positive]) |> rem(1000)
+    buttons = BnBBot.ButtonAwait.generate_msg_buttons_with_uuid(obj_list, uuid)
+
+    {:ok} =
+      Api.create_interaction_response(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: "Did you mean:",
+            flags: 64,
+            components: buttons
+          }
+        }
+      )
+
+    btn_response = BnBBot.ButtonAwait.await_btn_click(uuid, nil)
+
+    route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
+
+    unless is_nil(btn_response) do
+      [_, "c", chip] = String.split(btn_response.data.custom_id, "_", parts: 3)
+      {:found, chip} = BnBBot.Library.Battlechip.get_chip(chip)
+
+      Task.start(fn ->
+        Api.request(:patch, route, %{
+          content: "You selected #{chip.name}",
+          components: []
+        })
+      end)
+
+      send_drops_found(inter, chip)
+    else
+      Api.request(:patch, route, %{
+        content: "Timed out waiting for response",
+        components: []
+      })
+    end
   end
 
   defp handle_not_found(inter, opts) do

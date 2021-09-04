@@ -73,6 +73,16 @@ defmodule BnBBot.Library.Virus do
     GenServer.call(:virus_table, {:cr, cr})
   end
 
+  @spec validate_virus_drops() :: {:ok} | {:error, String.t()}
+  def validate_virus_drops() do
+    GenServer.call(:virus_table, :validate_drops, :infinity)
+  end
+
+  @spec locate_by_drop(BnBBot.Library.Battlechip.t()) :: [BnBBot.Library.Virus.t()]
+  def locate_by_drop(%BnBBot.Library.Battlechip{} = chip) do
+     GenServer.call(:virus_table, {:drops, chip.name}, :infinity)
+  end
+
   @spec make_encounter(pos_integer(), pos_integer()) :: [BnBBot.Library.Virus.t()]
   def make_encounter(num, cr) do
     GenServer.call(:virus_table, {:encounter, num, cr})
@@ -359,11 +369,12 @@ defmodule BnBBot.Library.VirusTable do
       Map.values(state)
       |> Enum.filter(fn virus -> virus.cr == cr end)
 
-    viruses = unless Enum.empty?(viruses) do
-      for _ <- 1..count, do: Enum.random(viruses)
-    else
-      []
-    end
+    viruses =
+      unless Enum.empty?(viruses) do
+        for _ <- 1..count, do: Enum.random(viruses)
+      else
+        []
+      end
 
     {:reply, viruses, state}
   end
@@ -380,6 +391,48 @@ defmodule BnBBot.Library.VirusTable do
       |> Enum.filter(fn virus -> virus.cr in low_cr..high_cr end)
 
     viruses = for _ <- 1..count, do: Enum.random(viruses)
+
+    {:reply, viruses, state}
+  end
+
+  @spec handle_call(:validate_drops, GenServer.from(), map()) ::
+          {:reply, {:ok} | {:error, String.t()}, map()}
+  def handle_call(:validate_drops, _from, state) do
+    viruses = Map.values(state)
+
+    res =
+      Enum.find_value(viruses, fn virus ->
+        drop =
+          Map.to_list(virus.drops)
+          |> Enum.find(fn {_, drop} ->
+            !String.contains?(drop, "Zenny") && !BnBBot.Library.Battlechip.exists?(drop)
+          end)
+
+        unless is_nil(drop) do
+          {pos, drop} = drop
+          "#{virus.name} drops #{drop} at #{pos}, however it doesn't exist"
+        end
+      end)
+
+    to_ret =
+      if is_nil(res) do
+        {:ok}
+      else
+        {:error, res}
+      end
+
+    {:reply, to_ret, state}
+  end
+
+  @spec handle_call({:drops, String.t()}, GenServer.from(), map()) ::
+          {:reply, [BnBBot.Library.Virus.t()], map()}
+  def handle_call({:drops, name}, _from, state) do
+    viruses =
+      Map.values(state)
+      |> Enum.filter(fn virus ->
+        Map.values(virus.drops)
+        |> Enum.any?(fn drop -> drop == name end)
+      end)
 
     {:reply, viruses, state}
   end
