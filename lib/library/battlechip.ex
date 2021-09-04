@@ -43,8 +43,8 @@ defmodule BnBBot.Library.Battlechip do
           elem: [BnBBot.Library.Shared.element()],
           skill: [BnBBot.Library.Shared.skill()],
           range: BnBBot.Library.Shared.range(),
-          hits: non_neg_integer() | String.t(),
-          targets: non_neg_integer(),
+          hits: String.t(),
+          targets: String.t(),
           description: String.t(),
           effect: [String.t()] | nil,
           effduration: non_neg_integer() | nil,
@@ -93,7 +93,7 @@ defmodule BnBBot.Library.Battlechip do
     [
       "Effect: ",
       eff_list,
-      " for ",
+      " for up to ",
       to_string(effduration),
       " round(s)"
     ]
@@ -150,87 +150,61 @@ end
 defimpl String.Chars, for: BnBBot.Library.Battlechip do
   def to_string(%BnBBot.Library.Battlechip{} = chip) do
     elems =
-      Enum.map(chip.elem, fn elem -> BnBBot.Library.Shared.element_to_string(elem) end)
-      |> Enum.intersperse(", ")
+      [Enum.map(chip.elem, fn elem -> BnBBot.Library.Shared.element_to_string(elem) end)
+      |> Enum.intersperse(", "), " | "]
 
-    skill = String.upcase(Enum.join(chip.skill, ", "), :ascii)
-    range = String.capitalize(Kernel.to_string(chip.range), :ascii)
-    kind = String.capitalize(Kernel.to_string(chip.kind), :ascii)
-
-    hits =
-      if chip.hits == "1" do
-        "1 hit"
-      else
-        [chip.hits, " hits"]
-      end
-
-    targets =
-      if chip.targets == 1 do
-        "1 target"
-      else
-        [Kernel.to_string(chip.targets), " targets"]
-      end
-
-    damage = BnBBot.Library.Shared.dice_to_io_list(chip.damage, " damage")
-    # unless is_nil(chip.damage) do
-    #  [
-    #    Kernel.to_string(chip.damage[:dienum]),
-    #    "d",
-    #    Kernel.to_string(chip.damage[:dietype]),
-    #    " damage"
-    #  ]
-    # else
-    #  "--"
-    # end
-
-    blight =
-      unless is_nil(chip.blight) do
-        ["\n", BnBBot.Library.Shared.blight_to_io_list(chip.blight)]
+    skill =
+      unless is_nil(chip.skill) do
+        [String.upcase(Enum.join(chip.skill, ", "), :ascii), " | "]
       else
         []
       end
 
-    # blight = ["\n", BnBBot.Library.Shared.blight_to_io_list(chip.blight)]
+    range = [String.capitalize(Kernel.to_string(chip.range), :ascii), " | "]
+    kind = String.capitalize(Kernel.to_string(chip.kind), :ascii)
 
-    effect =
-      unless is_nil(chip.effect) do
-        ["\n", BnBBot.Library.Battlechip.effect_to_io_list(chip)]
+    hits =
+      case chip.hits do
+        nil -> []
+        "1" -> ["1 hit", " | "]
+        _ -> [chip.hits, " hits | "]
+      end
+
+    targets =
+      case chip.targets do
+        nil -> []
+        "1" -> ["1 target", " | "]
+        _ -> [chip.targets, " targets | "]
+      end
+
+    damage =
+      unless is_nil(chip.damage) do
+        [BnBBot.Library.Shared.dice_to_io_list(chip.damage, " damage"), " | "]
       else
         []
       end
 
     class =
       if chip.class == :standard do
-        ""
+        []
       else
         [" | ", String.capitalize(Kernel.to_string(chip.class), :ascii)]
       end
-
-    # same as below except faster because of how elixir handles string concat
-    # "```\n#{chip.name} - #{elems} | #{skill} | #{range} | #{damage} | #{hits} | #{targets} | #{kind}#{class}\n#{chip.description}\n```"
 
     io_list = [
       "```\n",
       chip.name,
       " - ",
       elems,
-      " | ",
       skill,
-      " | ",
       range,
-      " | ",
       damage,
-      " | ",
       hits,
-      " | ",
       targets,
-      " | ",
       kind,
       class,
-      "\n",
+      "\n\n",
       chip.description,
-      blight,
-      effect,
       "\n```"
     ]
 
