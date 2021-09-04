@@ -91,13 +91,14 @@ defmodule BnBBot.Consumer do
     end
   end
 
-  def handle_event({:GUILD_MEMBER_ADD, {guild_id, %Nostrum.Struct.Guild.Member{} = member}, _ws_state}) do
-    if guild_id == Application.fetch_env!(:elixir_bot, :primary_guild_id) do
-      primary_guild_channel = Application.fetch_env!(:elixir_bot, :primary_guild_channel_id)
-      primary_guild_role_channel = Application.fetch_env!(:elixir_bot, :primary_guild_role_channel_id)
-      text = "Welcome to the Busters & Battlechips Discord <@#{member.user.id}>. Assign yourself roles in <##{primary_guild_role_channel}>"
-      Api.create_message!(primary_guild_channel, text)
-    end
+  def handle_event({:GUILD_MEMBER_ADD, {_guild_id, %Nostrum.Struct.Guild.Member{} = _member}, _ws_state}) do
+    #if guild_id == Application.fetch_env!(:elixir_bot, :primary_guild_id) do
+    #  primary_guild_channel = Application.fetch_env!(:elixir_bot, :primary_guild_channel_id)
+    #  primary_guild_role_channel = Application.fetch_env!(:elixir_bot, :primary_guild_role_channel_id)
+    #  text = "Welcome to the Busters & Battlechips Discord <@#{member.user.id}>. Assign yourself roles in <##{primary_guild_role_channel}>"
+    #  Api.create_message!(primary_guild_channel, text)
+    #end
+    :noop
   end
 
   def handle_event({:GUILD_MEMBER_REMOVE, {guild_id, %Nostrum.Struct.Guild.Member{} = member}, _ws_state}) do
