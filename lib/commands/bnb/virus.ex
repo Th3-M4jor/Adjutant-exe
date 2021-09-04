@@ -19,6 +19,9 @@ defmodule BnBBot.Commands.Virus do
         cr = opt.value
         cr_list = Virus.get_cr_list(cr)
         send_cr_list(inter, cr, cr_list)
+
+      "encounter" ->
+        build_encounter(inter, sub_cmd.options)
     end
   end
 
@@ -51,6 +54,31 @@ defmodule BnBBot.Commands.Virus do
               name: "cr",
               description: "The CR to search for",
               required: true
+            }
+          ]
+        },
+        %{
+          type: 1,
+          name: "encounter",
+          description: "Generate a random encounter",
+          options: [
+            %{
+              type: 4,
+              name: "count",
+              description: "The number of viruses you want",
+              required: true
+            },
+            %{
+              type: 4,
+              name: "cr-low",
+              description: "The lowest CR of the viruses",
+              required: true
+            },
+            %{
+              type: 4,
+              name: "cr-high",
+              description: "The highest CR of the viruses",
+              required: false
             }
           ]
         }
@@ -100,10 +128,14 @@ defmodule BnBBot.Commands.Virus do
         }
       )
 
-    Process.sleep(300000) # five minutes
-    names = Enum.map(cr_list, fn virus ->
-      virus.name
-    end) |> Enum.join(", ")
+    # five minutes
+    Process.sleep(300_000)
+
+    names =
+      Enum.map(cr_list, fn virus ->
+        virus.name
+      end)
+      |> Enum.join(", ")
 
     route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
@@ -111,7 +143,91 @@ defmodule BnBBot.Commands.Virus do
       content: "These viruses are in CR #{cr}:\n#{names}",
       components: []
     })
+  end
 
+  defp build_encounter(inter, [count | _rest]) when count.value > 25 do
+    {:ok} =
+      Api.create_interaction_response(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: "Cowardly refusing to build an encounter with more than 25 viruses",
+            flags: 64
+          }
+        }
+      )
+  end
+
+  defp build_encounter(inter, [count, cr]) do
+    Logger.debug(["Building an encounter with ", "#{count.value}", " viruses in CR ", "#{cr.value}"])
+
+    viruses = Virus.make_encounter(count.value, cr.value)
+
+    send_encounter(inter, viruses)
+  end
+
+  defp build_encounter(inter, [count, cr_low, cr_high]) do
+    Logger.debug([
+      "Building an encounter with ",
+      "#{count.value}",
+      " viruses in CR ",
+      "#{cr_low.value}",
+      " to ",
+      "#{cr_high.value}"
+    ])
+
+    viruses = Virus.make_encounter(count.value, cr_low.value, cr_high.value)
+
+    send_encounter(inter, viruses)
+  end
+
+  defp send_encounter(inter, []) do
+    {:ok} =
+      Api.create_interaction_response(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: "I'm sorry, I couldn't find any viruses in the given CR's",
+            flags: 64
+          }
+        }
+      )
+  end
+
+  defp send_encounter(inter, viruses) do
+    names =
+      Enum.map(viruses, fn virus ->
+        virus.name
+      end)
+      |> Enum.join(", ")
+
+    buttons =
+      Enum.sort_by(viruses, fn virus -> virus.name end)
+      |> Enum.dedup()
+      |> BnBBot.ButtonAwait.generate_persistent_buttons()
+
+    {:ok} =
+      Api.create_interaction_response(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: names,
+            components: buttons
+          }
+        }
+      )
+
+    # five minutes
+    Process.sleep(300_000)
+
+    route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
+
+    Api.request(:patch, route, %{
+      components: []
+    })
   end
 
   def send_found_virus(%Nostrum.Struct.Interaction{} = inter, virus) do

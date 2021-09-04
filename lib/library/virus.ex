@@ -73,8 +73,17 @@ defmodule BnBBot.Library.Virus do
     GenServer.call(:virus_table, {:cr, cr})
   end
 
-  def skills_to_io_list(%BnBBot.Library.Virus{} = virus) do
+  @spec make_encounter(pos_integer(), pos_integer()) :: [BnBBot.Library.Virus.t()]
+  def make_encounter(num, cr) do
+    GenServer.call(:virus_table, {:encounter, num, cr})
+  end
 
+  @spec make_encounter(pos_integer(), pos_integer(), pos_integer()) :: [BnBBot.Library.Virus.t()]
+  def make_encounter(num, low_cr, high_cr) do
+    GenServer.call(:virus_table, {:encounter, num, low_cr, high_cr})
+  end
+
+  def skills_to_io_list(%BnBBot.Library.Virus{} = virus) do
     per = num_to_2_digit_string(virus.skills[:per] || 0)
     inf = num_to_2_digit_string(virus.skills[:inf] || 0)
     tch = num_to_2_digit_string(virus.skills[:tch] || 0)
@@ -111,7 +120,6 @@ defmodule BnBBot.Library.Virus do
       "AFF: ",
       aff
     ]
-
   end
 
   def drops_to_io_list(%BnBBot.Library.Virus{} = virus) do
@@ -133,7 +141,6 @@ defmodule BnBBot.Library.Virus do
       "#{num}"
     end
   end
-
 end
 
 defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Virus do
@@ -177,10 +184,9 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Virus do
       style: 4,
       emoji: emoji,
       label: virus.name,
-      custom_id: lower_name,
+      custom_id: lower_name
     }
   end
-
 end
 
 defimpl String.Chars, for: BnBBot.Library.Virus do
@@ -215,25 +221,27 @@ defimpl String.Chars, for: BnBBot.Library.Virus do
         []
       end
 
-    damage_elem = unless is_nil(virus.dmgelem) do
-      [
-        "Damage Element(s): ",
-        Enum.map(virus.dmgelem, fn elem -> BnBBot.Library.Shared.element_to_string(elem) end)
-        |> Enum.intersperse(", "),
-        "\n"
-      ]
-    else
-      []
-    end
+    damage_elem =
+      unless is_nil(virus.dmgelem) do
+        [
+          "Damage Element(s): ",
+          Enum.map(virus.dmgelem, fn elem -> BnBBot.Library.Shared.element_to_string(elem) end)
+          |> Enum.intersperse(", "),
+          "\n"
+        ]
+      else
+        []
+      end
 
-    blight = unless is_nil(virus.blight) do
-      [
-        BnBBot.Library.Shared.blight_to_io_list(virus.blight),
-        "\n"
-      ]
-    else
-      []
-    end
+    blight =
+      unless is_nil(virus.blight) do
+        [
+          BnBBot.Library.Shared.blight_to_io_list(virus.blight),
+          "\n"
+        ]
+      else
+        []
+      end
 
     io_list = [
       "```\n",
@@ -334,12 +342,44 @@ defmodule BnBBot.Library.VirusTable do
     {:reply, size, state}
   end
 
-  @spec handle_call({:cr, pos_integer()}, GenServer.from(), map()) :: {:reply, [BnBBot.Library.Virus.t()], map()}
+  @spec handle_call({:cr, pos_integer()}, GenServer.from(), map()) ::
+          {:reply, [BnBBot.Library.Virus.t()], map()}
   def handle_call({:cr, cr}, _from, state) do
     viruses =
       Map.values(state)
       |> Enum.filter(fn virus -> virus.cr == cr end)
-      |> Enum.sort_by(fn virus -> virus.name end)
+
+    {:reply, viruses, state}
+  end
+
+  @spec handle_call({:encounter, pos_integer(), pos_integer()}, GenServer.from(), map()) ::
+          {:reply, [BnBBot.Library.Virus.t()], map()}
+  def handle_call({:encounter, count, cr}, _from, state) do
+    viruses =
+      Map.values(state)
+      |> Enum.filter(fn virus -> virus.cr == cr end)
+
+    viruses = unless Enum.empty?(viruses) do
+      for _ <- 1..count, do: Enum.random(viruses)
+    else
+      []
+    end
+
+    {:reply, viruses, state}
+  end
+
+  @spec handle_call(
+          {:encounter, pos_integer(), pos_integer(), pos_integer()},
+          GenServer.from(),
+          map()
+        ) ::
+          {:reply, [BnBBot.Library.Virus.t()], map()}
+  def handle_call({:encounter, count, low_cr, high_cr}, _from, state) do
+    viruses =
+      Map.values(state)
+      |> Enum.filter(fn virus -> virus.cr in low_cr..high_cr end)
+
+    viruses = for _ <- 1..count, do: Enum.random(viruses)
 
     {:reply, viruses, state}
   end
