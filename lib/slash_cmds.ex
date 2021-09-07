@@ -74,6 +74,58 @@ defmodule BnBBot.SlashCommands do
     Api.request(:put, route, %{
       permissions: perms
     })
+
+    hidden_cmd = Commands.Hidden.get_create_map()
+
+    {:ok, cmd} = Api.create_guild_application_command(guild_id, hidden_cmd)
+
+    route = "/applications/#{me_id}/guilds/#{guild_id}/commands/#{cmd.id}/permissions"
+
+    Api.request(:put, route, %{
+      permissions: perms
+    })
+  end
+
+  @spec create_locked_global_commands([Nostrum.Snowflake.t()]) :: any()
+  def create_locked_global_commands(guild_ids) do
+    me_id = Nostrum.Cache.Me.get().id
+
+    perms =
+      [
+        Application.fetch_env!(:elixir_bot, :owner_id)
+        | Application.fetch_env!(:elixir_bot, :admins)
+      ]
+      |> Enum.map(fn id ->
+        %{
+          id: "#{id}",
+          type: 2,
+          permission: true
+        }
+      end)
+
+    reload_cmd = Commands.Reload.get_create_map()
+
+    {:ok, cmd} = Api.create_global_application_command(reload_cmd)
+
+    for guild_id <- guild_ids do
+      route = "/applications/#{me_id}/guilds/#{guild_id}/commands/#{cmd.id}/permissions"
+
+      Api.request(:put, route, %{
+        permissions: perms
+      })
+    end
+
+    hidden_cmd = Commands.Hidden.get_create_map()
+
+    {:ok, cmd} = Api.create_global_application_command(hidden_cmd)
+
+    for guild_id <- guild_ids do
+      route = "/applications/#{me_id}/guilds/#{guild_id}/commands/#{cmd.id}/permissions"
+
+      Api.request(:put, route, %{
+        permissions: perms
+      })
+    end
   end
 
   @spec handle_command(Nostrum.Struct.Interaction.t()) :: any
@@ -94,7 +146,7 @@ defmodule BnBBot.SlashCommands do
     Commands.Shuffle.call_slash(inter)
   end
 
-  defp handle_slash_command("phb", inter) do
+  defp handle_slash_command("links", inter) do
     Commands.PHB.call_slash(inter)
   end
 
@@ -128,6 +180,10 @@ defmodule BnBBot.SlashCommands do
 
   defp handle_slash_command("reload", inter) do
     Commands.Reload.call_slash(inter)
+  end
+
+  defp handle_slash_command("hidden", inter) do
+    Commands.Hidden.call_slash(inter)
   end
 
   defp handle_slash_command(name, inter) do

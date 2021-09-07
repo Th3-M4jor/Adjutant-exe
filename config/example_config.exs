@@ -38,7 +38,20 @@ config :elixir_bot,
   ncp_url: "https://jin-tengai.dev/bnb/backend/fetch/ncps",
   chip_url: "https://jin-tengai.dev/bnb/backend/fetch/chips",
   virus_url: "https://jin-tengai.dev/bnb/backend/fetch/viruses",
-  phb: "https://jin-tengai.dev/bnb/#!/home",
+  phb_links: [
+    %{
+      type: 2,
+      style: 5,
+      label: "B&B PHB",
+      url: "https://jin-tengai.dev/bnb/#!/home"
+    },
+    %{
+      type: 2,
+      style: 5,
+      label: "Manager",
+      url: "https://jin-tengai.dev/manager"
+    }
+  ],
   ncp_emoji: %{
     id: nil,
 
