@@ -20,8 +20,8 @@ defmodule BnBBot.Util do
     Api.create_reaction(msg.channel_id, msg.id, emote)
   end
 
-  @spec get_user_perms(Nostrum.Struct.Message.t()) :: :admin | :everyone | :owner
-  def get_user_perms(%Nostrum.Struct.Message{} = msg) do
+  @spec get_user_perms(Nostrum.Struct.Message.t() | Nostrum.Struct.Interaction.t()) :: :admin | :everyone | :owner
+  def get_user_perms(msg) do
     cond do
       is_owner_msg?(msg) -> :owner
       is_admin_msg?(msg) -> :admin
@@ -29,16 +29,43 @@ defmodule BnBBot.Util do
     end
   end
 
-  @spec is_owner_msg?(Nostrum.Struct.Message.t()) :: boolean
+  @spec is_owner_msg?(Nostrum.Struct.Message.t() | Nostrum.Struct.Interaction.t()) :: boolean
   def is_owner_msg?(%Nostrum.Struct.Message{} = msg) do
     {:ok, owner_id} = Nostrum.Snowflake.cast(Application.fetch_env!(:elixir_bot, :owner_id))
     {:ok, msg_author_id} = Nostrum.Snowflake.cast(msg.author.id)
     owner_id == msg_author_id
   end
 
+  def is_owner_msg?(%Nostrum.Struct.Interaction{} = inter) do
+    {:ok, owner_id} = Nostrum.Snowflake.cast(Application.fetch_env!(:elixir_bot, :owner_id))
+
+    inter_author_id = if is_nil(inter.member) do
+      inter.user.id
+    else
+      inter.member.user.id
+    end |> Nostrum.Snowflake.cast!()
+
+    owner_id == inter_author_id
+
+  end
+
+  @spec is_admin_msg?(Nostrum.Struct.Message.t() | Nostrum.Struct.Interaction.t()) :: boolean
   def is_admin_msg?(%Nostrum.Struct.Message{} = msg) do
     admins = Application.fetch_env!(:elixir_bot, :admins)
     Enum.any?(admins, fn id -> id == msg.author.id end)
+  end
+
+  def is_admin_msg?(%Nostrum.Struct.Interaction{} = inter) do
+    admins = Application.fetch_env!(:elixir_bot, :admins)
+
+    inter_author_id = if is_nil(inter.member) do
+      inter.user.id
+    else
+      inter.member.user.id
+    end |> Nostrum.Snowflake.cast!()
+
+    Enum.any?(admins, fn id -> id == inter_author_id end)
+
   end
 
   @spec dm_owner(keyword() | map() | String.t(), boolean()) ::

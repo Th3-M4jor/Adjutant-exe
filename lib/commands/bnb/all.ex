@@ -152,10 +152,14 @@ defmodule BnBBot.Commands.All do
 
       edit_task =
         Task.async(fn ->
-          Api.request(:patch, route, %{
-            content: "You selected #{lib_obj.name}",
-            components: []
-          })
+          {:ok} =
+            Api.create_interaction_response(btn_response, %{
+              type: 7,
+              data: %{
+                content: "You selected #{lib_obj.name}",
+                components: []
+              }
+            })
         end)
 
       resp_task =
@@ -164,14 +168,16 @@ defmodule BnBBot.Commands.All do
 
           resp_text =
             if is_nil(inter.user) do
-              "<@#{inter.member.user.id}> used `#{name}`\n#{lib_obj}"
+              "<@#{inter.member.user.id}> used `/#{name}`\n#{lib_obj}"
             else
-              "<@#{inter.user.id}> used `#{name}`\n#{lib_obj}"
+              "<@#{inter.user.id}> used `/#{name}`\n#{lib_obj}"
             end
 
-          Api.execute_webhook(inter.application_id, inter.token, %{
-            content: resp_text
-          })
+          Api.create_message!(inter.channel_id, resp_text)
+
+          #Api.execute_webhook(inter.application_id, inter.token, %{
+          #  content: resp_text
+          #})
         end)
 
       Task.await_many([edit_task, resp_task], :infinity)

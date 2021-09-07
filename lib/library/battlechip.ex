@@ -284,7 +284,7 @@ defmodule BnBBot.Library.BattlechipTable do
   end
 
   defp load_chips() do
-    Logger.debug("(Re)loading Chips")
+    Logger.info("(Re)loading Chips")
 
     chip_url = Application.fetch_env!(:elixir_bot, :chip_url)
     resp = HTTPoison.get(chip_url)

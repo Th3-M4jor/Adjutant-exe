@@ -199,7 +199,7 @@ defmodule BnBBot.Library.NCPTable do
   end
 
   defp load_ncps() do
-    Logger.debug("(Re)loading NCPs")
+    Logger.info("(Re)loading NCPs")
     ncp_url = Application.fetch_env!(:elixir_bot, :ncp_url)
     resp = HTTPoison.get(ncp_url)
 

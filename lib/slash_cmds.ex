@@ -49,10 +49,36 @@ defmodule BnBBot.SlashCommands do
     Api.request(:put, route, body)
   end
 
+  def create_locked_commands(guild_id) do
+    me_id = Nostrum.Cache.Me.get().id
+
+    reload_cmd = Commands.Reload.get_create_map()
+
+    {:ok, cmd} = Api.create_guild_application_command(guild_id, reload_cmd)
+
+    route = "/applications/#{me_id}/guilds/#{guild_id}/commands/#{cmd.id}/permissions"
+
+    perms =
+      [
+        Application.fetch_env!(:elixir_bot, :owner_id)
+        | Application.fetch_env!(:elixir_bot, :admins)
+      ]
+      |> Enum.map(fn id ->
+        %{
+          id: "#{id}",
+          type: 2,
+          permission: true
+        }
+      end)
+
+    Api.request(:put, route, %{
+      permissions: perms
+    })
+  end
+
   @spec handle_command(Nostrum.Struct.Interaction.t()) :: any
   def handle_command(%Nostrum.Struct.Interaction{} = inter) do
-    name = inter.data.name
-    handle_slash_command(name, inter)
+    handle_slash_command(inter.data.name, inter)
   end
 
   @spec handle_slash_command(String.t(), Nostrum.Struct.Interaction.t()) :: :ignore
@@ -100,18 +126,23 @@ defmodule BnBBot.SlashCommands do
     Commands.Panels.call_slash(inter)
   end
 
+  defp handle_slash_command("reload", inter) do
+    Commands.Reload.call_slash(inter)
+  end
+
   defp handle_slash_command(name, inter) do
     Logger.warn("slash command #{name} doesn't exist")
 
-    {:ok} = Api.create_interaction_response(
-      inter,
-      %{
-        type: 4,
-        data: %{
-          content: "Woops, Major forgot to implement this command",
-          flags: 64
+    {:ok} =
+      Api.create_interaction_response(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: "Woops, Major forgot to implement this command",
+            flags: 64
+          }
         }
-      }
-    )
+      )
   end
 end

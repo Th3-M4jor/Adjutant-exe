@@ -38,7 +38,7 @@ defmodule BnBBot.Library.Virus do
   @type t :: %BnBBot.Library.Virus{
           id: pos_integer(),
           name: String.t(),
-          element: [BnBBot.Library.Shared.Element.t()],
+          element: [BnBBot.Library.Shared.element()],
           hp: pos_integer(),
           ac: pos_integer(),
           stats: map(),
@@ -48,7 +48,7 @@ defmodule BnBBot.Library.Virus do
           cr: pos_integer(),
           abilities: [String.t()] | nil,
           damage: BnBBot.Library.Shared.dice() | nil,
-          dmgelem: [BnBBot.Library.Shared.Element.t()] | nil,
+          dmgelem: [BnBBot.Library.Shared.element()] | nil,
           blight: BnBBot.Library.Shared.blight() | nil
         }
 

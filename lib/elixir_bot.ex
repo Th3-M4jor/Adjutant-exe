@@ -91,17 +91,21 @@ defmodule BnBBot.Consumer do
     end
   end
 
-  def handle_event({:GUILD_MEMBER_ADD, {_guild_id, %Nostrum.Struct.Guild.Member{} = _member}, _ws_state}) do
-    #if guild_id == Application.fetch_env!(:elixir_bot, :primary_guild_id) do
+  def handle_event(
+        {:GUILD_MEMBER_ADD, {_guild_id, %Nostrum.Struct.Guild.Member{} = _member}, _ws_state}
+      ) do
+    # if guild_id == Application.fetch_env!(:elixir_bot, :primary_guild_id) do
     #  primary_guild_channel = Application.fetch_env!(:elixir_bot, :primary_guild_channel_id)
     #  primary_guild_role_channel = Application.fetch_env!(:elixir_bot, :primary_guild_role_channel_id)
     #  text = "Welcome to the Busters & Battlechips Discord <@#{member.user.id}>. Assign yourself roles in <##{primary_guild_role_channel}>"
     #  Api.create_message!(primary_guild_channel, text)
-    #end
+    # end
     :noop
   end
 
-  def handle_event({:GUILD_MEMBER_REMOVE, {guild_id, %Nostrum.Struct.Guild.Member{} = member}, _ws_state}) do
+  def handle_event(
+        {:GUILD_MEMBER_REMOVE, {guild_id, %Nostrum.Struct.Guild.Member{} = member}, _ws_state}
+      ) do
     log_channel_id = Application.fetch_env!(:elixir_bot, :dm_log_Id)
     text = "#{member.user.username} has left #{guild_id}"
     Api.create_message!(log_channel_id, text)
@@ -144,8 +148,7 @@ defmodule BnBBot.Consumer do
   end
 
   # button clicks
-  def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{} = inter, _ws_state})
-      when inter.type == 3 do
+  def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{type: 3} = inter, _ws_state}) do
     Logger.debug("Got an interaction button click on #{inter.message.id}")
     Logger.debug("#{inspect(inter, pretty: true)}")
 
@@ -157,7 +160,9 @@ defmodule BnBBot.Consumer do
 
       ["cr", chip_name] ->
         {:found, chip} = BnBBot.Library.Battlechip.get_chip(chip_name)
-        Api.create_interaction_response(inter,
+
+        Api.create_interaction_response(
+          inter,
           %{
             type: 4,
             data: %{
@@ -168,7 +173,9 @@ defmodule BnBBot.Consumer do
 
       ["nr", ncp_name] ->
         {:found, ncp} = BnBBot.Library.NCP.get_ncp(ncp_name)
-        Api.create_interaction_response(inter,
+
+        Api.create_interaction_response(
+          inter,
           %{
             type: 4,
             data: %{
@@ -179,7 +186,9 @@ defmodule BnBBot.Consumer do
 
       ["vr", virus_name] ->
         {:found, virus} = BnBBot.Library.Virus.get_virus(virus_name)
-        Api.create_interaction_response(inter,
+
+        Api.create_interaction_response(
+          inter,
           %{
             type: 4,
             data: %{
@@ -197,8 +206,7 @@ defmodule BnBBot.Consumer do
   end
 
   # slash commands and context menu
-  def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{} = inter, _ws_state})
-      when inter.type == 2 do
+  def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{type: 2} = inter, _ws_state}) do
     Logger.debug("Got an interaction command")
     Logger.debug("#{inspect(inter, pretty: true)}")
 
@@ -208,17 +216,10 @@ defmodule BnBBot.Consumer do
       e ->
         Logger.error(Exception.format(:error, e, __STACKTRACE__))
 
-        {:ok} =
-          Api.create_interaction_response(
-            inter,
-            %{
-              type: 4,
-              data: %{
-                content: "An error has occurred, inform Major",
-                flags: 64
-              }
-            }
-          )
+        Api.create_message!(
+          inter.channel_id,
+          "An error has occurred, inform Major"
+        )
     end
   end
 

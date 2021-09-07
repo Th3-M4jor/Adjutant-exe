@@ -121,6 +121,7 @@ defmodule BnBBot.ButtonAwait do
     Logger.debug("Registering an await click on #{uuid} for #{user_id}")
     btn = await_btn_click_inner()
     Logger.debug("Got a response to #{uuid} of #{inspect(btn, pretty: true)}")
+    Registry.unregister(:BUTTON_COLLECTOR, uuid)
     btn
   end
 

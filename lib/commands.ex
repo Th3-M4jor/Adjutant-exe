@@ -16,8 +16,7 @@ defmodule BnBBot.Commands do
     end
   end
 
-  @spec parse_cmd(Nostrum.Struct.Message.t(), :owner | :admin | :everyone) :: any()
-  defp parse_cmd(msg, :owner) do
+  defp parse_cmd(%Nostrum.Struct.Message{} = msg, :owner) do
     contents = String.trim(msg.content)
     prefix = Application.fetch_env!(:elixir_bot, :prefix)
     {_, prefix_removed} = String.split_at(contents, String.length(prefix))
@@ -33,6 +32,7 @@ defmodule BnBBot.Commands do
       end
 
     cmd_call(cmd_name, msg, args)
+    :ignore
   end
 
   defp parse_cmd(msg, :admin) do

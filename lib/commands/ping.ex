@@ -44,23 +44,22 @@ defmodule BnBBot.Commands.Ping do
       ]
     }
 
-  #  route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
+    route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
-  #  Api.request(:patch, route, %{
-  #    content: "",
-  #    embeds: [ping_embed],
-  #    flags: 0,
-  #  })
+    :ok = Api.request(:patch, route, %{
+      content: "",
+      embeds: [ping_embed],
+    }) |> elem(0)
 
-    Api.execute_webhook(
-      inter.application_id,
-      inter.token,
-      %{
-        content: "",
-        embeds: [ping_embed]
-      },
-      true
-    )
+    #Api.execute_webhook(
+    #  inter.application_id,
+    #  inter.token,
+    #  %{
+    #    content: "",
+    #    embeds: [ping_embed]
+    #  },
+    #  true
+    #)
 
     # Api.create_message(inter.channel_id, content: "", embeds: [ping_embed])
     :ignore
