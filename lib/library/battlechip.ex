@@ -222,12 +222,27 @@ defmodule BnBBot.Library.BattlechipTable do
 
   @impl true
   def init(_) do
+
+    {:ok, %{}, {:continue, :reload}}
+
+    #case load_chips() do
+    #  {:ok, chips} ->
+    #    {:ok, chips}
+    #
+    #  {:error, reason} ->
+    #    Logger.warn("Failed to load Chips: #{reason}")
+    #    {:ok, %{}}
+    #end
+  end
+
+  @impl true
+  def handle_continue(:reload, _state) do
     case load_chips() do
       {:ok, chips} ->
-        {:ok, chips}
-
+        {:noreply, chips}
       {:error, reason} ->
-        {:stop, reason}
+        Logger.warn("Failed to load Chips: #{reason}")
+        {:noreply, %{}}
     end
   end
 
@@ -291,21 +306,20 @@ defmodule BnBBot.Library.BattlechipTable do
     chip_list = decode_chip_resp(resp)
 
     case chip_list do
-      :http_err ->
-        Logger.warn("Failed in loading chips")
-        {:error, "Failed to load Chips"}
+      {:http_err, reason} ->
+        {:error, reason}
 
-      chips ->
+      {:ok, chips} ->
         {:ok, Map.new(chips)}
     end
   end
 
   @spec decode_chip_resp({:ok, HTTPoison.Response.t()} | {:error, HTTPoison.Error.t()}) ::
-          [{String.t(), BnBBot.Library.Battlechip}] | :http_err
+          {:ok, [{String.t(), BnBBot.Library.Battlechip}]} | {:http_err, String.t()}
   defp decode_chip_resp({:ok, %HTTPoison.Response{} = resp}) when resp.status_code in 200..299 do
     maps = Poison.Parser.parse!(resp.body, keys: :atoms)
 
-    Enum.map(maps, fn chip ->
+    maps = Enum.map(maps, fn chip ->
       elem = chip[:elem] |> string_list_to_atoms()
       skill = chip[:skill] |> string_list_to_atoms()
       range = chip[:range] |> String.to_atom()
@@ -332,10 +346,16 @@ defmodule BnBBot.Library.BattlechipTable do
 
       {lower_name, chip}
     end)
+
+    {:ok, maps}
   end
 
-  defp decode_chip_resp(_err) do
-    :http_err
+  defp decode_chip_resp({:ok, %HTTPoison.Response{} = resp}) do
+    {:http_err, "Got http status code #{resp.status_code}"}
+  end
+
+  defp decode_chip_resp({:error, %HTTPoison.Error{} = err}) do
+    {:http_err, "Got http error #{err.reason}"}
   end
 
   defp string_list_to_atoms(nil) do

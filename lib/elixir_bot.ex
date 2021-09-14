@@ -121,7 +121,7 @@ defmodule BnBBot.Consumer do
     {dm_msg, override} =
       case :ets.lookup(:bnb_bot_data, :first_ready) do
         [first_ready: false] ->
-          Logger.warn("Ready re-emitted #{inspect(ready_data, pretty: true)}")
+          Logger.warn(["Ready re-emitted\n", inspect(ready_data, pretty: true)])
           {"ready re-emitted", true}
 
         _ ->
@@ -133,7 +133,7 @@ defmodule BnBBot.Consumer do
           ncp_ct = BnBBot.Library.NCP.get_ncp_ct()
           virus_ct = BnBBot.Library.Virus.get_virus_ct()
           # [ok: ncp_ct, ok: chip_ct] = Task.await_many([ncp_task, chips_task], :infinity)
-          Logger.debug("Ready #{inspect(ready_data, pretty: true)}")
+          Logger.debug(["Ready\n", inspect(ready_data, pretty: true)])
 
           {"Bot Ready\n#{chip_ct} chips loaded\n#{virus_ct} viruses loaded\n#{ncp_ct} ncps loaded",
            false}
@@ -143,14 +143,16 @@ defmodule BnBBot.Consumer do
   end
 
   def handle_event({:RESUMED, resume_data, _ws_state}) do
-    Logger.debug("Bot resumed #{inspect(resume_data, pretty: true)}")
+    Logger.debug(["Bot resumed\n", inspect(resume_data, pretty: true)])
     BnBBot.Util.dm_owner("Bot Resumed")
   end
 
   # button clicks
   def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{type: 3} = inter, _ws_state}) do
-    Logger.debug("Got an interaction button click on #{inter.message.id}")
-    Logger.debug("#{inspect(inter, pretty: true)}")
+    Logger.debug([
+      "Got an interaction button click on #{inter.message.id}\n",
+      inspect(inter, pretty: true)
+    ])
 
     case String.split(inter.data.custom_id, "_", parts: 3) do
       # Ensure that the custom_id starts with a number before trying to parse
@@ -158,44 +160,8 @@ defmodule BnBBot.Consumer do
         id = String.to_integer(id)
         BnBBot.ButtonAwait.resp_to_btn(inter, id)
 
-      ["cr", chip_name] ->
-        {:found, chip} = BnBBot.Library.Battlechip.get_chip(chip_name)
-
-        Api.create_interaction_response(
-          inter,
-          %{
-            type: 4,
-            data: %{
-              content: "#{chip}"
-            }
-          }
-        )
-
-      ["nr", ncp_name] ->
-        {:found, ncp} = BnBBot.Library.NCP.get_ncp(ncp_name)
-
-        Api.create_interaction_response(
-          inter,
-          %{
-            type: 4,
-            data: %{
-              content: "#{ncp}"
-            }
-          }
-        )
-
-      ["vr", virus_name] ->
-        {:found, virus} = BnBBot.Library.Virus.get_virus(virus_name)
-
-        Api.create_interaction_response(
-          inter,
-          %{
-            type: 4,
-            data: %{
-              content: "#{virus}"
-            }
-          }
-        )
+      [<<kind::utf8, "r">>, name] when kind in [?c, ?n, ?v] ->
+        BnBBot.ButtonAwait.resp_to_persistent_btn(inter, kind, name)
 
       ["r", id] ->
         BnBBot.RoleBtn.handle_role_btn_click(inter, id)
@@ -207,8 +173,7 @@ defmodule BnBBot.Consumer do
 
   # slash commands and context menu
   def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{type: 2} = inter, _ws_state}) do
-    Logger.debug("Got an interaction command")
-    Logger.debug("#{inspect(inter, pretty: true)}")
+    Logger.debug(["Got an interaction command\n", inspect(inter, pretty: true)])
 
     try do
       BnBBot.SlashCommands.handle_command(inter)

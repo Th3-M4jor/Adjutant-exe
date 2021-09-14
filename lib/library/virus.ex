@@ -298,12 +298,26 @@ defmodule BnBBot.Library.VirusTable do
 
   @impl true
   def init(_) do
+
+    {:ok, %{}, {:continue, :reload}}
+    #case load_viruses() do
+    #  {:ok, viruses} ->
+    #    {:ok, viruses}
+    #
+    #  {:error, reason} ->
+    #    Logger.warn("Failed to load Viruses: #{reason}")
+    #    {:ok, %{}}
+    #end
+  end
+
+  @impl true
+  def handle_continue(:reload, _state) do
     case load_viruses() do
       {:ok, viruses} ->
-        {:ok, viruses}
-
-      {:error, err} ->
-        {:stop, err}
+        {:noreply, viruses}
+      {:error, reason} ->
+        Logger.warn("Failed to load Viruses: #{reason}")
+        {:noreply, %{}}
     end
   end
 
@@ -390,7 +404,11 @@ defmodule BnBBot.Library.VirusTable do
       Map.values(state)
       |> Enum.filter(fn virus -> virus.cr in low_cr..high_cr end)
 
-    viruses = for _ <- 1..count, do: Enum.random(viruses)
+    viruses = unless Enum.empty?(viruses) do
+      for _ <- 1..count, do: Enum.random(viruses)
+    else
+      []
+    end
 
     {:reply, viruses, state}
   end
@@ -444,19 +462,20 @@ defmodule BnBBot.Library.VirusTable do
     virus_list = decode_virus_resp(resp)
 
     case virus_list do
-      :http_err ->
-        Logger.warn("Failed in loadinv viruses")
-        {:error, "Failed to load Viruses"}
+      {:http_err, reason} ->
+        {:error, reason}
 
-      viruses ->
+      {:ok, viruses} ->
         {:ok, Map.new(viruses)}
     end
   end
 
+  @spec decode_virus_resp({:ok, HTTPoison.Response.t()} | {:error, HTTPoison.Error.t()}) ::
+          {:ok, [{String.t(), BnBBot.Library.Virus.t()}]} | {:http_err, String.t()}
   defp decode_virus_resp({:ok, %HTTPoison.Response{} = resp}) when resp.status_code in 200..299 do
     maps = Poison.Parser.parse!(resp.body, keys: :atoms)
 
-    Enum.map(maps, fn virus ->
+    maps = Enum.map(maps, fn virus ->
       elem = virus[:element] |> string_list_to_atoms()
       dmg_elem = virus[:dmgelem] |> string_list_to_atoms()
       lower_name = virus[:name] |> String.downcase(:ascii)
@@ -487,10 +506,16 @@ defmodule BnBBot.Library.VirusTable do
 
       {lower_name, virus}
     end)
+
+    {:ok, maps}
   end
 
-  defp decode_virus_resp(_err) do
-    :http_err
+  defp decode_virus_resp({:ok, %HTTPoison.Response{} = resp}) do
+    {:http_err, "Got http status code #{resp.status_code}"}
+  end
+
+  defp decode_virus_resp({:error, %HTTPoison.Error{} = err}) do
+    {:http_err, "Got http error #{err.reason}"}
   end
 
   defp string_list_to_atoms(nil) do

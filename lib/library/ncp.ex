@@ -137,12 +137,25 @@ defmodule BnBBot.Library.NCPTable do
 
   @impl true
   def init(_) do
+    {:ok, %{}, {:continue, :reload}}
     #state = load_ncps()
+    #case load_ncps() do
+    #  {:ok, ncps} ->
+    #    {:ok, ncps}
+    #  {:error, reason} ->
+    #    Logger.warn("Failed to load NCPS: #{reason}")
+    #    {:ok, %{}}
+    #end
+  end
+
+  @impl true
+  def handle_continue(:reload, _state) do
     case load_ncps() do
       {:ok, ncps} ->
-        {:ok, ncps}
+        {:noreply, ncps}
       {:error, reason} ->
-        {:stop, reason}
+        Logger.warn("Failed to load NCPS: #{reason}")
+        {:noreply, %{}}
     end
   end
 
@@ -204,29 +217,34 @@ defmodule BnBBot.Library.NCPTable do
     resp = HTTPoison.get(ncp_url)
 
     case decode_ncp_resp(resp) do
-      :http_err ->
-        Logger.warn("Failed in loading NCPs")
-        {:error, "Failed to load NCPs"}
+      {:http_err, reason} ->
+        {:error, reason}
 
-      ncps ->
+      {:ok, ncps} ->
         {:ok, Map.new(ncps)}
     end
   end
 
   @spec decode_ncp_resp({:ok, HTTPoison.Response.t()} | {:error, HTTPoison.Error.t()}) ::
-          [{String.t(), BnBBot.Library.NCP}] | :http_err
+          {:ok, [{String.t(), BnBBot.Library.NCP.t()}]} | {:http_err, String.t()}
   defp decode_ncp_resp({:ok, %HTTPoison.Response{} = resp}) when resp.status_code in 200..299 do
     maps = Poison.Parser.parse!(resp.body, keys: :atoms)
 
-    Enum.map(maps, fn ncp ->
+    maps = Enum.map(maps, fn ncp ->
       color = String.to_atom(ncp[:color])
       lower_name = String.downcase(ncp[:name], :ascii)
       ncp_map = Map.put(ncp, :color, color)
       {lower_name, struct(BnBBot.Library.NCP, ncp_map)}
     end)
+
+    {:ok, maps}
   end
 
-  defp decode_ncp_resp(_) do
-    :http_err
+  defp decode_ncp_resp({:ok, %HTTPoison.Response{} = resp}) do
+    {:http_err, "Got http status code #{resp.status_code}"}
+  end
+
+  defp decode_ncp_resp({:error, %HTTPoison.Error{} = err}) do
+    {:http_err, "Got http error #{err.reason}"}
   end
 end

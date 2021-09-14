@@ -151,6 +151,25 @@ defmodule BnBBot.ButtonAwait do
     end
   end
 
+  def resp_to_persistent_btn(%Nostrum.Struct.Interaction{} = inter, kind, name) do
+    {:found, obj} = case kind do
+      ?c -> BnBBot.Library.Battlechip.get_chip(name)
+      ?n -> BnBBot.Library.NCP.get_ncp(name)
+      ?v -> BnBBot.Library.Virus.get_virus(name)
+    end
+
+    {:ok} = Nostrum.Api.create_interaction_response(
+      inter,
+      %{
+        type: 4,
+        data: %{
+          content: "#{obj}"
+        }
+      }
+    )
+
+  end
+
   defp await_btn_click_inner() do
     receive do
       value ->

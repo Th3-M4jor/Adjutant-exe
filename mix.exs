@@ -24,7 +24,7 @@ defmodule ElixirBot.MixProject do
   def application do
     [
       mod: {BnBBot, []},
-      extra_applications: [:logger]
+      extra_applications: [:logger, :runtime_tools]
     ]
   end
 

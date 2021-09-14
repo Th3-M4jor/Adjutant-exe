@@ -194,7 +194,7 @@ defmodule BnBBot.Commands.Virus do
         %{
           type: 4,
           data: %{
-            content: "I'm sorry, I couldn't find any viruses in the given CR's",
+            content: "I'm sorry, I couldn't find any viruses in the given CRs",
             flags: 64
           }
         }

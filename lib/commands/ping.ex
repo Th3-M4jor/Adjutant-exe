@@ -9,11 +9,22 @@ defmodule BnBBot.Commands.Ping do
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     Logger.debug("Recieved a ping command")
 
+    utilization_task = Task.async(fn ->
+      :scheduler.utilization(1) |> Enum.take(2)
+    end)
+
     now = System.monotonic_time()
 
     {:ok} = Api.create_interaction_response(inter, %{
       type: 5
     })
+
+    elapsed = System.monotonic_time() - now
+
+    [
+      {:total, _, total_percent},
+      {:weighted, _, weighted_percent},
+    ] = Task.await(utilization_task)
 
     #  {:ok, response} =
     #    Api.create_message(
@@ -21,7 +32,7 @@ defmodule BnBBot.Commands.Ping do
     #      content: "Checking response times..."
     #    )
 
-    elapsed = System.monotonic_time() - now
+
     milis = System.convert_time_unit(elapsed, :native, :microsecond) / 1000
     count = :erlang.float_to_binary(milis, decimals: 2)
 
@@ -40,7 +51,8 @@ defmodule BnBBot.Commands.Ping do
           name: "Uptime:",
           value: get_uptime_str()
         },
-        %Embed.Field{name: "Memory:", value: "BEAM VM memory usage is #{memory_usage} MiB"}
+        %Embed.Field{name: "Memory:", value: "BEAM VM memory usage is #{memory_usage} MiB"},
+        %Embed.Field{name: "CPU usage:", value: "total: #{total_percent}\nweighted: #{weighted_percent}"},
       ]
     }
 
