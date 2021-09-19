@@ -21,7 +21,8 @@ defmodule BnBBot.SlashCommands do
       Commands.All.get_create_map(),
       Commands.Statuses.get_create_map(),
       Commands.Blight.get_create_map(),
-      Commands.Panels.get_create_map()
+      Commands.Panels.get_create_map(),
+      Commands.Groups.get_create_map()
     ]
 
     Api.request(:put, route, body)
@@ -43,7 +44,8 @@ defmodule BnBBot.SlashCommands do
       Commands.All.get_create_map(),
       Commands.Statuses.get_create_map(),
       Commands.Blight.get_create_map(),
-      Commands.Panels.get_create_map()
+      Commands.Panels.get_create_map(),
+      Commands.Groups.get_create_map()
     ]
 
     Api.request(:put, route, body)
@@ -180,6 +182,10 @@ defmodule BnBBot.SlashCommands do
 
   defp handle_slash_command("reload", inter) do
     Commands.Reload.call_slash(inter)
+  end
+
+  defp handle_slash_command("groups", inter) do
+    Commands.Groups.call_slash(inter)
   end
 
   defp handle_slash_command("hidden", inter) do
