@@ -9,22 +9,34 @@ defmodule BnBBot.Commands.Ping do
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     Logger.debug("Recieved a ping command")
 
-    utilization_task = Task.async(fn ->
-      :scheduler.utilization(1) |> Enum.take(2)
-    end)
+    utilization_task =
+      Task.async(fn ->
+        :scheduler.utilization(1) |> Enum.take(2)
+      end)
+
+    memory_usage_task =
+      Task.async(fn ->
+        bot_memory_usage = round(:erlang.memory(:total) / (1024 * 1024))
+        total_memory_usage = bot_memory_usage + get_cross_node_memory_usage()
+        {bot_memory_usage, total_memory_usage}
+      end)
 
     now = System.monotonic_time()
 
-    {:ok} = Api.create_interaction_response(inter, %{
-      type: 5
-    })
+    {:ok} =
+      Api.create_interaction_response(inter, %{
+        type: 5
+      })
 
     elapsed = System.monotonic_time() - now
 
     [
-      {:total, _, total_percent},
-      {:weighted, _, weighted_percent},
-    ] = Task.await(utilization_task)
+      [
+        {:total, _, total_percent},
+        {:weighted, _, weighted_percent}
+      ],
+      {bot_memory_usage, total_memory_usage}
+    ] = Task.await_many([utilization_task, memory_usage_task], :infinity)
 
     #  {:ok, response} =
     #    Api.create_message(
@@ -32,14 +44,11 @@ defmodule BnBBot.Commands.Ping do
     #      content: "Checking response times..."
     #    )
 
-
     milis = System.convert_time_unit(elapsed, :native, :microsecond) / 1000
     count = :erlang.float_to_binary(milis, decimals: 2)
 
     # zero since there should only need to be one shard
     latency = Nostrum.Util.get_all_shard_latencies()[0]
-
-    memory_usage = round(:erlang.memory(:total) / (1024 * 1024))
 
     ping_embed = %Embed{
       title: "\u{1F3D3} Pong!",
@@ -51,19 +60,33 @@ defmodule BnBBot.Commands.Ping do
           name: "Uptime:",
           value: get_uptime_str()
         },
-        %Embed.Field{name: "Memory:", value: "BEAM VM memory usage is #{memory_usage} MiB"},
-        %Embed.Field{name: "CPU usage:", value: "total: #{total_percent}\nweighted: #{weighted_percent}"},
+        %Embed.Field{
+          name: "Memory:",
+          value: """
+          Bot memory usage is #{bot_memory_usage} MiB
+          BEAM VM memory usage is #{total_memory_usage} MiB
+          """
+        },
+        %Embed.Field{
+          name: "Bot CPU usage:",
+          value: """
+          total: #{total_percent}
+          weighted: #{weighted_percent}
+          """
+        }
       ]
     }
 
     route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
-    :ok = Api.request(:patch, route, %{
-      content: "",
-      embeds: [ping_embed],
-    }) |> elem(0)
+    :ok =
+      Api.request(:patch, route, %{
+        content: "",
+        embeds: [ping_embed]
+      })
+      |> elem(0)
 
-    #Api.execute_webhook(
+    # Api.execute_webhook(
     #  inter.application_id,
     #  inter.token,
     #  %{
@@ -71,7 +94,7 @@ defmodule BnBBot.Commands.Ping do
     #    embeds: [ping_embed]
     #  },
     #  true
-    #)
+    # )
 
     # Api.create_message(inter.channel_id, content: "", embeds: [ping_embed])
     :ignore
@@ -103,5 +126,21 @@ defmodule BnBBot.Commands.Ping do
 
     # "Bot uptime is #{uptime_days}D:#{uptime_hours}H:#{uptime_minutes}M:#{uptime_seconds}S"
     "Bot was last restarted <t:#{startup_time}:R>"
+  end
+
+  defp get_cross_node_memory_usage() do
+    Logger.debug("Getting cross node memory usage")
+
+    backend_name = Application.fetch_env!(:elixir_bot, :backend_node_name)
+    webhook_name = Application.fetch_env!(:elixir_bot, :webhook_node_name)
+
+    if Node.alive?() and Node.connect(backend_name) and Node.connect(webhook_name) do
+      [{:ok, backend_memory_usage}, {:ok, webhook_memory_usage}] =
+        :erpc.multicall([backend_name, webhook_name], :erlang, :memory, [:total])
+
+      round((backend_memory_usage + webhook_memory_usage) / (1024 * 1024))
+    else
+      0
+    end
   end
 end
