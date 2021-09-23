@@ -9,7 +9,7 @@ defmodule BnBBot.ButtonAwait do
 
   Raises if there are more than 25 buttons
   """
-  @spec generate_msg_buttons([struct()]) ::
+  @spec generate_msg_buttons([struct()], boolean()) ::
           [
             %{
               type: pos_integer(),
@@ -17,19 +17,20 @@ defmodule BnBBot.ButtonAwait do
             }
           ]
           | no_return()
-  def generate_msg_buttons([]) do
+  def generate_msg_buttons(buttons, disabled \\ false)
+  def generate_msg_buttons([], _disabled) do
     raise "Empty List"
   end
 
-  def generate_msg_buttons(content) when length(content) > 25 do
+  def generate_msg_buttons(content, _disabled) when length(content) > 25 do
     raise "Too many buttons"
   end
 
-  def generate_msg_buttons(content) do
+  def generate_msg_buttons(content, disabled) do
     row_chunks = Enum.chunk_every(content, 5)
 
     Enum.map(row_chunks, fn row ->
-      action_row = Enum.map(row, &BnBBot.Library.LibObj.to_btn/1)
+      action_row = Enum.map(row, &BnBBot.Library.LibObj.to_btn(&1, disabled))
 
       %{
         type: 1,
@@ -38,7 +39,7 @@ defmodule BnBBot.ButtonAwait do
     end)
   end
 
-  @spec generate_msg_buttons_with_uuid([struct()], pos_integer()) ::
+  @spec generate_msg_buttons_with_uuid([struct()], boolean(), pos_integer()) ::
           [
             %{
               type: pos_integer(),
@@ -47,23 +48,22 @@ defmodule BnBBot.ButtonAwait do
           ]
           | no_return()
 
-  def generate_msg_buttons_with_uuid([], _uuid) do
+  def generate_msg_buttons_with_uuid(buttons, disabled \\ false, uuid)
+  def generate_msg_buttons_with_uuid([], _disabled, _uuid) do
     raise "Empty List"
   end
 
-  def generate_msg_buttons_with_uuid(content, _uuid) when length(content) > 25 do
+  def generate_msg_buttons_with_uuid(content, _disabled, _uuid) when length(content) > 25 do
     raise "Too many buttons"
   end
 
-  def generate_msg_buttons_with_uuid(content, uuid) do
+  def generate_msg_buttons_with_uuid(content, disabled, uuid) do
     # uuid = System.unique_integer([:positive]) |> rem(1000)
     row_chunks = Enum.chunk_every(content, 5)
 
     Enum.map(row_chunks, fn row ->
       action_row =
-        Enum.map(row, fn obj ->
-          BnBBot.Library.LibObj.to_btn(obj, uuid)
-        end)
+        Enum.map(row, &BnBBot.Library.LibObj.to_btn_with_uuid(&1, disabled, uuid))
 
       %{
         type: 1,
@@ -72,7 +72,7 @@ defmodule BnBBot.ButtonAwait do
     end)
   end
 
-  @spec generate_persistent_buttons([struct()]) ::
+  @spec generate_persistent_buttons([struct()], boolean()) ::
           [
             %{
               type: pos_integer(),
@@ -80,19 +80,20 @@ defmodule BnBBot.ButtonAwait do
             }
           ]
           | no_return()
-  def generate_persistent_buttons([]) do
+  def generate_persistent_buttons(buttons, disabled \\ false)
+  def generate_persistent_buttons([], _disabled) do
     raise "Empty List"
   end
 
-  def generate_persistent_buttons(content) when length(content) > 25 do
+  def generate_persistent_buttons(content, _disabled) when length(content) > 25 do
     raise "Too many buttons"
   end
 
-  def generate_persistent_buttons(content) do
+  def generate_persistent_buttons(content, disabled) do
     row_chunks = Enum.chunk_every(content, 5)
 
     Enum.map(row_chunks, fn row ->
-      action_row = Enum.map(row, &BnBBot.Library.LibObj.to_persistent_btn/1)
+      action_row = Enum.map(row, &BnBBot.Library.LibObj.to_persistent_btn(&1, disabled))
 
       %{
         type: 1,

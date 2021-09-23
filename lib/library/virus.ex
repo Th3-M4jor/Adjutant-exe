@@ -156,8 +156,8 @@ end
 defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Virus do
   def type(_value), do: :virus
 
-  @spec to_btn(BnBBot.Library.Virus.t()) :: BnBBot.Library.LibObj.button()
-  def to_btn(virus) do
+  @spec to_btn(BnBBot.Library.Virus.t(), boolean()) :: BnBBot.Library.LibObj.button()
+  def to_btn(virus, disabled \\ false) do
     lower_name = "v_#{String.downcase(virus.name, :ascii)}"
     emoji = Application.fetch_env!(:elixir_bot, :virus_emoji)
 
@@ -166,12 +166,13 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Virus do
       style: 4,
       emoji: emoji,
       label: virus.name,
-      custom_id: lower_name
+      custom_id: lower_name,
+      disabled: disabled,
     }
   end
 
-  @spec to_btn(BnBBot.Library.Virus.t(), pos_integer()) :: BnBBot.Library.LibObj.button()
-  def to_btn(virus, uuid) do
+  @spec to_btn_with_uuid(BnBBot.Library.Virus.t(), boolean(), pos_integer()) :: BnBBot.Library.LibObj.button()
+  def to_btn_with_uuid(virus, disabled \\ false, uuid) do
     lower_name = "#{uuid}_v_#{String.downcase(virus.name, :ascii)}"
     emoji = Application.fetch_env!(:elixir_bot, :virus_emoji)
 
@@ -180,12 +181,13 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Virus do
       style: 4,
       emoji: emoji,
       label: virus.name,
-      custom_id: lower_name
+      custom_id: lower_name,
+      disabled: disabled,
     }
   end
 
-  @spec to_persistent_btn(BnBBot.Library.Virus.t()) :: BnBBot.Library.LibObj.button()
-  def to_persistent_btn(virus) do
+  @spec to_persistent_btn(BnBBot.Library.Virus.t(), boolean()) :: BnBBot.Library.LibObj.button()
+  def to_persistent_btn(virus, disabled \\ false) do
     lower_name = "vr_#{String.downcase(virus.name, :ascii)}"
     emoji = Application.fetch_env!(:elixir_bot, :virus_emoji)
 
@@ -194,7 +196,8 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Virus do
       style: 4,
       emoji: emoji,
       label: virus.name,
-      custom_id: lower_name
+      custom_id: lower_name,
+      disabled: disabled,
     }
   end
 end

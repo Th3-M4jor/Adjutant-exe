@@ -128,20 +128,16 @@ defmodule BnBBot.Commands.Virus do
         }
       )
 
-    names =
-      Enum.map(cr_list, fn virus ->
-        virus.name
-      end)
-      |> Enum.join(", ")
-
     route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
     # five minutes
     Process.sleep(300_000)
 
+    buttons = BnBBot.ButtonAwait.generate_persistent_buttons(cr_list, true)
+
     Api.request(:patch, route, %{
-      content: "These viruses are in CR #{cr}:\n#{names}",
-      components: []
+      content: "These viruses are in CR #{cr}:",
+      components: buttons
     })
   end
 

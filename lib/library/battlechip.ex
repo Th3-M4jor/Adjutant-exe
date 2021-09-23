@@ -103,8 +103,8 @@ end
 defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Battlechip do
   def type(_value), do: :chip
 
-  @spec to_btn(BnBBot.Library.Battlechip.t()) :: BnBBot.Library.LibObj.button()
-  def to_btn(chip) do
+  @spec to_btn(BnBBot.Library.Battlechip.t(), boolean()) :: BnBBot.Library.LibObj.button()
+  def to_btn(chip, disabled \\ false) do
     lower_name = "c_#{String.downcase(chip.name, :ascii)}"
     emoji = Application.fetch_env!(:elixir_bot, :chip_emoji)
 
@@ -113,12 +113,13 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Battlechip do
       style: 2,
       emoji: emoji,
       label: chip.name,
-      custom_id: lower_name
+      custom_id: lower_name,
+      disabled: disabled,
     }
   end
 
-  @spec to_btn(BnBBot.Library.Battlechip.t(), pos_integer()) :: BnBBot.Library.LibObj.button()
-  def to_btn(chip, uuid) do
+  @spec to_btn_with_uuid(BnBBot.Library.Battlechip.t(), boolean(), pos_integer()) :: BnBBot.Library.LibObj.button()
+  def to_btn_with_uuid(chip, disabled \\ false ,uuid) do
     lower_name = "#{uuid}_c_#{String.downcase(chip.name, :ascii)}"
     emoji = Application.fetch_env!(:elixir_bot, :chip_emoji)
 
@@ -127,12 +128,13 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Battlechip do
       style: 2,
       emoji: emoji,
       label: chip.name,
-      custom_id: lower_name
+      custom_id: lower_name,
+      disabled: disabled,
     }
   end
 
-  @spec to_persistent_btn(BnBBot.Library.Battlechip.t()) :: BnBBot.Library.LibObj.button()
-  def to_persistent_btn(chip) do
+  @spec to_persistent_btn(BnBBot.Library.Battlechip.t(), boolean()) :: BnBBot.Library.LibObj.button()
+  def to_persistent_btn(chip, disabled \\ false) do
     lower_name = "cr_#{String.downcase(chip.name, :ascii)}"
     emoji = Application.fetch_env!(:elixir_bot, :chip_emoji)
 
@@ -141,7 +143,8 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Battlechip do
       style: 2,
       emoji: emoji,
       label: chip.name,
-      custom_id: lower_name
+      custom_id: lower_name,
+      disabled: disabled,
     }
   end
 

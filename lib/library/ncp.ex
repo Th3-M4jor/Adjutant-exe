@@ -53,8 +53,8 @@ end
 defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
   def type(_value), do: :ncp
 
-  @spec to_btn(BnBBot.Library.NCP.t()) :: BnBBot.Library.LibObj.button()
-  def to_btn(ncp) do
+  @spec to_btn(BnBBot.Library.NCP.t(), boolean()) :: BnBBot.Library.LibObj.button()
+  def to_btn(ncp, disabled \\ false) do
     lower_name = "n_#{String.downcase(ncp.name, :ascii)}"
     emoji = Application.fetch_env!(:elixir_bot, :ncp_emoji)
 
@@ -66,12 +66,13 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
       style: 3,
       emoji: emoji,
       label: ncp.name,
-      custom_id: lower_name
+      custom_id: lower_name,
+      disabled: disabled,
     }
   end
 
-  @spec to_btn(BnBBot.Library.NCP.t(), pos_integer()) :: BnBBot.Library.LibObj.button()
-  def to_btn(ncp, uuid) do
+  @spec to_btn_with_uuid(BnBBot.Library.NCP.t(), boolean(), pos_integer()) :: BnBBot.Library.LibObj.button()
+  def to_btn_with_uuid(ncp, disabled \\ false, uuid) do
     lower_name = "#{uuid}_n_#{String.downcase(ncp.name, :ascii)}"
     emoji = Application.fetch_env!(:elixir_bot, :ncp_emoji)
 
@@ -83,12 +84,13 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
       style: 3,
       emoji: emoji,
       label: ncp.name,
-      custom_id: lower_name
+      custom_id: lower_name,
+      disabled: disabled,
     }
   end
 
-  @spec to_persistent_btn(BnBBot.Library.NCP.t()) :: BnBBot.Library.LibObj.button()
-  def to_persistent_btn(ncp) do
+  @spec to_persistent_btn(BnBBot.Library.NCP.t(), boolean()) :: BnBBot.Library.LibObj.button()
+  def to_persistent_btn(ncp, disabled \\ false) do
     lower_name = "nr_#{String.downcase(ncp.name, :ascii)}"
     emoji = Application.fetch_env!(:elixir_bot, :ncp_emoji)
 
@@ -100,7 +102,8 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
       style: 3,
       emoji: emoji,
       label: ncp.name,
-      custom_id: lower_name
+      custom_id: lower_name,
+      disabled: disabled,
     }
   end
 

@@ -114,17 +114,14 @@ defmodule BnBBot.Commands.Chip do
 
       route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
-      names =
-        Enum.map(drops, fn virus ->
-          virus.name
-        end) |> Enum.join(", ")
+      buttons = BnBBot.ButtonAwait.generate_persistent_buttons(drops, true)
 
       # five minutes
       Process.sleep(300_000)
 
       Api.request(:patch, route, %{
-        content: "The following viruses drop #{chip.name}:\n#{names}",
-        components: []
+        content: "The following viruses drop #{chip.name}:",
+        components: buttons
       })
     else
       {:ok} =

@@ -99,7 +99,6 @@ defmodule BnBBot.Commands.NCP do
           }
         }
       )
-
   end
 
   defp send_ncp_color(inter, color, ncps) do
@@ -119,19 +118,17 @@ defmodule BnBBot.Commands.NCP do
         }
       )
 
-    Process.sleep(300000) # five minutes
+    # five minutes
+    Process.sleep(300_000)
 
-    names = Enum.map(ncps, fn ncp ->
-      ncp.name
-    end) |> Enum.join(", ")
+    buttons = BnBBot.ButtonAwait.generate_persistent_buttons(ncps, true)
 
     route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
     Api.request(:patch, route, %{
-      content: "These are the #{color_str} NCPs:\n#{names}",
-      components: []
+      content: "These are the #{color_str} NCPs:",
+      components: buttons
     })
-
   end
 
   defp send_found_ncp(%Nostrum.Struct.Interaction{} = inter, %BnBBot.Library.NCP{} = ncp) do

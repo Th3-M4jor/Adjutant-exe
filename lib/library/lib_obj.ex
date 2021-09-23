@@ -154,13 +154,13 @@ defprotocol BnBBot.Library.LibObj do
   @doc """
   Return the libobj as a button.
   """
-  @spec to_btn(t) :: button() | link_button()
-  def to_btn(value)
+  @spec to_btn(t, boolean()) :: button() | link_button()
+  def to_btn(value, disabled \\ false)
 
-  @spec to_btn(t, pos_integer()) :: button() | link_button()
-  def to_btn(value, uuid)
+  @spec to_btn_with_uuid(t, boolean(), pos_integer()) :: button() | link_button()
+  def to_btn_with_uuid(value, disabled \\ false, uuid)
 
-  @spec to_persistent_btn(t) :: button() | link_button()
-  def to_persistent_btn(value)
+  @spec to_persistent_btn(t, boolean()) :: button() | link_button()
+  def to_persistent_btn(value, disabled \\ false)
 
 end
