@@ -39,11 +39,14 @@ defmodule BnBBot.Commands.Reload do
 
       route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
-      :ok = Api.request(:patch, route, %{
-        content: res,
-      }) |> elem(0)
-      else
-        {:ok} = Api.create_interaction_response(inter, %{
+      :ok =
+        Api.request(:patch, route, %{
+          content: res
+        })
+        |> elem(0)
+    else
+      {:ok} =
+        Api.create_interaction_response(inter, %{
           type: 4,
           data: %{
             content: "You don't have permission to do that",
@@ -60,7 +63,7 @@ defmodule BnBBot.Commands.Reload do
       type: 1,
       name: "reload",
       description: "Reloads chips, ncps, viruses",
-      default_permission: false,
+      default_permission: false
     }
   end
 

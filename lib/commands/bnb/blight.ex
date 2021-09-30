@@ -40,15 +40,16 @@ defmodule BnBBot.Commands.Blight do
           "An unknown error has occurred"
       end
 
-    {:ok} = Api.create_interaction_response(
-      inter,
-      %{
-        type: 4,
-        data: %{
-          content: resp_str
+    {:ok} =
+      Api.create_interaction_response(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: resp_str
+          }
         }
-      }
-    )
+      )
 
     :ignore
   end
@@ -76,7 +77,6 @@ defmodule BnBBot.Commands.Blight do
         }
       ]
     }
-
   end
 
   defp blight_to_str(name) do

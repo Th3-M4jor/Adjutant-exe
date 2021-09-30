@@ -26,6 +26,11 @@ defmodule BnBBot.Library.NCP do
     GenServer.call(:ncp_table, {:get, name, min_dist})
   end
 
+  @spec get_autocomplete(String.t(), float()) :: [{float(), String.t()}]
+  def get_autocomplete(name, min_dist \\ 0.7) when min_dist >= 0.0 and min_dist <= 1.0 do
+    GenServer.call(:ncp_table, {:autocomplete, name, min_dist})
+  end
+
   @spec get_ncps_by_color(colors()) :: [t()]
   def get_ncps_by_color(color) do
     GenServer.call(:ncp_table, {:color, color})
@@ -67,11 +72,12 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
       emoji: emoji,
       label: ncp.name,
       custom_id: lower_name,
-      disabled: disabled,
+      disabled: disabled
     }
   end
 
-  @spec to_btn_with_uuid(BnBBot.Library.NCP.t(), boolean(), pos_integer()) :: BnBBot.Library.LibObj.button()
+  @spec to_btn_with_uuid(BnBBot.Library.NCP.t(), boolean(), pos_integer()) ::
+          BnBBot.Library.LibObj.button()
   def to_btn_with_uuid(ncp, disabled \\ false, uuid) do
     lower_name = "#{uuid}_n_#{String.downcase(ncp.name, :ascii)}"
     emoji = Application.fetch_env!(:elixir_bot, :ncp_emoji)
@@ -85,7 +91,7 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
       emoji: emoji,
       label: ncp.name,
       custom_id: lower_name,
-      disabled: disabled,
+      disabled: disabled
     }
   end
 
@@ -103,10 +109,9 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
       emoji: emoji,
       label: ncp.name,
       custom_id: lower_name,
-      disabled: disabled,
+      disabled: disabled
     }
   end
-
 end
 
 defimpl String.Chars, for: BnBBot.Library.NCP do
@@ -141,14 +146,14 @@ defmodule BnBBot.Library.NCPTable do
   @impl true
   def init(_) do
     {:ok, %{}, {:continue, :reload}}
-    #state = load_ncps()
-    #case load_ncps() do
+    # state = load_ncps()
+    # case load_ncps() do
     #  {:ok, ncps} ->
     #    {:ok, ncps}
     #  {:error, reason} ->
     #    Logger.warn("Failed to load NCPS: #{reason}")
     #    {:ok, %{}}
-    #end
+    # end
   end
 
   @impl true
@@ -156,6 +161,7 @@ defmodule BnBBot.Library.NCPTable do
     case load_ncps() do
       {:ok, ncps} ->
         {:noreply, ncps}
+
       {:error, reason} ->
         Logger.warn("Failed to load NCPS: #{reason}")
         {:noreply, %{}}
@@ -189,20 +195,50 @@ defmodule BnBBot.Library.NCPTable do
     {:reply, resp, state}
   end
 
-  @spec handle_call({:color, String.t()}, GenServer.from(), map()) :: {:reply, [BnBBot.Library.NCP.t()], map()}
+  @spec handle_call({:autocomplete, String.t(), float()}, GenServer.from(), map()) ::
+          {:reply, [{float(), String.t()}], map()}
+  def handle_call({:autocomplete, name, min_dist}, _from, state) do
+    lower_name = String.downcase(name, :ascii)
+
+    list = Map.to_list(state)
+
+    list =
+      :lists.filtermap(
+        fn {key, value} ->
+          dist = String.jaro_distance(key, lower_name)
+
+          if dist >= min_dist do
+            {true, {dist, value.name}}
+          else
+            false
+          end
+        end,
+        list
+      )
+      |> Enum.sort_by(fn {d, _} -> d end, &>=/2)
+      |> Enum.take(25)
+
+    {:reply, list, state}
+  end
+
+  @spec handle_call({:color, String.t()}, GenServer.from(), map()) ::
+          {:reply, [BnBBot.Library.NCP.t()], map()}
   def handle_call({:color, color}, _from, state) do
-    resp = Map.values(state)
+    resp =
+      Map.values(state)
       |> Enum.filter(fn ncp -> ncp.color == color end)
       |> Enum.sort_by(fn ncp -> ncp.name end)
 
-      {:reply, resp, state}
+    {:reply, resp, state}
   end
 
-  @spec handle_call(:reload, GenServer.from(), map()) :: {:reply, {:ok} | {:error, String.t()}, map()}
+  @spec handle_call(:reload, GenServer.from(), map()) ::
+          {:reply, {:ok} | {:error, String.t()}, map()}
   def handle_call(:reload, _from, _state) do
     case load_ncps() do
       {:ok, ncps} ->
         {:reply, {:ok}, ncps}
+
       {:error, reason} ->
         {:reply, {:error, reason}, Map.new()}
     end
@@ -233,12 +269,13 @@ defmodule BnBBot.Library.NCPTable do
   defp decode_ncp_resp({:ok, %HTTPoison.Response{} = resp}) when resp.status_code in 200..299 do
     maps = Poison.Parser.parse!(resp.body, keys: :atoms)
 
-    maps = Enum.map(maps, fn ncp ->
-      color = String.to_atom(ncp[:color])
-      lower_name = String.downcase(ncp[:name], :ascii)
-      ncp_map = Map.put(ncp, :color, color)
-      {lower_name, struct(BnBBot.Library.NCP, ncp_map)}
-    end)
+    maps =
+      Enum.map(maps, fn ncp ->
+        color = String.to_atom(ncp[:color])
+        lower_name = String.downcase(ncp[:name], :ascii)
+        ncp_map = Map.put(ncp, :color, color)
+        {lower_name, struct(BnBBot.Library.NCP, ncp_map)}
+      end)
 
     {:ok, maps}
   end

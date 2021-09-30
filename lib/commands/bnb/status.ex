@@ -53,15 +53,17 @@ defmodule BnBBot.Commands.Statuses do
           "An unknown error has occurred"
       end
 
-    {:ok} = Api.create_interaction_response(
-      inter,
-      %{
-        type: 4,
-        data: %{
-          content: resp_str
+    {:ok} =
+      Api.create_interaction_response(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: resp_str
+          }
         }
-      }
-    )
+      )
+
     :ignore
   end
 

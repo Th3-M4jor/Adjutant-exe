@@ -4,7 +4,7 @@ defmodule BnBBot.Commands.Chip do
 
   @behaviour BnBBot.SlashCmdFn
 
-  def call_slash(%Nostrum.Struct.Interaction{} = inter) do
+  def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
     [sub_cmd] = inter.data.options
 
     case sub_cmd.name do
@@ -18,6 +18,16 @@ defmodule BnBBot.Commands.Chip do
         name = opt.value
         locate_drops(inter, name)
     end
+
+    :ignore
+  end
+
+  def call_slash(%Nostrum.Struct.Interaction{type: 4} = inter) do
+    [sub_cmd] = inter.data.options
+    [opt] = sub_cmd.options
+    name = opt.value
+
+    search_chip(inter, name)
   end
 
   def get_create_map() do
@@ -35,7 +45,8 @@ defmodule BnBBot.Commands.Chip do
               type: 3,
               name: "name",
               description: "The name of the chip to search for",
-              required: true
+              required: true,
+              autocomplete: true
             }
           ]
         },
@@ -48,7 +59,8 @@ defmodule BnBBot.Commands.Chip do
               type: 3,
               name: "chip-name",
               description: "The name of the chip",
-              required: true
+              required: true,
+              autocomplete: true
             }
           ]
         }
@@ -56,7 +68,7 @@ defmodule BnBBot.Commands.Chip do
     }
   end
 
-  def search_chip(inter, name) do
+  def search_chip(%Nostrum.Struct.Interaction{type: 2} = inter, name) do
     Logger.debug(["Searching for the following chip: ", name])
 
     case BnBBot.Library.Battlechip.get_chip(name) do
@@ -67,6 +79,25 @@ defmodule BnBBot.Commands.Chip do
       {:not_found, possibilities} ->
         handle_not_found(inter, possibilities)
     end
+  end
+
+  def search_chip(%Nostrum.Struct.Interaction{type: 4} = inter, name) do
+    Logger.debug(["Autocomplete Searching for the following chip: ", name])
+
+    list =
+      BnBBot.Library.Battlechip.get_autocomplete(name)
+      |> Enum.map(fn {_, name} ->
+        lower_name = String.downcase(name, :ascii)
+        %{name: name, value: lower_name}
+      end)
+
+    {:ok} =
+      Api.create_interaction_response(inter, %{
+        type: 8,
+        data: %{
+          choices: list
+        }
+      })
   end
 
   def send_found_chip(%Nostrum.Struct.Interaction{} = inter, %BnBBot.Library.Battlechip{} = chip) do
@@ -158,7 +189,8 @@ defmodule BnBBot.Commands.Chip do
       names =
         Enum.map(drops, fn virus ->
           virus.name
-        end) |> Enum.join(", ")
+        end)
+        |> Enum.join(", ")
 
       # five minutes
       Process.sleep(300_000)

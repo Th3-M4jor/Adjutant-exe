@@ -2,15 +2,56 @@ defmodule BnBBot.Commands.All do
   alias Nostrum.Api
   require Logger
 
+  alias BnBBot.Library.{Battlechip, NCP, Virus}
+
   @behaviour BnBBot.SlashCmdFn
 
-  def call_slash(%Nostrum.Struct.Interaction{} = inter) do
+  def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
     [opt] = inter.data.options
     to_search = opt.value
     Logger.debug(["Searching for: ", to_search])
 
     search_inner(inter, to_search)
     :ignore
+  end
+
+  def call_slash(%Nostrum.Struct.Interaction{type: 4} = inter) do
+    [opt] = inter.data.options
+    to_search = opt.value
+
+    chips_task =
+      Task.async(fn ->
+        Battlechip.get_autocomplete(to_search)
+      end)
+
+    viruses_task =
+      Task.async(fn ->
+        Virus.get_autocomplete(to_search)
+      end)
+
+    ncp_task =
+      Task.async(fn ->
+        NCP.get_autocomplete(to_search)
+      end)
+
+    all_pos =
+      Task.await_many([chips_task, viruses_task, ncp_task])
+      |> Enum.concat()
+      |> Enum.uniq_by(fn {_, name} -> name end)
+      |> Enum.sort_by(fn {pos, _} -> pos end, &>=/2)
+      |> Enum.take(25)
+      |> Enum.map(fn {_, name} ->
+        lower_name = String.downcase(name, :ascii)
+        %{name: name, value: lower_name}
+      end)
+
+    {:ok} =
+      Api.create_interaction_response(inter, %{
+        type: 8,
+        data: %{
+          choices: all_pos
+        }
+      })
   end
 
   def get_create_map() do
@@ -23,7 +64,8 @@ defmodule BnBBot.Commands.All do
           type: 3,
           name: "name",
           description: "The name of item to search for",
-          required: true
+          required: true,
+          autocomplete: true
         }
       ]
     }
@@ -32,7 +74,7 @@ defmodule BnBBot.Commands.All do
   defp search_inner(msg_inter, to_search) do
     chips_task =
       Task.async(fn ->
-        case BnBBot.Library.Battlechip.get_chip(to_search) do
+        case Battlechip.get_chip(to_search) do
           {:found, chip} ->
             [{1.0, chip}]
 
@@ -43,7 +85,7 @@ defmodule BnBBot.Commands.All do
 
     ncps_task =
       Task.async(fn ->
-        case BnBBot.Library.NCP.get_ncp(to_search) do
+        case NCP.get_ncp(to_search) do
           {:found, ncp} ->
             [{1.0, ncp}]
 
@@ -54,7 +96,7 @@ defmodule BnBBot.Commands.All do
 
     viruses_task =
       Task.async(fn ->
-        case BnBBot.Library.Virus.get_virus(to_search) do
+        case Virus.get_virus(to_search) do
           {:found, virus} ->
             [{1.0, virus}]
 
@@ -175,9 +217,9 @@ defmodule BnBBot.Commands.All do
 
           Api.create_message!(inter.channel_id, resp_text)
 
-          #Api.execute_webhook(inter.application_id, inter.token, %{
+          # Api.execute_webhook(inter.application_id, inter.token, %{
           #  content: resp_text
-          #})
+          # })
         end)
 
       Task.await_many([edit_task, resp_task], :infinity)

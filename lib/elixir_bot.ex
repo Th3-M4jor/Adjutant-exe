@@ -188,6 +188,23 @@ defmodule BnBBot.Consumer do
     end
   end
 
+  # autocomplete, gonna leave it up to the individual commands to handle both types if they have both
+  def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{type: 4} = inter, _ws_state}) do
+    Logger.debug(["Got an interaction autocomplete req\n", inspect(inter, pretty: true)])
+
+    try do
+      BnBBot.SlashCommands.handle_command(inter)
+    rescue
+      e ->
+        Logger.error(Exception.format(:error, e, __STACKTRACE__))
+
+        Api.create_message!(
+          inter.channel_id,
+          "An error has occurred, inform Major"
+        )
+    end
+  end
+
   # Default event handler, if you don't include this, your consumer WILL crash if
   # you don't have a method definition for each event type.
   def handle_event(_event) do

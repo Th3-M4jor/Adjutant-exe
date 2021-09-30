@@ -1,5 +1,4 @@
 defmodule BnBBot.CommandFn do
-
   @typedoc """
   Who can use the command?
   """
@@ -14,7 +13,6 @@ defmodule BnBBot.CommandFn do
   The description of the command
   """
   @type command_desc :: String.t()
-
 end
 
 defmodule BnBBot.SlashCmdFn do
@@ -68,7 +66,8 @@ defmodule BnBBot.SlashCmdFn do
           required(:description) => String.t(),
           optional(:required) => boolean(),
           optional(:choices) => [slash_choices(), ...],
-          optional(:options) => [slash_opts(), ...]
+          optional(:options) => [slash_opts(), ...],
+          optional(:autocomplete) => boolean()
         }
 
   @typedoc """

@@ -2,7 +2,6 @@ defmodule BnBBot.Commands.Debug do
   alias Nostrum.Api
   require Logger
 
-
   def call(%Nostrum.Struct.Message{} = msg, []) do
     Logger.debug("Got a debug cmd with no args")
 

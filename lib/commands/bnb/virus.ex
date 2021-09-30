@@ -5,7 +5,7 @@ defmodule BnBBot.Commands.Virus do
 
   @behaviour BnBBot.SlashCmdFn
 
-  def call_slash(%Nostrum.Struct.Interaction{} = inter) do
+  def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
     [sub_cmd] = inter.data.options
 
     case sub_cmd.name do
@@ -23,6 +23,21 @@ defmodule BnBBot.Commands.Virus do
       "encounter" ->
         build_encounter(inter, sub_cmd.options)
     end
+
+    :ignore
+  end
+
+  def call_slash(%Nostrum.Struct.Interaction{type: 4} = inter) do
+    [sub_cmd] = inter.data.options
+
+    case sub_cmd.name do
+      "search" ->
+        [opt] = sub_cmd.options
+        name = opt.value
+        search_virus(inter, name)
+    end
+
+    :ignore
   end
 
   def get_create_map() do
@@ -40,7 +55,8 @@ defmodule BnBBot.Commands.Virus do
               type: 3,
               name: "name",
               description: "The name of the virus to search for",
-              required: true
+              required: true,
+              autocomplete: true
             }
           ]
         },
@@ -86,7 +102,7 @@ defmodule BnBBot.Commands.Virus do
     }
   end
 
-  defp search_virus(inter, name) do
+  defp search_virus(%Nostrum.Struct.Interaction{type: 2} = inter, name) do
     Logger.debug(["Searching for the following virus: ", name])
 
     case Virus.get_virus(name) do
@@ -97,6 +113,25 @@ defmodule BnBBot.Commands.Virus do
       {:not_found, possibilities} ->
         handle_not_found(inter, possibilities)
     end
+  end
+
+  defp search_virus(%Nostrum.Struct.Interaction{type: 4} = inter, name) do
+    Logger.debug(["Autocomplete searching for the following virus: ", name])
+
+    list =
+      Virus.get_autocomplete(name)
+      |> Enum.map(fn {_, name} ->
+        lower_name = String.downcase(name, :ascii)
+        %{name: name, value: lower_name}
+      end)
+
+    {:ok} =
+      Api.create_interaction_response(inter, %{
+        type: 8,
+        data: %{
+          choices: list
+        }
+      })
   end
 
   defp send_cr_list(inter, cr, []) do

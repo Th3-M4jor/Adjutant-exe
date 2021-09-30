@@ -6,7 +6,7 @@ defmodule BnBBot.Commands.NCP do
 
   @behaviour BnBBot.SlashCmdFn
 
-  def call_slash(%Nostrum.Struct.Interaction{} = inter) do
+  def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
     [sub_cmd] = inter.data.options
 
     case sub_cmd.name do
@@ -21,6 +21,19 @@ defmodule BnBBot.Commands.NCP do
         color = String.to_existing_atom(name)
         ncps = NCP.get_ncps_by_color(color)
         send_ncp_color(inter, color, ncps)
+    end
+
+    :ignore
+  end
+
+  def call_slash(%Nostrum.Struct.Interaction{type: 4} = inter) do
+    [sub_cmd] = inter.data.options
+
+    case sub_cmd.name do
+      "search" ->
+        [opt] = sub_cmd.options
+        name = opt.value
+        search_ncp(inter, name)
     end
 
     :ignore
@@ -49,7 +62,8 @@ defmodule BnBBot.Commands.NCP do
               type: 3,
               name: "name",
               description: "The name of the NCP to search for",
-              required: true
+              required: true,
+              autocomplete: true
             }
           ]
         },
@@ -71,16 +85,35 @@ defmodule BnBBot.Commands.NCP do
     }
   end
 
-  defp search_ncp(inter, name) do
+  defp search_ncp(%Nostrum.Struct.Interaction{type: 2} = inter, name) do
     Logger.debug(["Searching for the following NCP: ", name])
 
-    case BnBBot.Library.NCP.get_ncp(name) do
+    case NCP.get_ncp(name) do
       {:found, ncp} ->
         send_found_ncp(inter, ncp)
 
       {:not_found, possibilities} ->
         handle_not_found_ncp(inter, possibilities)
     end
+  end
+
+  defp search_ncp(%Nostrum.Struct.Interaction{type: 4} = inter, name) do
+    Logger.debug(["Autocomplete searching for the following NCP: ", name])
+
+    list =
+      NCP.get_autocomplete(name)
+      |> Enum.map(fn {_, name} ->
+        lower_name = String.downcase(name, :ascii)
+        %{name: name, value: lower_name}
+      end)
+
+    {:ok} =
+      Api.create_interaction_response(inter, %{
+        type: 8,
+        data: %{
+          choices: list
+        }
+      })
   end
 
   defp send_ncp_color(inter, color, []) do

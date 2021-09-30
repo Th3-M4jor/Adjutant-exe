@@ -32,15 +32,15 @@ defmodule BnBBot.Library.Shared do
           | :self
 
   @type dice :: %{
-    dienum: pos_integer(),
-    dietype: pos_integer()
-  }
+          dienum: pos_integer(),
+          dietype: pos_integer()
+        }
 
   @type blight :: %{
-    elem: element,
-    dmg: dice,
-    duration: dice,
-  }
+          elem: element,
+          dmg: dice,
+          duration: dice
+        }
 
   @type kind :: :burst | :construct | :melee | :projectile | :wave | :recovery | :summon | :trap
 
@@ -64,6 +64,7 @@ defmodule BnBBot.Library.Shared do
 
   @spec dice_to_io_list(nil | dice(), iodata()) :: iolist()
   def dice_to_io_list(dice, last \\ "")
+
   def dice_to_io_list(nil, _last) do
     ["--"]
   end
@@ -86,6 +87,7 @@ defmodule BnBBot.Library.Shared do
 
   @spec blight_to_io_list(blight() | nil, iodata()) :: iolist()
   def blight_to_io_list(blight, last \\ "")
+
   def blight_to_io_list(nil, _last) do
     []
   end
@@ -116,7 +118,6 @@ defmodule BnBBot.Library.Shared do
       :aff -> 8
     end
   end
-
 end
 
 defprotocol BnBBot.Library.LibObj do
@@ -162,5 +163,4 @@ defprotocol BnBBot.Library.LibObj do
 
   @spec to_persistent_btn(t, boolean()) :: button() | link_button()
   def to_persistent_btn(value, disabled \\ false)
-
 end

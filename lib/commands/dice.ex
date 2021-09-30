@@ -5,7 +5,6 @@ defmodule BnBBot.Commands.Dice do
   @behaviour BnBBot.SlashCmdFn
 
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
-
     opts = inter.data.options
 
     die_str = (opts && List.first(opts) && List.first(opts).value) || "1d20"
@@ -17,24 +16,25 @@ defmodule BnBBot.Commands.Dice do
         {:error, "An invalid character was found, must be in the format XdY[ + X[dY]]"}
       end
 
-    {:ok} = case roll_result do
-      {:error, text} ->
-        Api.create_interaction_response(inter, %{
-          type: 4,
-          data: %{
-            content: text,
-            flags: 64
-          }
-        })
+    {:ok} =
+      case roll_result do
+        {:error, text} ->
+          Api.create_interaction_response(inter, %{
+            type: 4,
+            data: %{
+              content: text,
+              flags: 64
+            }
+          })
 
-      {:ok, roll} ->
-        Api.create_interaction_response(inter, %{
-          type: 4,
-          data: %{
-            content: roll
-          }
-        })
-    end
+        {:ok, roll} ->
+          Api.create_interaction_response(inter, %{
+            type: 4,
+            data: %{
+              content: roll
+            }
+          })
+      end
 
     :ignore
 

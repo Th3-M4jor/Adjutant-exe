@@ -32,8 +32,8 @@ defmodule BnBBot.Commands.Groups do
       Application.fetch_env!(:elixir_bot, :dm_log_id)
       |> Nostrum.Snowflake.cast()
 
-      Nostrum.Api.create_message(dm_channel_id, "Group #{group_name} has been force closed")
-      :ignore
+    Nostrum.Api.create_message(dm_channel_id, "Group #{group_name} has been force closed")
+    :ignore
   end
 
   @spec fetch_and_send_groups(Nostrum.Struct.Interaction.t(), node()) :: :ignore

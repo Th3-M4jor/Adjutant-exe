@@ -68,6 +68,11 @@ defmodule BnBBot.Library.Virus do
     GenServer.call(:virus_table, {:get, name, min_dist})
   end
 
+  @spec get_autocomplete(String.t(), float()) :: [{float(), String.t()}]
+  def get_autocomplete(name, min_dist \\ 0.7) when min_dist >= 0.0 and min_dist <= 1.0 do
+    GenServer.call(:virus_table, {:autocomplete, name, min_dist})
+  end
+
   @spec get_cr_list(pos_integer()) :: [BnBBot.Library.Virus.t()]
   def get_cr_list(cr) do
     GenServer.call(:virus_table, {:cr, cr})
@@ -80,7 +85,7 @@ defmodule BnBBot.Library.Virus do
 
   @spec locate_by_drop(BnBBot.Library.Battlechip.t()) :: [BnBBot.Library.Virus.t()]
   def locate_by_drop(%BnBBot.Library.Battlechip{} = chip) do
-     GenServer.call(:virus_table, {:drops, chip.name}, :infinity)
+    GenServer.call(:virus_table, {:drops, chip.name}, :infinity)
   end
 
   @spec make_encounter(pos_integer(), pos_integer()) :: [BnBBot.Library.Virus.t()]
@@ -167,11 +172,12 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Virus do
       emoji: emoji,
       label: virus.name,
       custom_id: lower_name,
-      disabled: disabled,
+      disabled: disabled
     }
   end
 
-  @spec to_btn_with_uuid(BnBBot.Library.Virus.t(), boolean(), pos_integer()) :: BnBBot.Library.LibObj.button()
+  @spec to_btn_with_uuid(BnBBot.Library.Virus.t(), boolean(), pos_integer()) ::
+          BnBBot.Library.LibObj.button()
   def to_btn_with_uuid(virus, disabled \\ false, uuid) do
     lower_name = "#{uuid}_v_#{String.downcase(virus.name, :ascii)}"
     emoji = Application.fetch_env!(:elixir_bot, :virus_emoji)
@@ -182,7 +188,7 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Virus do
       emoji: emoji,
       label: virus.name,
       custom_id: lower_name,
-      disabled: disabled,
+      disabled: disabled
     }
   end
 
@@ -197,7 +203,7 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Virus do
       emoji: emoji,
       label: virus.name,
       custom_id: lower_name,
-      disabled: disabled,
+      disabled: disabled
     }
   end
 end
@@ -301,16 +307,15 @@ defmodule BnBBot.Library.VirusTable do
 
   @impl true
   def init(_) do
-
     {:ok, %{}, {:continue, :reload}}
-    #case load_viruses() do
+    # case load_viruses() do
     #  {:ok, viruses} ->
     #    {:ok, viruses}
     #
     #  {:error, reason} ->
     #    Logger.warn("Failed to load Viruses: #{reason}")
     #    {:ok, %{}}
-    #end
+    # end
   end
 
   @impl true
@@ -318,6 +323,7 @@ defmodule BnBBot.Library.VirusTable do
     case load_viruses() do
       {:ok, viruses} ->
         {:noreply, viruses}
+
       {:error, reason} ->
         Logger.warn("Failed to load Viruses: #{reason}")
         {:noreply, %{}}
@@ -349,6 +355,32 @@ defmodule BnBBot.Library.VirusTable do
       end
 
     {:reply, resp, state}
+  end
+
+  @spec handle_call({:autocomplete, String.t(), float()}, GenServer.from(), map()) ::
+          {:reply, [{float(), String.t()}], map()}
+  def handle_call({:autocomplete, name, min_dist}, _from, state) do
+    lower_name = String.downcase(name)
+
+    list = Map.to_list(state)
+
+    list =
+      :lists.filtermap(
+        fn {key, value} ->
+          dist = String.jaro_distance(key, lower_name)
+
+          if dist >= min_dist do
+            {true, {dist, value.name}}
+          else
+            false
+          end
+        end,
+        list
+      )
+      |> Enum.sort_by(fn {d, _} -> d end, &>=/2)
+      |> Enum.take(25)
+
+    {:reply, list, state}
   end
 
   @spec handle_call(:reload, GenServer.from(), map()) ::
@@ -407,11 +439,12 @@ defmodule BnBBot.Library.VirusTable do
       Map.values(state)
       |> Enum.filter(fn virus -> virus.cr in low_cr..high_cr end)
 
-    viruses = unless Enum.empty?(viruses) do
-      for _ <- 1..count, do: Enum.random(viruses)
-    else
-      []
-    end
+    viruses =
+      unless Enum.empty?(viruses) do
+        for _ <- 1..count, do: Enum.random(viruses)
+      else
+        []
+      end
 
     {:reply, viruses, state}
   end
@@ -478,37 +511,38 @@ defmodule BnBBot.Library.VirusTable do
   defp decode_virus_resp({:ok, %HTTPoison.Response{} = resp}) when resp.status_code in 200..299 do
     maps = Poison.Parser.parse!(resp.body, keys: :atoms)
 
-    maps = Enum.map(maps, fn virus ->
-      elem = virus[:element] |> string_list_to_atoms()
-      dmg_elem = virus[:dmgelem] |> string_list_to_atoms()
-      lower_name = virus[:name] |> String.downcase(:ascii)
+    maps =
+      Enum.map(maps, fn virus ->
+        elem = virus[:element] |> string_list_to_atoms()
+        dmg_elem = virus[:dmgelem] |> string_list_to_atoms()
+        lower_name = virus[:name] |> String.downcase(:ascii)
 
-      drops =
-        virus[:drops]
-        |> Enum.map(fn [range, item] ->
-          {range, item}
-        end)
-        |> Map.new()
+        drops =
+          virus[:drops]
+          |> Enum.map(fn [range, item] ->
+            {range, item}
+          end)
+          |> Map.new()
 
-      virus = %BnBBot.Library.Virus{
-        id: virus[:id],
-        name: virus[:name],
-        element: elem,
-        hp: virus[:hp],
-        ac: virus[:ac],
-        stats: virus[:stats],
-        skills: virus[:skills],
-        drops: drops,
-        description: virus[:description],
-        cr: virus[:cr],
-        abilities: virus[:abilities],
-        damage: virus[:damage],
-        dmgelem: dmg_elem,
-        blight: virus[:blight]
-      }
+        virus = %BnBBot.Library.Virus{
+          id: virus[:id],
+          name: virus[:name],
+          element: elem,
+          hp: virus[:hp],
+          ac: virus[:ac],
+          stats: virus[:stats],
+          skills: virus[:skills],
+          drops: drops,
+          description: virus[:description],
+          cr: virus[:cr],
+          abilities: virus[:abilities],
+          damage: virus[:damage],
+          dmgelem: dmg_elem,
+          blight: virus[:blight]
+        }
 
-      {lower_name, virus}
-    end)
+        {lower_name, virus}
+      end)
 
     {:ok, maps}
   end

@@ -71,6 +71,11 @@ defmodule BnBBot.Library.Battlechip do
     GenServer.call(:chip_table, {:get, name, min_dist})
   end
 
+  @spec get_autocomplete(String.t(), float()) :: [{float(), String.t()}]
+  def get_autocomplete(name, min_dist \\ 0.7) when min_dist >= 0.0 and min_dist <= 1.0 do
+    GenServer.call(:chip_table, {:autocomplete, name, min_dist})
+  end
+
   @spec exists?(String.t()) :: boolean()
   def exists?(name) do
     GenServer.call(:chip_table, {:exists, name})
@@ -114,12 +119,13 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Battlechip do
       emoji: emoji,
       label: chip.name,
       custom_id: lower_name,
-      disabled: disabled,
+      disabled: disabled
     }
   end
 
-  @spec to_btn_with_uuid(BnBBot.Library.Battlechip.t(), boolean(), pos_integer()) :: BnBBot.Library.LibObj.button()
-  def to_btn_with_uuid(chip, disabled \\ false ,uuid) do
+  @spec to_btn_with_uuid(BnBBot.Library.Battlechip.t(), boolean(), pos_integer()) ::
+          BnBBot.Library.LibObj.button()
+  def to_btn_with_uuid(chip, disabled \\ false, uuid) do
     lower_name = "#{uuid}_c_#{String.downcase(chip.name, :ascii)}"
     emoji = Application.fetch_env!(:elixir_bot, :chip_emoji)
 
@@ -129,11 +135,12 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Battlechip do
       emoji: emoji,
       label: chip.name,
       custom_id: lower_name,
-      disabled: disabled,
+      disabled: disabled
     }
   end
 
-  @spec to_persistent_btn(BnBBot.Library.Battlechip.t(), boolean()) :: BnBBot.Library.LibObj.button()
+  @spec to_persistent_btn(BnBBot.Library.Battlechip.t(), boolean()) ::
+          BnBBot.Library.LibObj.button()
   def to_persistent_btn(chip, disabled \\ false) do
     lower_name = "cr_#{String.downcase(chip.name, :ascii)}"
     emoji = Application.fetch_env!(:elixir_bot, :chip_emoji)
@@ -144,17 +151,18 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Battlechip do
       emoji: emoji,
       label: chip.name,
       custom_id: lower_name,
-      disabled: disabled,
+      disabled: disabled
     }
   end
-
 end
 
 defimpl String.Chars, for: BnBBot.Library.Battlechip do
   def to_string(%BnBBot.Library.Battlechip{} = chip) do
-    elems =
-      [Enum.map(chip.elem, fn elem -> BnBBot.Library.Shared.element_to_string(elem) end)
-      |> Enum.intersperse(", "), " | "]
+    elems = [
+      Enum.map(chip.elem, fn elem -> BnBBot.Library.Shared.element_to_string(elem) end)
+      |> Enum.intersperse(", "),
+      " | "
+    ]
 
     skill =
       unless is_nil(chip.skill) do
@@ -225,17 +233,16 @@ defmodule BnBBot.Library.BattlechipTable do
 
   @impl true
   def init(_) do
-
     {:ok, %{}, {:continue, :reload}}
 
-    #case load_chips() do
+    # case load_chips() do
     #  {:ok, chips} ->
     #    {:ok, chips}
     #
     #  {:error, reason} ->
     #    Logger.warn("Failed to load Chips: #{reason}")
     #    {:ok, %{}}
-    #end
+    # end
   end
 
   @impl true
@@ -243,6 +250,7 @@ defmodule BnBBot.Library.BattlechipTable do
     case load_chips() do
       {:ok, chips} ->
         {:noreply, chips}
+
       {:error, reason} ->
         Logger.warn("Failed to load Chips: #{reason}")
         {:noreply, %{}}
@@ -288,6 +296,32 @@ defmodule BnBBot.Library.BattlechipTable do
     end
   end
 
+  @spec handle_call({:autocomplete, String.t(), float()}, GenServer.from(), map()) ::
+          {:reply, [{float(), String.t()}], map()}
+  def handle_call({:autocomplete, name, min_dist}, _from, state) do
+    lower_name = String.downcase(name, :ascii)
+
+    list = Map.to_list(state)
+
+    list =
+      :lists.filtermap(
+        fn {key, value} ->
+          dist = String.jaro_distance(key, lower_name)
+
+          if dist >= min_dist do
+            {true, {dist, value.name}}
+          else
+            false
+          end
+        end,
+        list
+      )
+      |> Enum.sort_by(fn {d, _} -> d end, &>=/2)
+      |> Enum.take(25)
+
+    {:reply, list, state}
+  end
+
   @spec handle_call(:len, GenServer.from(), map()) :: {:reply, non_neg_integer(), map()}
   def handle_call(:len, _from, state) do
     size = map_size(state)
@@ -322,33 +356,34 @@ defmodule BnBBot.Library.BattlechipTable do
   defp decode_chip_resp({:ok, %HTTPoison.Response{} = resp}) when resp.status_code in 200..299 do
     maps = Poison.Parser.parse!(resp.body, keys: :atoms)
 
-    maps = Enum.map(maps, fn chip ->
-      elem = chip[:elem] |> string_list_to_atoms()
-      skill = chip[:skill] |> string_list_to_atoms()
-      range = chip[:range] |> String.to_atom()
-      kind = chip[:kind] |> String.to_atom()
-      class = chip[:class] |> String.to_atom()
-      lower_name = String.downcase(chip[:name], :ascii)
+    maps =
+      Enum.map(maps, fn chip ->
+        elem = chip[:elem] |> string_list_to_atoms()
+        skill = chip[:skill] |> string_list_to_atoms()
+        range = chip[:range] |> String.to_atom()
+        kind = chip[:kind] |> String.to_atom()
+        class = chip[:class] |> String.to_atom()
+        lower_name = String.downcase(chip[:name], :ascii)
 
-      chip = %BnBBot.Library.Battlechip{
-        id: chip[:id],
-        name: chip[:name],
-        elem: elem,
-        skill: skill,
-        range: range,
-        hits: chip[:hits],
-        targets: chip[:targets],
-        description: chip[:description],
-        effect: chip[:effect],
-        effduration: chip[:effduration],
-        blight: chip[:blight],
-        damage: chip[:damage],
-        kind: kind,
-        class: class
-      }
+        chip = %BnBBot.Library.Battlechip{
+          id: chip[:id],
+          name: chip[:name],
+          elem: elem,
+          skill: skill,
+          range: range,
+          hits: chip[:hits],
+          targets: chip[:targets],
+          description: chip[:description],
+          effect: chip[:effect],
+          effduration: chip[:effduration],
+          blight: chip[:blight],
+          damage: chip[:damage],
+          kind: kind,
+          class: class
+        }
 
-      {lower_name, chip}
-    end)
+        {lower_name, chip}
+      end)
 
     {:ok, maps}
   end

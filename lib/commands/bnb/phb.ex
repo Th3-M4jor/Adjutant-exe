@@ -6,7 +6,8 @@ defmodule BnBBot.Commands.PHB do
   @behaviour BnBBot.SlashCmdFn
 
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
-    link_buttons = Application.fetch_env!(:elixir_bot, :phb_links)
+    link_buttons =
+      Application.fetch_env!(:elixir_bot, :phb_links)
       |> Enum.chunk_every(5)
       |> Enum.map(fn links ->
         %{
@@ -15,16 +16,18 @@ defmodule BnBBot.Commands.PHB do
         }
       end)
 
-    {:ok} = Api.create_interaction_response(
-      inter,
-      %{
-        type: 4,
-        data: %{
-          content: "B&B Links:",
-          components: link_buttons
+    {:ok} =
+      Api.create_interaction_response(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: "B&B Links:",
+            components: link_buttons
+          }
         }
-      }
-    )
+      )
+
     :ignore
   end
 

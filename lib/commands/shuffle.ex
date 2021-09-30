@@ -21,30 +21,31 @@ defmodule BnBBot.Commands.Shuffle do
           {:error, "An unknown error occurred"}
       end
 
-    {:ok} = case resp do
-      {:ok, resp_str} ->
-        Api.create_interaction_response(
-          inter,
-          %{
-            type: 4,
-            data: %{
-              content: resp_str
+    {:ok} =
+      case resp do
+        {:ok, resp_str} ->
+          Api.create_interaction_response(
+            inter,
+            %{
+              type: 4,
+              data: %{
+                content: resp_str
+              }
             }
-          }
-        )
+          )
 
-      {:error, str} ->
-        Api.create_interaction_response(
-          inter,
-          %{
-            type: 4,
-            data: %{
-              content: str,
-              flags: 64
+        {:error, str} ->
+          Api.create_interaction_response(
+            inter,
+            %{
+              type: 4,
+              data: %{
+                content: str,
+                flags: 64
+              }
             }
-          }
-        )
-    end
+          )
+      end
 
     :ignore
   end

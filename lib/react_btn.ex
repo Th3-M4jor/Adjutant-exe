@@ -18,6 +18,7 @@ defmodule BnBBot.ButtonAwait do
           ]
           | no_return()
   def generate_msg_buttons(buttons, disabled \\ false)
+
   def generate_msg_buttons([], _disabled) do
     raise "Empty List"
   end
@@ -49,6 +50,7 @@ defmodule BnBBot.ButtonAwait do
           | no_return()
 
   def generate_msg_buttons_with_uuid(buttons, disabled \\ false, uuid)
+
   def generate_msg_buttons_with_uuid([], _disabled, _uuid) do
     raise "Empty List"
   end
@@ -62,8 +64,7 @@ defmodule BnBBot.ButtonAwait do
     row_chunks = Enum.chunk_every(content, 5)
 
     Enum.map(row_chunks, fn row ->
-      action_row =
-        Enum.map(row, &BnBBot.Library.LibObj.to_btn_with_uuid(&1, disabled, uuid))
+      action_row = Enum.map(row, &BnBBot.Library.LibObj.to_btn_with_uuid(&1, disabled, uuid))
 
       %{
         type: 1,
@@ -81,6 +82,7 @@ defmodule BnBBot.ButtonAwait do
           ]
           | no_return()
   def generate_persistent_buttons(buttons, disabled \\ false)
+
   def generate_persistent_buttons([], _disabled) do
     raise "Empty List"
   end
@@ -137,38 +139,40 @@ defmodule BnBBot.ButtonAwait do
       _ ->
         Logger.debug("Interaction wasn't registered, or wasn't for said user")
 
-        {:ok} = Nostrum.Api.create_interaction_response(
-          inter,
-          %{
-            type: 4,
-            data: %{
-              content:
-                "You're not the one that I created this for, or I'm no longer listening for events on it, sorry",
-              # 64 is the flag for ephemeral messages
-              flags: 64
+        {:ok} =
+          Nostrum.Api.create_interaction_response(
+            inter,
+            %{
+              type: 4,
+              data: %{
+                content:
+                  "You're not the one that I created this for, or I'm no longer listening for events on it, sorry",
+                # 64 is the flag for ephemeral messages
+                flags: 64
+              }
             }
-          }
-        )
+          )
     end
   end
 
   def resp_to_persistent_btn(%Nostrum.Struct.Interaction{} = inter, kind, name) do
-    {:found, obj} = case kind do
-      ?c -> BnBBot.Library.Battlechip.get_chip(name)
-      ?n -> BnBBot.Library.NCP.get_ncp(name)
-      ?v -> BnBBot.Library.Virus.get_virus(name)
-    end
+    {:found, obj} =
+      case kind do
+        ?c -> BnBBot.Library.Battlechip.get_chip(name)
+        ?n -> BnBBot.Library.NCP.get_ncp(name)
+        ?v -> BnBBot.Library.Virus.get_virus(name)
+      end
 
-    {:ok} = Nostrum.Api.create_interaction_response(
-      inter,
-      %{
-        type: 4,
-        data: %{
-          content: "#{obj}"
+    {:ok} =
+      Nostrum.Api.create_interaction_response(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: "#{obj}"
+          }
         }
-      }
-    )
-
+      )
   end
 
   defp await_btn_click_inner() do
