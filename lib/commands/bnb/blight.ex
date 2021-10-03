@@ -31,12 +31,15 @@ defmodule BnBBot.Commands.Blight do
   @object "```\nObject:\nAt the start of each turn, make an Info Check of a given DC. Should you fail, the target that Blighted you steals one chip from your Folder if any are present there.\n```"
 
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
+    Logger.info("Recieved a blight command")
+
     resp_str =
       case inter.data.options do
         [arg] ->
           blight_to_str(arg.value)
 
         _ ->
+          Logger.warn(["Blight: bad argument given ", inspect(inter.data.options)])
           "An unknown error has occurred"
       end
 

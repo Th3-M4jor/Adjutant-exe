@@ -69,7 +69,7 @@ defmodule BnBBot.Commands.Chip do
   end
 
   def search_chip(%Nostrum.Struct.Interaction{type: 2} = inter, name) do
-    Logger.debug(["Searching for the following chip: ", name])
+    Logger.info(["Searching for the following chip: ", name])
 
     case BnBBot.Library.Battlechip.get_chip(name) do
       {:found, chip} ->
@@ -82,7 +82,7 @@ defmodule BnBBot.Commands.Chip do
   end
 
   def search_chip(%Nostrum.Struct.Interaction{type: 4} = inter, name) do
-    Logger.debug(["Autocomplete Searching for the following chip: ", name])
+    Logger.info(["Autocomplete Searching for the following chip: ", inspect(name)])
 
     list =
       BnBBot.Library.Battlechip.get_autocomplete(name)
@@ -114,7 +114,7 @@ defmodule BnBBot.Commands.Chip do
   end
 
   def locate_drops(%Nostrum.Struct.Interaction{} = inter, name) do
-    Logger.debug(["Locating drops for the following chip: ", name])
+    Logger.info(["Locating drops for the following chip: ", name])
 
     case BnBBot.Library.Battlechip.get_chip(name) do
       {:found, chip} ->

@@ -29,12 +29,15 @@ defmodule BnBBot.Commands.Panels do
   @sea "```\nSea:\nTerrain of this type forces non-Aqua Element targets with less than 5 Agility that occupy it to use two Move Actions when moving away from it. Should these targets not have two Move Actions remanining, they cannot step off these panels. Elec attacks gain damage dice equal to half their regular value on targets standing in these spaces.\n```"
 
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
+    Logger.info("Recieved a panel command")
+
     resp_str =
       case inter.data.options do
         [arg] ->
           panel_to_str(arg.value)
 
         _ ->
+          Logger.warn(["Bad panel args given ", inspect(inter.data.options)])
           "An unknown error has occurred"
       end
 

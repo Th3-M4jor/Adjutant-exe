@@ -103,7 +103,7 @@ defmodule BnBBot.Commands.Virus do
   end
 
   defp search_virus(%Nostrum.Struct.Interaction{type: 2} = inter, name) do
-    Logger.debug(["Searching for the following virus: ", name])
+    Logger.info(["Searching for the following virus: ", name])
 
     case Virus.get_virus(name) do
       {:found, virus} ->
@@ -116,7 +116,7 @@ defmodule BnBBot.Commands.Virus do
   end
 
   defp search_virus(%Nostrum.Struct.Interaction{type: 4} = inter, name) do
-    Logger.debug(["Autocomplete searching for the following virus: ", name])
+    Logger.info(["Autocomplete searching for the following virus: ", inspect(name)])
 
     list =
       Virus.get_autocomplete(name)
@@ -177,6 +177,8 @@ defmodule BnBBot.Commands.Virus do
   end
 
   defp build_encounter(inter, [count | _rest]) when count.value > 25 do
+    Logger.info(["Got asked to build an encounter with ", "#{count.value}", " viruses. Cowardly refusing."])
+
     {:ok} =
       Api.create_interaction_response(
         inter,
@@ -191,7 +193,7 @@ defmodule BnBBot.Commands.Virus do
   end
 
   defp build_encounter(inter, [count, cr]) do
-    Logger.debug([
+    Logger.info([
       "Building an encounter with ",
       "#{count.value}",
       " viruses in CR ",
@@ -204,7 +206,7 @@ defmodule BnBBot.Commands.Virus do
   end
 
   defp build_encounter(inter, [count, cr_low, cr_high]) do
-    Logger.debug([
+    Logger.info([
       "Building an encounter with ",
       "#{count.value}",
       " viruses in CR ",

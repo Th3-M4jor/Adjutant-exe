@@ -9,7 +9,7 @@ defmodule BnBBot.Commands.All do
   def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
     [opt] = inter.data.options
     to_search = opt.value
-    Logger.debug(["Searching for: ", to_search])
+    Logger.info(["Searching for: ", to_search])
 
     search_inner(inter, to_search)
     :ignore
@@ -18,6 +18,8 @@ defmodule BnBBot.Commands.All do
   def call_slash(%Nostrum.Struct.Interaction{type: 4} = inter) do
     [opt] = inter.data.options
     to_search = opt.value
+
+    Logger.info(["Generating autcomplete for: ", inspect(to_search)])
 
     chips_task =
       Task.async(fn ->

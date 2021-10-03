@@ -8,19 +8,19 @@ defmodule BnBBot.Commands.Hidden do
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     case inter.data.options do
       [%Nostrum.Struct.ApplicationCommandInteractionDataOption{value: "die"} | _] ->
-        Logger.debug("BnBBot.Commands.Hidden.call_slash: die")
+        Logger.info("BnBBot.Commands.Hidden.call_slash: die")
         die(inter)
 
       [%Nostrum.Struct.ApplicationCommandInteractionDataOption{value: "debug"} | args] ->
-        Logger.debug("BnBBot.Commands.Hidden.call_slash: debug")
+        Logger.info(["BnBBot.Commands.Hidden.call_slash: debug ", inspect(args)])
         debug(inter, args)
 
       [%Nostrum.Struct.ApplicationCommandInteractionDataOption{value: "shut_up"} | _] ->
-        Logger.debug("BnBBot.Commands.Hidden.call_slash: shut_up")
+        Logger.info("BnBBot.Commands.Hidden.call_slash: shut_up")
         shut_up(inter)
 
       _ ->
-        Logger.debug("BnBBot.Commands.Hidden.call_slash: unknown")
+        Logger.info("BnBBot.Commands.Hidden.call_slash: unknown")
 
         Api.create_interaction_response(inter, %{
           type: 4,

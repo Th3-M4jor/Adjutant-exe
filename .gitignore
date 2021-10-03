@@ -33,3 +33,9 @@ config/test.exs
 COOKIE
 .env
 nohup.out
+
+#database files
+db/*
+dev_db.db
+prod_db.db
+priv/repo/structure.sql

@@ -6,6 +6,8 @@ defmodule BnBBot.Commands.Shuffle do
 
   @spec call_slash(Nostrum.Struct.Interaction.t()) :: :ignore
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
+    Logger.info("Recieved a shuffle command")
+
     resp =
       case inter.data.options do
         [stop, start] ->

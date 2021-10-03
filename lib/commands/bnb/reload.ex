@@ -6,7 +6,7 @@ defmodule BnBBot.Commands.Reload do
   @behaviour BnBBot.SlashCmdFn
 
   def call(%Nostrum.Struct.Message{} = msg, _args) do
-    Logger.debug("Recieved a reload command")
+    Logger.info("Recieved a reload command")
 
     perms_level = BnBBot.Util.get_user_perms(msg)
 
@@ -20,7 +20,7 @@ defmodule BnBBot.Commands.Reload do
   end
 
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
-    Logger.debug("Recieved a reload slash command")
+    Logger.info("Recieved a reload slash command")
 
     perms_level = BnBBot.Util.get_user_perms(inter)
 

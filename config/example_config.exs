@@ -18,7 +18,11 @@ config :nostrum,
   ]
 
 config :logger,
-  level: :warn,
+  level: :info,
+  backends: [
+    :console,
+    {BnBBot.LogBackend, :log_backend}
+  ],
   compile_time_purge_matching: [
     [module: Nostrum, level_lower_than: :warn],
     [module: Nostrum.Api, level_lower_than: :warn],
@@ -27,7 +31,12 @@ config :logger,
     [module: Nostrum.Shard.Event, level_lower_than: :warn]
   ]
 
+config :elixir_bot, BnBBot.Repo,
+  database: "./db/dev_db.db"
+
 config :elixir_bot,
+  ecto_repos: [BnBBot.Repo],
+  ecto_shard_count: 1,
   prefix: "!",
   owner_id: 666,
   admins: [667, 668],

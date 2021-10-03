@@ -90,6 +90,10 @@ defmodule BnBBot.Commands do
     Commands.Reload.call(msg, args)
   end
 
+  defp cmd_call("audit", msg, args) do
+    Commands.Audit.call(msg, args)
+  end
+
   # default
   defp cmd_call(_name, _msg, _args) do
     # few enough args so it should be fine

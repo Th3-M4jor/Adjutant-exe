@@ -7,7 +7,7 @@ defmodule BnBBot.Commands.Ping do
 
   @spec call_slash(Nostrum.Struct.Interaction.t()) :: :ignore
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
-    Logger.debug("Recieved a ping command")
+    Logger.info("Recieved a ping command")
 
     utilization_task =
       Task.async(fn ->

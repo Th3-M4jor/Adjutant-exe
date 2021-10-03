@@ -86,7 +86,7 @@ defmodule BnBBot.Commands.NCP do
   end
 
   defp search_ncp(%Nostrum.Struct.Interaction{type: 2} = inter, name) do
-    Logger.debug(["Searching for the following NCP: ", name])
+    Logger.info(["Searching for the following NCP: ", name])
 
     case NCP.get_ncp(name) do
       {:found, ncp} ->
@@ -98,7 +98,7 @@ defmodule BnBBot.Commands.NCP do
   end
 
   defp search_ncp(%Nostrum.Struct.Interaction{type: 4} = inter, name) do
-    Logger.debug(["Autocomplete searching for the following NCP: ", name])
+    Logger.info(["Autocomplete searching for the following NCP: ", inspect(name)])
 
     list =
       NCP.get_autocomplete(name)

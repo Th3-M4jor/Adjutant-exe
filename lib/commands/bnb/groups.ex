@@ -7,7 +7,7 @@ defmodule BnBBot.Commands.Groups do
 
   @spec call_slash(Nostrum.Struct.Interaction.t()) :: :ignore
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
-    Logger.debug("Recieved a groups command")
+    Logger.info("Recieved a groups command")
 
     backend_name = Application.fetch_env!(:elixir_bot, :backend_node_name)
 

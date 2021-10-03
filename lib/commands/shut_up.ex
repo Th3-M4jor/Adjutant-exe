@@ -2,7 +2,7 @@ defmodule BnBBot.Commands.ShutUp do
   require Logger
 
   def call(%Nostrum.Struct.Message{} = msg, _args) do
-    Logger.debug("Recieved a shutup command")
+    Logger.info("Recieved a shutup command")
 
     if BnBBot.Util.is_owner_msg?(msg) do
       res =

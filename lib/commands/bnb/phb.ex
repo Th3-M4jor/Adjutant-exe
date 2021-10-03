@@ -6,6 +6,8 @@ defmodule BnBBot.Commands.PHB do
   @behaviour BnBBot.SlashCmdFn
 
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
+    Logger.info("Recieved a links command")
+
     link_buttons =
       Application.fetch_env!(:elixir_bot, :phb_links)
       |> Enum.chunk_every(5)

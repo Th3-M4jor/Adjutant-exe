@@ -9,6 +9,8 @@ defmodule BnBBot.Commands.Dice do
 
     die_str = (opts && List.first(opts) && List.first(opts).value) || "1d20"
 
+    Logger.info(["Got a request to roll ", die_str])
+
     roll_result =
       if String.match?(die_str, ~r/^(?:\d+d\d+|\d+)(?:\s*\+\s*\d+d\d+|\s*\+\s*\d+)*$/) do
         String.replace(die_str, ~r/\s+/, "") |> roll_dice()

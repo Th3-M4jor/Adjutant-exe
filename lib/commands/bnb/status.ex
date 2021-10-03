@@ -44,12 +44,15 @@ defmodule BnBBot.Commands.Statuses do
   @stagger "```When Staggered, your AC is reduced by your Body Stat. You also immediately fail any Strength Check you’re required to make. This includes Attack Rolls. This effect can be removed at the cost of all your remaining Move Actions for that round.```"
 
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
+    Logger.info("Recieved a Status command")
+
     resp_str =
       case inter.data.options do
         [arg] ->
           status_to_str(arg.value)
 
         _ ->
+          Logger.warn(["Status: bad argument given ", inspect(inter.data.options)])
           "An unknown error has occurred"
       end
 
