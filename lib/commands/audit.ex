@@ -26,8 +26,17 @@ defmodule BnBBot.Commands.Audit do
 
     ct = String.to_integer(ct)
 
-    text = get_entries(ct) |> Enum.map(&format_entry/1) |> Enum.join("\n")
+    text = get_entries(ct) |> Enum.map(&format_entry/1) |> IO.iodata_to_binary()
     Nostrum.Api.create_message(msg, text)
+  end
+
+  def call(%Nostrum.Struct.Message{} = msg, ["dump"]) do
+    Logger.info("Got an audit cmd for \"dump\"")
+    Task.start(fn -> Nostrum.Api.start_typing(msg.channel_id) end)
+
+    text = BnBBot.Repo.all(BnBBot.LogLine) |> Enum.map(&format_entry/1) |> Enum.intersperse("\n\n")
+    File.write("log_dump.txt", text, [:write])
+    Nostrum.Api.create_message(msg, "Dumped log to log_dump.txt")
   end
 
   def call(%Nostrum.Struct.Message{} = msg, _) do
@@ -43,19 +52,18 @@ defmodule BnBBot.Commands.Audit do
   @spec get_entries(non_neg_integer()) :: [BnBBot.LogLine.t()]
   def get_entries(count \\ 10) do
     query = from(log in BnBBot.LogLine, order_by: [desc: log.id], limit: ^count)
-    BnBBot.Repo.all(query)
+    BnBBot.Repo.all(query) |> Enum.reverse()
   end
 
   defp format_entry(%BnBBot.LogLine{} = line) do
-    data = [
+    [
       NaiveDateTime.to_string(line.inserted_at),
       " ",
       to_string(line.level),
       ": ",
-      line.message
+      line.message,
+      "\n"
     ]
-
-    IO.iodata_to_binary(data)
   end
 
   defp format_entry(nil) do

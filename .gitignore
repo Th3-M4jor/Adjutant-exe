@@ -39,3 +39,6 @@ db/*
 dev_db.db
 prod_db.db
 priv/repo/structure.sql
+
+#log dump file
+log_dump.txt
