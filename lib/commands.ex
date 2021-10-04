@@ -8,70 +8,31 @@ defmodule BnBBot.Commands do
   def cmd_check(%Nostrum.Struct.Message{} = msg) do
     contents = String.trim(msg.content)
     prefix = Application.fetch_env!(:elixir_bot, :prefix)
+    prefix_len = String.length(prefix)
+    perms = BnBBot.Util.get_user_perms(msg)
 
-    if String.starts_with?(contents, prefix) do
-      perms = BnBBot.Util.get_user_perms(msg)
-      parse_cmd(msg, perms)
-      :ignore
-    end
-  end
+    case {contents, perms} do
+      {<<^prefix::binary-size(prefix_len), "">>, perms} when perms in [:owner, :admin] ->
+        :ignore
 
-  defp parse_cmd(%Nostrum.Struct.Message{} = msg, :owner) do
-    contents = String.trim(msg.content)
-    prefix = Application.fetch_env!(:elixir_bot, :prefix)
-    {_, prefix_removed} = String.split_at(contents, String.length(prefix))
-
-    {cmd_name, args} =
-      case String.split(prefix_removed) do
-        [cmd_name | args] ->
-          lowercase_name = String.downcase(cmd_name, :ascii)
-          {lowercase_name, args}
-
-        [] ->
-          {:prefix_only, []}
-      end
-
-    cmd_call(cmd_name, msg, args)
-    :ignore
-  end
-
-  defp parse_cmd(msg, :admin) do
-    contents = String.trim(msg.content)
-    prefix = Application.fetch_env!(:elixir_bot, :prefix)
-    {_, prefix_removed} = String.split_at(contents, String.length(prefix))
-
-    {cmd_name, args} =
-      case String.split(prefix_removed) do
-        [cmd_name | args] ->
-          lowercase_name = String.downcase(cmd_name, :ascii)
-          {lowercase_name, args}
-
-        [] ->
-          {:prefix_only, []}
-      end
-
-    case cmd_name do
-      :prefix_only ->
-        {:ignore, nil}
-
-      "reload" ->
-        Commands.Reload.call(msg, args)
-
-      _ ->
+      {<<^prefix::binary-size(prefix_len), _rest::binary>>, :everyone} ->
         Api.create_message(
           msg.channel_id,
-          content: "I'm sorry, all but one command for admin use has been removed",
+          content: "I'm sorry, text based commands have been removed in favor of slash commands",
           message_reference: %{message_id: msg.id}
         )
-    end
-  end
 
-  defp parse_cmd(msg, :everyone) do
-    Api.create_message(
-      msg.channel_id,
-      content: "I'm sorry, text based commands have been removed in favor of slash commands",
-      message_reference: %{message_id: msg.id}
-    )
+      {<<^prefix::binary-size(prefix_len), "reload">>, :admin} ->
+        Commands.Reload.call(msg, [])
+
+      {<<^prefix::binary-size(prefix_len), rest::binary>>, :owner} ->
+        [cmd_name | args] = String.split(rest)
+        cmd_call(cmd_name, msg, args)
+
+      _ ->
+        nil
+    end
+    :ignore
   end
 
   defp cmd_call("die", msg, args) do
