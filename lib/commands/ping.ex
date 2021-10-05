@@ -73,6 +73,10 @@ defmodule BnBBot.Commands.Ping do
           total: #{total_percent}
           weighted: #{weighted_percent}
           """
+        },
+        %Embed.Field{
+          name: "Active bot processes:",
+          value: Process.list() |> length()
         }
       ]
     }
