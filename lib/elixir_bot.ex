@@ -51,7 +51,6 @@ defmodule BnBBot.Supervisor do
     children = [ncp | children]
     children = [chips | children]
     children = [viruses | children]
-    children = [BnBBot.Repo | children]
     Logger.debug(inspect(children, pretty: true))
 
     res = Supervisor.init(children, strategy: :one_for_one)
