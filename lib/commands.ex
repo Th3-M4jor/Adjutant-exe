@@ -12,8 +12,15 @@ defmodule BnBBot.Commands do
     perms = BnBBot.Util.get_user_perms(msg)
 
     case {contents, perms} do
-      {<<^prefix::binary-size(prefix_len), "">>, perms} when perms in [:owner, :admin] ->
-        :ignore
+      {<<^prefix::binary-size(prefix_len), "reload">>, :admin} ->
+        Commands.Reload.call(msg, [])
+
+      {<<^prefix::binary-size(prefix_len), "">>, _} ->
+        nil
+
+      {<<^prefix::binary-size(prefix_len), rest::binary>>, :owner} ->
+        [cmd_name | args] = String.split(rest)
+        cmd_call(cmd_name, msg, args)
 
       {<<^prefix::binary-size(prefix_len), _rest::binary>>, :everyone} ->
         Api.create_message(
@@ -22,16 +29,10 @@ defmodule BnBBot.Commands do
           message_reference: %{message_id: msg.id}
         )
 
-      {<<^prefix::binary-size(prefix_len), "reload">>, :admin} ->
-        Commands.Reload.call(msg, [])
-
-      {<<^prefix::binary-size(prefix_len), rest::binary>>, :owner} ->
-        [cmd_name | args] = String.split(rest)
-        cmd_call(cmd_name, msg, args)
-
       _ ->
         nil
     end
+
     :ignore
   end
 
