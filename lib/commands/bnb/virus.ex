@@ -177,7 +177,11 @@ defmodule BnBBot.Commands.Virus do
   end
 
   defp build_encounter(inter, [count | _rest]) when count.value > 25 do
-    Logger.info(["Got asked to build an encounter with ", "#{count.value}", " viruses. Cowardly refusing."])
+    Logger.info([
+      "Got asked to build an encounter with ",
+      "#{count.value}",
+      " viruses. Cowardly refusing."
+    ])
 
     {:ok} =
       Api.create_interaction_response(

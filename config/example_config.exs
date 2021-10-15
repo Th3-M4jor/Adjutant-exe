@@ -31,8 +31,7 @@ config :logger,
     [module: Nostrum.Shard.Event, level_lower_than: :warn]
   ]
 
-config :elixir_bot, BnBBot.Repo,
-  database: "./db/dev_db.db"
+config :elixir_bot, BnBBot.Repo, database: "./db/dev_db.db"
 
 config :elixir_bot,
   ecto_repos: [BnBBot.Repo],

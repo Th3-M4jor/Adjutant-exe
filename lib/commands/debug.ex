@@ -30,6 +30,7 @@ defmodule BnBBot.Commands.Debug do
   def call(%Nostrum.Struct.Message{} = msg, args) do
     if BnBBot.Util.is_owner_msg?(msg) do
       Logger.info(["Got a debug cmd with bad args: " | Enum.intersperse(args, " ")])
+
       Api.create_message(
         msg.channel_id,
         "I'm sorry, that is not a valid argument to the Debug command"

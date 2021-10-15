@@ -19,6 +19,14 @@ defmodule BnBBot.Commands.Hidden do
         Logger.info("BnBBot.Commands.Hidden.call_slash: shut_up")
         shut_up(inter)
 
+      [%Nostrum.Struct.ApplicationCommandInteractionDataOption{value: "add_to_bans"} | args] ->
+        Logger.info("BnBBot.Commands.Hidden.call_slash: add_to_bans")
+        BnBBot.Commands.AddToBans.add_to_bans(inter, args)
+
+      [%Nostrum.Struct.ApplicationCommandInteractionDataOption{value: "salt_the_earth"} | _] ->
+        Logger.info("BnBBot.Commands.Hidden.call_slash: salt_the_earth")
+        BnBBot.Commands.AddToBans.salt_the_earth(inter)
+
       _ ->
         Logger.info("BnBBot.Commands.Hidden.call_slash: unknown")
 

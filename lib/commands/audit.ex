@@ -34,7 +34,9 @@ defmodule BnBBot.Commands.Audit do
     Logger.info("Got an audit cmd for \"dump\"")
     Task.start(fn -> Nostrum.Api.start_typing(msg.channel_id) end)
 
-    text = BnBBot.Repo.all(BnBBot.LogLine) |> Enum.map(&format_entry/1) |> Enum.intersperse("\n\n")
+    text =
+      BnBBot.Repo.all(BnBBot.LogLine) |> Enum.map(&format_entry/1) |> Enum.intersperse("\n\n")
+
     File.write("log_dump.txt", text, [:write])
     Nostrum.Api.create_message(msg, "Dumped log to log_dump.txt")
   end

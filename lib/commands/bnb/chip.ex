@@ -182,7 +182,7 @@ defmodule BnBBot.Commands.Chip do
           components: buttons
         })
 
-      resp = Poison.decode!(resp)
+      resp = Jason.decode!(resp)
 
       edit_route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/#{resp["id"]}"
 

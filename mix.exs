@@ -36,7 +36,7 @@ defmodule ElixirBot.MixProject do
       {:nostrum, path: "../nostrum/"},
       {:dotenv, "~> 3.1"},
       {:httpoison, "~> 1.7"},
-      {:poison, "~> 3.0"},
+      {:jason, "~> 1.2"},
       {:ecto_sql, "~> 3.0"},
       {:ecto_sqlite3, "~> 0.7.1"},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false}

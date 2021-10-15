@@ -354,10 +354,9 @@ defmodule BnBBot.Library.BattlechipTable do
   @spec decode_chip_resp({:ok, HTTPoison.Response.t()} | {:error, HTTPoison.Error.t()}) ::
           {:ok, [{String.t(), BnBBot.Library.Battlechip}]} | {:http_err, String.t()}
   defp decode_chip_resp({:ok, %HTTPoison.Response{} = resp}) when resp.status_code in 200..299 do
-    maps = Poison.Parser.parse!(resp.body, keys: :atoms)
-
     maps =
-      Enum.map(maps, fn chip ->
+      Jason.decode!(resp.body, keys: :atoms)
+      |> Enum.map(fn chip ->
         elem = chip[:elem] |> string_list_to_atoms()
         skill = chip[:skill] |> string_list_to_atoms()
         range = chip[:range] |> String.to_atom()

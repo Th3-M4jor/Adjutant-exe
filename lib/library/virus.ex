@@ -509,10 +509,9 @@ defmodule BnBBot.Library.VirusTable do
   @spec decode_virus_resp({:ok, HTTPoison.Response.t()} | {:error, HTTPoison.Error.t()}) ::
           {:ok, [{String.t(), BnBBot.Library.Virus.t()}]} | {:http_err, String.t()}
   defp decode_virus_resp({:ok, %HTTPoison.Response{} = resp}) when resp.status_code in 200..299 do
-    maps = Poison.Parser.parse!(resp.body, keys: :atoms)
-
     maps =
-      Enum.map(maps, fn virus ->
+      Jason.decode!(resp.body, keys: :atoms)
+      |> Enum.map(fn virus ->
         elem = virus[:element] |> string_list_to_atoms()
         dmg_elem = virus[:dmgelem] |> string_list_to_atoms()
         lower_name = virus[:name] |> String.downcase(:ascii)

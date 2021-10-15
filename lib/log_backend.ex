@@ -2,10 +2,10 @@ defmodule BnBBot.LogLine do
   use Ecto.Schema
 
   @type t :: %__MODULE__{
-    level: :debug | :info | :notice | :warn | :error | :critical | :alert | :emergency,
-    message: String.t(),
-    inserted_at: NaiveDateTime.t()
-  }
+          level: :debug | :info | :notice | :warn | :error | :critical | :alert | :emergency,
+          message: String.t(),
+          inserted_at: NaiveDateTime.t()
+        }
 
   schema "bot_log" do
     field(:level, Ecto.Enum,
