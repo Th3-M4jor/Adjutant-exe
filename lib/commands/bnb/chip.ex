@@ -82,7 +82,7 @@ defmodule BnBBot.Commands.Chip do
   end
 
   def search_chip(%Nostrum.Struct.Interaction{type: 4} = inter, name) do
-    Logger.info(["Autocomplete Searching for the following chip: ", inspect(name)])
+    Logger.debug(["Autocomplete Searching for the following chip: ", inspect(name)])
 
     list =
       BnBBot.Library.Battlechip.get_autocomplete(name)

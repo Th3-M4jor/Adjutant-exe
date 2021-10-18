@@ -116,7 +116,7 @@ defmodule BnBBot.Commands.Virus do
   end
 
   defp search_virus(%Nostrum.Struct.Interaction{type: 4} = inter, name) do
-    Logger.info(["Autocomplete searching for the following virus: ", inspect(name)])
+    Logger.debug(["Autocomplete searching for the following virus: ", inspect(name)])
 
     list =
       Virus.get_autocomplete(name)

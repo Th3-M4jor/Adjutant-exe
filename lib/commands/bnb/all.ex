@@ -19,7 +19,7 @@ defmodule BnBBot.Commands.All do
     [opt] = inter.data.options
     to_search = opt.value
 
-    Logger.info(["Generating autcomplete for: ", inspect(to_search)])
+    Logger.debug(["Generating autcomplete for: ", inspect(to_search)])
 
     chips_task =
       Task.async(fn ->
