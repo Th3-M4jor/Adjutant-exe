@@ -1,13 +1,21 @@
 defmodule BnBBot.Commands.Dice do
   alias Nostrum.Api
+  alias Nostrum.Struct.ApplicationCommandInteractionDataOption, as: Option
   require Logger
 
   @behaviour BnBBot.SlashCmdFn
 
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
-    opts = inter.data.options
+    die_str =
+      case inter.data.options do
+        [%Option{value: value}] ->
+          value
 
-    die_str = (opts && List.first(opts) && List.first(opts).value) || "1d20"
+        _ ->
+          "1d20"
+      end
+
+    # (opts && List.first(opts) && List.first(opts).value) || "1d20"
 
     Logger.info(["Got a request to roll ", die_str])
 
