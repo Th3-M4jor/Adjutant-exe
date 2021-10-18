@@ -2,30 +2,38 @@ defmodule BnBBot.Commands.Hidden do
   require Logger
 
   alias Nostrum.Api
+  alias Nostrum.Struct.ApplicationCommandInteractionDataOption, as: Option
 
   @behaviour BnBBot.SlashCmdFn
 
-  def call_slash(%Nostrum.Struct.Interaction{} = inter) do
+  @ownercmds ["die", "debug", "shut_up", "add_to_bans", "salt_the_earth", "list_bans"]
+  @admincmds ["die", "add_to_bans", "salt_the_earth", "list_bans"]
+
+  def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
     case inter.data.options do
-      [%Nostrum.Struct.ApplicationCommandInteractionDataOption{value: "die"} | _] ->
+      [%Option{value: "die"} | _] ->
         Logger.info("BnBBot.Commands.Hidden.call_slash: die")
         die(inter)
 
-      [%Nostrum.Struct.ApplicationCommandInteractionDataOption{value: "debug"} | args] ->
+      [%Option{value: "debug"} | args] ->
         Logger.info(["BnBBot.Commands.Hidden.call_slash: debug ", inspect(args)])
         debug(inter, args)
 
-      [%Nostrum.Struct.ApplicationCommandInteractionDataOption{value: "shut_up"} | _] ->
+      [%Option{value: "shut_up"} | _] ->
         Logger.info("BnBBot.Commands.Hidden.call_slash: shut_up")
         shut_up(inter)
 
-      [%Nostrum.Struct.ApplicationCommandInteractionDataOption{value: "add_to_bans"} | args] ->
+      [%Option{value: "add_to_bans"} | args] ->
         Logger.info("BnBBot.Commands.Hidden.call_slash: add_to_bans")
         BnBBot.Commands.AddToBans.add_to_bans(inter, args)
 
-      [%Nostrum.Struct.ApplicationCommandInteractionDataOption{value: "salt_the_earth"} | _] ->
+      [%Option{value: "salt_the_earth"} | _] ->
         Logger.info("BnBBot.Commands.Hidden.call_slash: salt_the_earth")
         BnBBot.Commands.AddToBans.salt_the_earth(inter)
+
+      [%Option{value: "list_bans"} | _] ->
+        Logger.info("BnBBot.Commands.Hidden.call_slash: list_bans")
+        BnBBot.Commands.AddToBans.list_bans(inter)
 
       _ ->
         Logger.info("BnBBot.Commands.Hidden.call_slash: unknown")
@@ -42,6 +50,30 @@ defmodule BnBBot.Commands.Hidden do
     :ignore
   end
 
+  def call_slash(%Nostrum.Struct.Interaction{type: 4} = inter) do
+    Logger.debug("Recieved an autocomplete request for a hidden command")
+
+    list = cond do
+      BnBBot.Util.is_owner_msg?(inter) ->
+        @ownercmds
+      BnBBot.Util.is_admin_msg?(inter) ->
+        @admincmds
+      true ->
+        []
+    end
+
+    resp = Enum.map(list, fn cmd ->
+      %{name: cmd, value: cmd}
+    end)
+
+    {:ok} = Api.create_interaction_response(inter, %{
+      type: 8,
+      data: %{
+        choices: resp
+      }
+    })
+  end
+
   def get_create_map() do
     %{
       type: 1,
@@ -52,7 +84,8 @@ defmodule BnBBot.Commands.Hidden do
           type: 3,
           name: "command-name",
           description: "the name of the hidden command",
-          required: true
+          required: true,
+          autocomplete: true
         },
         %{
           type: 3,

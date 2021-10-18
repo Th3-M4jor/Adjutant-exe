@@ -1,6 +1,7 @@
 defmodule BnBBot.Commands.AddToBans do
   require Logger
   alias Nostrum.Api
+  alias Nostrum.Struct.ApplicationCommandInteractionDataOption, as: Option
   use Ecto.Schema
   import Ecto.Query, only: [from: 2]
 
@@ -16,9 +17,23 @@ defmodule BnBBot.Commands.AddToBans do
     timestamps(updated_at: false)
   end
 
-  def add_to_bans(inter, [%Nostrum.Struct.ApplicationCommandInteractionDataOption{value: to_add}]) do
+  def add_to_bans(inter, [%Option{value: to_add}]) do
     if BnBBot.Util.is_owner_msg?(inter) or BnBBot.Util.is_admin_msg?(inter) do
       add_id_to_list(inter, inter.member.user.id, to_add)
+    else
+      Api.create_interaction_response(inter, %{
+        type: 4,
+        data: %{
+          content: "You don't have permission to do that",
+          flags: 64
+        }
+      })
+    end
+  end
+
+  def list_bans(inter) do
+    if BnBBot.Util.is_owner_msg?(inter) or BnBBot.Util.is_admin_msg?(inter) do
+      send_id_list(inter)
     else
       Api.create_interaction_response(inter, %{
         type: 4,
@@ -65,6 +80,27 @@ defmodule BnBBot.Commands.AddToBans do
         }
       })
     end
+  end
+
+  defp send_id_list(inter) do
+    list =
+      from(u in __MODULE__, select: u.to_ban)
+      |> BnBBot.Repo.all()
+      |> Enum.map(fn to_ban ->
+        "<@#{to_ban}>\n"
+      end)
+
+    list = ["These users would be banned when you salt the earth\n" | list]
+
+    content = IO.iodata_to_binary(list)
+
+    Api.create_interaction_response(inter, %{
+      type: 4,
+      data: %{
+        content: content,
+        flags: 64
+      }
+    })
   end
 
   defp add_id_to_list(inter, author_id, to_add) do
