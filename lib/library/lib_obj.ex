@@ -118,6 +118,34 @@ defmodule BnBBot.Library.Shared do
       :aff -> 8
     end
   end
+
+  @spec gen_suggestions(map() | [map()], String.t(), float()) :: [{float(), map()}]
+  def gen_suggestions(map, name, min_dist) when is_map(map),
+    do: gen_suggestions(Map.to_list(map), name, min_dist)
+
+  def gen_suggestions(list, name, min_dist) when is_list(list) do
+    lower_name = String.downcase(name)
+
+    list
+    |> Stream.map(fn {key, value} -> {String.jaro_distance(key, lower_name), value} end)
+    |> Stream.filter(fn {dist, _} -> dist >= min_dist end)
+    |> Enum.sort_by(fn {d, _} -> d end, &>=/2)
+    |> Enum.take(25)
+  end
+
+  @spec gen_autocomplete(map() | [map()], String.t(), float()) :: [{float(), String.t()}]
+  def gen_autocomplete(map, to_search, min_dist) when is_map(map),
+    do: gen_autocomplete(Map.to_list(map), to_search, min_dist)
+
+  def gen_autocomplete(list, to_search, min_dist) when is_list(list) do
+    lower_name = String.downcase(to_search)
+
+    list
+    |> Stream.map(fn {key, value} -> {String.jaro_distance(key, lower_name), value.name} end)
+    |> Stream.filter(fn {dist, _} -> dist >= min_dist end)
+    |> Enum.sort_by(fn {d, _} -> d end, &>=/2)
+    |> Enum.take(25)
+  end
 end
 
 defprotocol BnBBot.Library.LibObj do

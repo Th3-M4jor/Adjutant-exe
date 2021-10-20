@@ -164,6 +164,10 @@ defmodule BnBBot.Consumer do
         id = String.to_integer(id)
         BnBBot.ButtonAwait.resp_to_btn(inter, id)
 
+      ["yn", <<head, _rest::binary>> = id, _yes_no] when head in ?1..?9 ->
+        id = String.to_integer(id)
+        BnBBot.ButtonAwait.resp_to_btn(inter, id)
+
       [<<kind::utf8, "r">>, name] when kind in [?c, ?n, ?v] ->
         BnBBot.ButtonAwait.resp_to_persistent_btn(inter, kind, name)
 

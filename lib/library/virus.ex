@@ -143,7 +143,7 @@ defmodule BnBBot.Library.Virus do
       {val, _} = Integer.parse(drop)
       val
     end)
-    |> Enum.map(fn {drop, num} ->
+    |> Stream.map(fn {drop, num} ->
       [drop, ": ", num]
     end)
     |> Enum.intersperse(" | ")
@@ -211,7 +211,7 @@ end
 defimpl String.Chars, for: BnBBot.Library.Virus do
   def to_string(%BnBBot.Library.Virus{} = virus) do
     elems =
-      Enum.map(virus.element, fn elem -> BnBBot.Library.Shared.element_to_string(elem) end)
+      Stream.map(virus.element, fn elem -> BnBBot.Library.Shared.element_to_string(elem) end)
       |> Enum.intersperse(", ")
 
     skills = BnBBot.Library.Virus.skills_to_io_list(virus)
@@ -244,7 +244,7 @@ defimpl String.Chars, for: BnBBot.Library.Virus do
       unless is_nil(virus.dmgelem) do
         [
           "Damage Element(s): ",
-          Enum.map(virus.dmgelem, fn elem -> BnBBot.Library.Shared.element_to_string(elem) end)
+          Stream.map(virus.dmgelem, fn elem -> BnBBot.Library.Shared.element_to_string(elem) end)
           |> Enum.intersperse(", "),
           "\n"
         ]
@@ -341,12 +341,7 @@ defmodule BnBBot.Library.VirusTable do
     resp =
       case state[lower_name] do
         nil ->
-          res =
-            Map.to_list(state)
-            |> Enum.map(fn {key, value} -> {String.jaro_distance(key, lower_name), value} end)
-            |> Enum.filter(fn {dist, _} -> dist >= min_dist end)
-            |> Enum.sort_by(fn {d, _} -> d end, &>=/2)
-            |> Enum.take(25)
+          res = BnBBot.Library.Shared.gen_suggestions(state, name, min_dist)
 
           {:not_found, res}
 
@@ -360,27 +355,9 @@ defmodule BnBBot.Library.VirusTable do
   @spec handle_call({:autocomplete, String.t(), float()}, GenServer.from(), map()) ::
           {:reply, [{float(), String.t()}], map()}
   def handle_call({:autocomplete, name, min_dist}, _from, state) do
-    lower_name = String.downcase(name)
+    res = BnBBot.Library.Shared.gen_autocomplete(state, name, min_dist)
 
-    list = Map.to_list(state)
-
-    list =
-      :lists.filtermap(
-        fn {key, value} ->
-          dist = String.jaro_distance(key, lower_name)
-
-          if dist >= min_dist do
-            {true, {dist, value.name}}
-          else
-            false
-          end
-        end,
-        list
-      )
-      |> Enum.sort_by(fn {d, _} -> d end, &>=/2)
-      |> Enum.take(25)
-
-    {:reply, list, state}
+    {:reply, res, state}
   end
 
   @spec handle_call(:reload, GenServer.from(), map()) ::
@@ -510,7 +487,7 @@ defmodule BnBBot.Library.VirusTable do
           {:ok, [{String.t(), BnBBot.Library.Virus.t()}]} | {:http_err, String.t()}
   defp decode_virus_resp({:ok, %HTTPoison.Response{} = resp}) when resp.status_code in 200..299 do
     maps =
-      Jason.decode!(resp.body, keys: :atoms)
+      Jason.decode!(resp.body, keys: :atoms, strings: :copy)
       |> Enum.map(fn virus ->
         elem = virus[:element] |> string_list_to_atoms()
         dmg_elem = virus[:dmgelem] |> string_list_to_atoms()
@@ -518,7 +495,7 @@ defmodule BnBBot.Library.VirusTable do
 
         drops =
           virus[:drops]
-          |> Enum.map(fn [range, item] ->
+          |> Stream.map(fn [range, item] ->
             {range, item}
           end)
           |> Map.new()

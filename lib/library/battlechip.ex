@@ -159,7 +159,7 @@ end
 defimpl String.Chars, for: BnBBot.Library.Battlechip do
   def to_string(%BnBBot.Library.Battlechip{} = chip) do
     elems = [
-      Enum.map(chip.elem, fn elem -> BnBBot.Library.Shared.element_to_string(elem) end)
+      Stream.map(chip.elem, fn elem -> BnBBot.Library.Shared.element_to_string(elem) end)
       |> Enum.intersperse(", "),
       " | "
     ]
@@ -268,12 +268,7 @@ defmodule BnBBot.Library.BattlechipTable do
     resp =
       case state[lower_name] do
         nil ->
-          res =
-            Map.to_list(state)
-            |> Enum.map(fn {key, value} -> {String.jaro_distance(key, lower_name), value} end)
-            |> Enum.filter(fn {dist, _} -> dist >= min_dist end)
-            |> Enum.sort_by(fn {d, _} -> d end, &>=/2)
-            |> Enum.take(25)
+          res = BnBBot.Library.Shared.gen_suggestions(state, name, min_dist)
 
           {:not_found, res}
 
@@ -299,27 +294,9 @@ defmodule BnBBot.Library.BattlechipTable do
   @spec handle_call({:autocomplete, String.t(), float()}, GenServer.from(), map()) ::
           {:reply, [{float(), String.t()}], map()}
   def handle_call({:autocomplete, name, min_dist}, _from, state) do
-    lower_name = String.downcase(name, :ascii)
+    res = BnBBot.Library.Shared.gen_autocomplete(state, name, min_dist)
 
-    list = Map.to_list(state)
-
-    list =
-      :lists.filtermap(
-        fn {key, value} ->
-          dist = String.jaro_distance(key, lower_name)
-
-          if dist >= min_dist do
-            {true, {dist, value.name}}
-          else
-            false
-          end
-        end,
-        list
-      )
-      |> Enum.sort_by(fn {d, _} -> d end, &>=/2)
-      |> Enum.take(25)
-
-    {:reply, list, state}
+    {:reply, res, state}
   end
 
   @spec handle_call(:len, GenServer.from(), map()) :: {:reply, non_neg_integer(), map()}
@@ -355,7 +332,7 @@ defmodule BnBBot.Library.BattlechipTable do
           {:ok, [{String.t(), BnBBot.Library.Battlechip}]} | {:http_err, String.t()}
   defp decode_chip_resp({:ok, %HTTPoison.Response{} = resp}) when resp.status_code in 200..299 do
     maps =
-      Jason.decode!(resp.body, keys: :atoms)
+      Jason.decode!(resp.body, keys: :atoms, strings: :copy)
       |> Enum.map(fn chip ->
         elem = chip[:elem] |> string_list_to_atoms()
         skill = chip[:skill] |> string_list_to_atoms()

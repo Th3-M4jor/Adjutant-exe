@@ -104,6 +104,74 @@ defmodule BnBBot.ButtonAwait do
     end)
   end
 
+  @spec get_confirmation?(Nostrum.Struct.Interaction.t(), String.t()) :: boolean()
+  def get_confirmation?(inter, content) do
+    uuid = System.unique_integer([:positive]) |> rem(1000)
+
+    action_row = [
+      %{
+        type: 2,
+        style: 4,
+        label: "yes",
+        custom_id: "yn_#{uuid}_yes"
+      },
+      %{
+        type: 2,
+        style: 2,
+        label: "no",
+        custom_id: "yn_#{uuid}_no"
+      }
+    ]
+
+    buttons = [
+      %{
+        type: 1,
+        components: action_row
+      }
+    ]
+
+    {:ok} =
+      Nostrum.Api.create_interaction_response(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: content,
+            flags: 64,
+            components: buttons
+          }
+        }
+      )
+
+    btn_response = BnBBot.ButtonAwait.await_btn_click(uuid, nil)
+
+    unless is_nil(btn_response) do
+      Nostrum.Api.create_interaction_response(btn_response, %{
+        type: 7,
+        data: %{
+          components: []
+        }
+      })
+
+      case String.split(btn_response.data.custom_id, "_") do
+        [_, _, "yes"] ->
+          true
+
+        [_, _, "no"] ->
+          false
+      end
+    else
+      route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
+
+      Nostrum.Api.request(:patch, route, %{
+        content: "Timed out waiting for response",
+        components: []
+      })
+
+      false
+    end
+  end
+
   #  defp tuple_to_btn({name, id, style}) do
   #    %{
   #      type: 2,

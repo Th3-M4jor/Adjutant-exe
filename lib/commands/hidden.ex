@@ -53,25 +53,30 @@ defmodule BnBBot.Commands.Hidden do
   def call_slash(%Nostrum.Struct.Interaction{type: 4} = inter) do
     Logger.debug("Recieved an autocomplete request for a hidden command")
 
-    list = cond do
-      BnBBot.Util.is_owner_msg?(inter) ->
-        @ownercmds
-      BnBBot.Util.is_admin_msg?(inter) ->
-        @admincmds
-      true ->
-        []
-    end
+    list =
+      cond do
+        BnBBot.Util.is_owner_msg?(inter) ->
+          @ownercmds
 
-    resp = Enum.map(list, fn cmd ->
-      %{name: cmd, value: cmd}
-    end)
+        BnBBot.Util.is_admin_msg?(inter) ->
+          @admincmds
 
-    {:ok} = Api.create_interaction_response(inter, %{
-      type: 8,
-      data: %{
-        choices: resp
-      }
-    })
+        true ->
+          []
+      end
+
+    resp =
+      Enum.map(list, fn cmd ->
+        %{name: cmd, value: cmd}
+      end)
+
+    {:ok} =
+      Api.create_interaction_response(inter, %{
+        type: 8,
+        data: %{
+          choices: resp
+        }
+      })
   end
 
   def get_create_map() do

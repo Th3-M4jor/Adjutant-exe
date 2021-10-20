@@ -47,30 +47,9 @@ defmodule BnBBot.Commands.AddToBans do
 
   def salt_the_earth(inter) do
     if BnBBot.Util.is_owner_msg?(inter) or BnBBot.Util.is_admin_msg?(inter) do
-      tasks =
-        BnBBot.Repo.all(__MODULE__)
-        |> Enum.map(fn row ->
-          Task.async(Api, :create_guild_ban, [inter.guild_id, row.to_ban, 0, "Salting the Earth"])
-        end)
-
-      msg_task =
-        Task.async(fn ->
-          Api.create_interaction_response(inter, %{
-            type: 4,
-            data: %{
-              content: "DEUS VULT! DEUS VULT! DEUS VULT!"
-            }
-          })
-        end)
-
-      Task.await_many([msg_task | tasks], :infinity)
-
-      route = "/webhooks/#{inter.application_id}/#{inter.token}"
-
-      Api.request(:post, route, %{
-        content:
-          "A time to love and a time to hate; A time for war and a time for peace. - Ecclesiastes 3:8"
-      })
+      if BnBBot.ButtonAwait.get_confirmation?(inter, "Are you sure you want to salt the earth?") do
+        salt_the_earth_inner(inter)
+      end
     else
       Api.create_interaction_response(inter, %{
         type: 4,
@@ -80,6 +59,34 @@ defmodule BnBBot.Commands.AddToBans do
         }
       })
     end
+  end
+
+  defp salt_the_earth_inner(inter) do
+    guild_id = inter.guild_id
+
+    tasks =
+      BnBBot.Repo.all(__MODULE__)
+      |> Enum.map(fn row ->
+        Task.async(Api, :create_guild_ban, [guild_id, row.to_ban, 0, "Salting the Earth"])
+      end)
+
+    route = "/webhooks/#{inter.application_id}/#{inter.token}"
+
+    msg_task =
+      Task.async(fn ->
+        Api.request(:post, route, %{
+          content: "DEUS VULT! DEUS VULT! DEUS VULT!"
+        })
+      end)
+
+    Task.await_many([msg_task | tasks], :infinity)
+
+    route = "/webhooks/#{inter.application_id}/#{inter.token}"
+
+    Api.request(:post, route, %{
+      content:
+        "A time to love and a time to hate; A time for war and a time for peace. - Ecclesiastes 3:8"
+    })
   end
 
   defp send_id_list(inter) do

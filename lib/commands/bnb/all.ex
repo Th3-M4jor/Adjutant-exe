@@ -123,7 +123,8 @@ defmodule BnBBot.Commands.All do
   end
 
   @spec do_btn_response(Nostrum.Struct.Interaction.t(), [
-          {float(), BnBBot.Library.NCP.t() | BnBBot.Library.Battlechip.t()}
+          {float(),
+           BnBBot.Library.NCP.t() | BnBBot.Library.Battlechip.t() | BnBBot.Library.Virus.t()}
         ]) :: :ignore
   def do_btn_response(%Nostrum.Struct.Interaction{} = inter, []) do
     Logger.debug("Nothing similar enough found")
