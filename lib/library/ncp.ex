@@ -31,6 +31,11 @@ defmodule BnBBot.Library.NCP do
     GenServer.call(:ncp_table, {:autocomplete, name, min_dist})
   end
 
+  @spec get_starters([colors()]) :: [t()]
+  def get_starters(colors) do
+    GenServer.call(:ncp_table, {:starters, colors})
+  end
+
   @spec get_ncps_by_color(colors()) :: [t()]
   def get_ncps_by_color(color) do
     GenServer.call(:ncp_table, {:color, color})
@@ -53,6 +58,50 @@ defmodule BnBBot.Library.NCP do
       :gray -> "Gray"
     end
   end
+
+  @spec ncp_color_to_sort_number(BnBBot.Library.NCP.t()) :: non_neg_integer()
+  def ncp_color_to_sort_number(%BnBBot.Library.NCP{} = ncp) do
+    case ncp.color do
+      :white -> 0
+      :pink -> 1
+      :yellow -> 2
+      :green -> 3
+      :blue -> 4
+      :red -> 5
+      :gray -> 6
+    end
+  end
+
+  @spec element_to_colors(BnBBot.Library.Shared.element()) :: [colors()]
+  def element_to_colors(element) do
+    case element do
+      :fire ->
+        [:white, :pink, :yellow, :blue, :gray]
+      :aqua ->
+        [:white, :pink, :yellow, :blue, :red]
+      :elec ->
+        [:white, :pink, :yellow, :green, :blue]
+      :wood ->
+        [:white, :pink, :yellow, :green, :red]
+      :wind ->
+        [:white, :pink, :yellow, :blue, :gray]
+      :sword ->
+        [:white, :pink, :yellow, :green, :red]
+      :break ->
+        [:white, :pink, :yellow, :green, :red]
+      :cursor ->
+        [:white, :pink, :yellow, :blue, :gray]
+      :recov ->
+        [:white, :pink, :yellow, :blue, :red]
+      :invis ->
+        [:white, :pink, :yellow, :green, :gray]
+      :object ->
+        [:white, :pink, :yellow, :red, :gray]
+      :null ->
+        [:white, :pink, :yellow, :green, :blue, :red, :gray]
+    end
+  end
+
 end
 
 defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
@@ -61,7 +110,7 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
   @spec to_btn(BnBBot.Library.NCP.t(), boolean()) :: BnBBot.Library.LibObj.button()
   def to_btn(ncp, disabled \\ false) do
     lower_name = "n_#{String.downcase(ncp.name, :ascii)}"
-    emoji = Application.fetch_env!(:elixir_bot, :ncp_emoji)
+    emoji = Application.fetch_env!(:elixir_bot, :ncp_emoji)[ncp.color]
 
     %{
       # type 2 for button
@@ -80,7 +129,7 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
           BnBBot.Library.LibObj.button()
   def to_btn_with_uuid(ncp, disabled \\ false, uuid) do
     lower_name = "#{uuid}_n_#{String.downcase(ncp.name, :ascii)}"
-    emoji = Application.fetch_env!(:elixir_bot, :ncp_emoji)
+    emoji = Application.fetch_env!(:elixir_bot, :ncp_emoji)[ncp.color]
 
     %{
       # type 2 for button
@@ -98,7 +147,7 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
   @spec to_persistent_btn(BnBBot.Library.NCP.t(), boolean()) :: BnBBot.Library.LibObj.button()
   def to_persistent_btn(ncp, disabled \\ false) do
     lower_name = "nr_#{String.downcase(ncp.name, :ascii)}"
-    emoji = Application.fetch_env!(:elixir_bot, :ncp_emoji)
+    emoji = Application.fetch_env!(:elixir_bot, :ncp_emoji)[ncp.color]
 
     %{
       # type 2 for button
@@ -138,6 +187,7 @@ end
 defmodule BnBBot.Library.NCPTable do
   require Logger
   use GenServer
+  alias BnBBot.Library.NCP
 
   def start_link(arg) do
     GenServer.start_link(__MODULE__, arg, name: :ncp_table)
@@ -205,6 +255,17 @@ defmodule BnBBot.Library.NCPTable do
       Map.values(state)
       |> Stream.filter(fn ncp -> ncp.color == color end)
       |> Enum.sort_by(fn ncp -> ncp.name end)
+
+    {:reply, resp, state}
+  end
+
+  @spec handle_call({:starters, [BnBBot.Library.NCP.colors()]}, GenServer.from(), map()) ::
+          {:reply, [NCP.t()], map()}
+  def handle_call({:starters, colors}, _from, state) do
+    resp =
+      Map.values(state)
+      |> Stream.filter(fn ncp -> Enum.member?(colors, ncp.color) and ncp.cost <= 2 end)
+      |> Enum.sort_by(fn ncp -> {NCP.ncp_color_to_sort_number(ncp), ncp.name} end)
 
     {:reply, resp, state}
   end

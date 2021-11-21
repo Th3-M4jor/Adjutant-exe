@@ -161,9 +161,9 @@ defmodule BnBBot.ButtonAwait do
           false
       end
     else
-      route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
+      #route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
-      Nostrum.Api.request(:patch, route, %{
+      Nostrum.Api.edit_interaction_response(inter, %{
         content: "Timed out waiting for response",
         components: []
       })

@@ -7,8 +7,6 @@ defmodule BnBBot.SlashCommands do
 
   @spec create_all_slash_commands :: any()
   def create_all_slash_commands() do
-    me_id = Nostrum.Cache.Me.get().id
-    route = "/applications/#{me_id}/commands"
 
     body = [
       Commands.Ping.get_create_map(),
@@ -25,13 +23,12 @@ defmodule BnBBot.SlashCommands do
       Commands.Groups.get_create_map()
     ]
 
-    Api.request(:put, route, body)
+    Api.bulk_overwrite_global_application_commands(body)
+
   end
 
   @spec create_all_slash_commands(Nostrum.Snowflake.t()) :: any()
   def create_all_slash_commands(guild_id) do
-    me_id = Nostrum.Cache.Me.get().id
-    route = "/applications/#{me_id}/guilds/#{guild_id}/commands"
 
     body = [
       Commands.Ping.get_create_map(),
@@ -48,7 +45,7 @@ defmodule BnBBot.SlashCommands do
       Commands.Groups.get_create_map()
     ]
 
-    Api.request(:put, route, body)
+    Api.bulk_overwrite_guild_application_commands(guild_id, body)
   end
 
   def create_locked_commands(guild_id) do

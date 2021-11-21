@@ -81,14 +81,12 @@ defmodule BnBBot.Commands.Ping do
       ]
     }
 
-    route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
+    #route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
-    :ok =
-      Api.request(:patch, route, %{
-        content: "",
-        embeds: [ping_embed]
-      })
-      |> elem(0)
+    {:ok, _message} = Api.edit_interaction_response(inter, %{
+      content: "",
+      embeds: [ping_embed]
+    })
 
     # Api.execute_webhook(
     #  inter.application_id,

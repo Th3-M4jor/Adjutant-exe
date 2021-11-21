@@ -6,6 +6,21 @@ defmodule BnBBot.Commands.NCP do
 
   @behaviour BnBBot.SlashCmdFn
 
+  @elements [
+    "Fire",
+    "Aqua",
+    "Elec",
+    "Wood",
+    "Wind",
+    "Sword",
+    "Break",
+    "Cursor",
+    "Recov",
+    "Invis",
+    "Object",
+    "Null"
+  ]
+
   def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
     [sub_cmd] = inter.data.options
 
@@ -21,6 +36,15 @@ defmodule BnBBot.Commands.NCP do
         color = String.to_existing_atom(name)
         ncps = NCP.get_ncps_by_color(color)
         send_ncp_color(inter, color, ncps)
+
+        "starter" ->
+          elem = case sub_cmd.options do
+            [opt] ->
+              opt.value |> String.to_existing_atom()
+            _ ->
+              :null
+          end
+          send_starter_ncps(inter, elem)
     end
 
     :ignore
@@ -48,6 +72,13 @@ defmodule BnBBot.Commands.NCP do
         }
       end)
 
+    element_choices = Enum.map(@elements, fn name ->
+      %{
+        name: name,
+        value: String.downcase(name, :ascii)
+      }
+    end)
+
     %{
       type: 1,
       name: "ncp",
@@ -64,6 +95,20 @@ defmodule BnBBot.Commands.NCP do
               description: "The name of the NCP to search for",
               required: true,
               autocomplete: true
+            }
+          ]
+        },
+        %{
+          type: 1,
+          name: "starter",
+          description: "List all starter programs",
+          options: [
+            %{
+              type: 3,
+              name: "element",
+              description: "The element to list them for",
+              required: false,
+              choices: element_choices
             }
           ]
         },
@@ -162,6 +207,39 @@ defmodule BnBBot.Commands.NCP do
       content: "These are the #{color_str} NCPs:",
       components: buttons
     })
+  end
+
+  defp send_starter_ncps(inter, element) do
+    Logger.debug(["Sending Starter NCPS for ", to_string(element)])
+
+    starters = NCP.element_to_colors(element) |> NCP.get_starters()
+
+    buttons = BnBBot.ButtonAwait.generate_persistent_buttons(starters)
+
+    elem_str = to_string(element) |> String.capitalize(:ascii)
+
+    {:ok} =
+      Api.create_interaction_response(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: "These are the starters for #{elem_str}:",
+            components: buttons
+          }
+        }
+      )
+
+    # five minutes
+    Process.sleep(300_000)
+
+    buttons = BnBBot.ButtonAwait.generate_persistent_buttons(starters, true)
+
+    {:ok, _message} = Api.edit_interaction_response(inter, %{
+      content: "These are the starters for #{elem_str}:",
+      components: buttons
+    })
+
   end
 
   defp send_found_ncp(%Nostrum.Struct.Interaction{} = inter, %BnBBot.Library.NCP{} = ncp) do
