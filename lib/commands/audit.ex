@@ -6,8 +6,13 @@ defmodule BnBBot.Commands.Audit do
   def call(%Nostrum.Struct.Message{} = msg, []) do
     Logger.info("Got an audit cmd with no args")
 
-    text = get_entries() |> Enum.map(&format_entry/1) |> Enum.join("\n")
-    Nostrum.Api.create_message(msg, text)
+    # |> Enum.join("\n")
+    {_, acc, _} =
+      get_entries() |> Enum.map(&format_entry/1) |> Enum.reduce({msg, [], 0}, &join_entries/2)
+
+    text = :erlang.iolist_to_binary(acc)
+
+    Nostrum.Api.create_message!(msg, text)
   end
 
   def call(%Nostrum.Struct.Message{} = msg, ["id", id]) do
@@ -70,5 +75,17 @@ defmodule BnBBot.Commands.Audit do
 
   defp format_entry(nil) do
     "No entry with that ID exists"
+  end
+
+  defp join_entries(elem, {msg, acc, acc_len}) do
+    elem_len = :erlang.iolist_size(elem)
+
+    if elem_len + acc_len > 1950 do
+      text = :erlang.iolist_to_binary(acc)
+      Nostrum.Api.create_message!(msg, text)
+      {msg, [elem, "\n"], elem_len + 1}
+    else
+      {msg, [acc, elem, "\n"], acc_len + elem_len + 1}
+    end
   end
 end
