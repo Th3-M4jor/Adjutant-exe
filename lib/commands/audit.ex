@@ -39,10 +39,26 @@ defmodule BnBBot.Commands.Audit do
     Logger.info("Got an audit cmd for \"dump\"")
     Task.start(fn -> Nostrum.Api.start_typing(msg.channel_id) end)
 
-    text =
-      BnBBot.Repo.all(BnBBot.LogLine) |> Enum.map(&format_entry/1) |> Enum.intersperse("\n\n")
+    #text =
+    #  BnBBot.Repo.all(BnBBot.LogLine) |> Enum.map(&format_entry/1) |> Enum.intersperse("\n\n")
 
-    File.write("log_dump.txt", text, [:write])
+    file_ptr = File.open!("log_dump.txt", [:write, :delayed_write, :utf8])
+
+    line_stream = BnBBot.Repo.stream(BnBBot.LogLine)
+    |> Stream.map(&format_entry/1)
+    |> Stream.intersperse("\n\n")
+    |> Stream.each(fn x ->
+      IO.write(file_ptr, x)
+      x
+    end)
+
+    #streams must happen in a transaction
+    BnBBot.Repo.transaction(fn ->
+      Stream.run(line_stream)
+    end)
+
+    :ok = File.close(file_ptr)
+
     Nostrum.Api.create_message(msg, "Dumped log to log_dump.txt")
   end
 
