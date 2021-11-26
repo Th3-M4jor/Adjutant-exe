@@ -242,10 +242,17 @@ defmodule BnBBot.Library.NCPTable do
 
   @spec handle_call({:autocomplete, String.t(), float()}, GenServer.from(), map()) ::
           {:reply, [{float(), String.t()}], map()}
-  def handle_call({:autocomplete, name, min_dist}, _from, state) do
-    res = BnBBot.Library.Shared.gen_autocomplete(state, name, min_dist)
+  def handle_call({:autocomplete, name, min_dist}, from, state) do
+    vals = Map.to_list(state) |> Enum.map(fn {k, v} ->
+      {k, v.name}
+    end)
 
-    {:reply, res, state}
+    Task.start(BnBBot.Library.Shared, :return_autocomplete, [from, vals, name, min_dist])
+
+
+    #res = BnBBot.Library.Shared.gen_autocomplete(state, name, min_dist)
+
+    {:noreply, state}
   end
 
   @spec handle_call({:color, String.t()}, GenServer.from(), map()) ::

@@ -211,7 +211,7 @@ end
 defimpl String.Chars, for: BnBBot.Library.Virus do
   def to_string(%BnBBot.Library.Virus{} = virus) do
     elems =
-      Stream.map(virus.element, fn elem -> BnBBot.Library.Shared.element_to_string(elem) end)
+      Stream.map(virus.element, &BnBBot.Library.Shared.element_to_string/1)
       |> Enum.intersperse(", ")
 
     skills = BnBBot.Library.Virus.skills_to_io_list(virus)
@@ -244,7 +244,7 @@ defimpl String.Chars, for: BnBBot.Library.Virus do
       unless is_nil(virus.dmgelem) do
         [
           "Damage Element(s): ",
-          Stream.map(virus.dmgelem, fn elem -> BnBBot.Library.Shared.element_to_string(elem) end)
+          Stream.map(virus.dmgelem, &BnBBot.Library.Shared.element_to_string/1)
           |> Enum.intersperse(", "),
           "\n"
         ]
@@ -354,10 +354,18 @@ defmodule BnBBot.Library.VirusTable do
 
   @spec handle_call({:autocomplete, String.t(), float()}, GenServer.from(), map()) ::
           {:reply, [{float(), String.t()}], map()}
-  def handle_call({:autocomplete, name, min_dist}, _from, state) do
-    res = BnBBot.Library.Shared.gen_autocomplete(state, name, min_dist)
+  def handle_call({:autocomplete, name, min_dist}, from, state) do
 
-    {:reply, res, state}
+    vals = Map.to_list(state) |> Enum.map(fn {k, v} ->
+      {k, v.name}
+    end)
+
+    Task.start(BnBBot.Library.Shared, :return_autocomplete, [from, vals, name, min_dist])
+
+
+    #res = BnBBot.Library.Shared.gen_autocomplete(state, name, min_dist)
+
+    {:noreply, state}
   end
 
   @spec handle_call(:reload, GenServer.from(), map()) ::
@@ -393,7 +401,7 @@ defmodule BnBBot.Library.VirusTable do
   def handle_call({:encounter, count, cr}, _from, state) do
     viruses =
       Map.values(state)
-      |> Enum.filter(fn virus -> virus.cr == cr end)
+      |> Stream.filter(fn virus -> virus.cr == cr end)
 
     viruses =
       unless Enum.empty?(viruses) do
@@ -414,7 +422,7 @@ defmodule BnBBot.Library.VirusTable do
   def handle_call({:encounter, count, low_cr, high_cr}, _from, state) do
     viruses =
       Map.values(state)
-      |> Enum.filter(fn virus -> virus.cr in low_cr..high_cr end)
+      |> Stream.filter(fn virus -> virus.cr in low_cr..high_cr end)
 
     viruses =
       unless Enum.empty?(viruses) do

@@ -146,6 +146,21 @@ defmodule BnBBot.Library.Shared do
     |> Enum.sort_by(fn {d, _} -> d end, &>=/2)
     |> Enum.take(25)
   end
+
+  @spec return_autocomplete(GenServer.from(), [{String.t(), String.t()}], String.t(), float()) :: :ok
+  def return_autocomplete(from, list, to_search, min_dist) do
+    to_search = String.downcase(to_search)
+
+    res = list
+    |> Stream.map(fn {lower, upper} -> {String.jaro_distance(lower, to_search), upper} end)
+    |> Stream.filter(fn {dist, _} -> dist >= min_dist end)
+    |> Enum.sort_by(fn {d, _} -> d end, &>=/2)
+    |> Enum.take(25)
+
+    GenServer.reply(from, res)
+
+  end
+
 end
 
 defprotocol BnBBot.Library.LibObj do
