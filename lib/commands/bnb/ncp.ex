@@ -21,6 +21,16 @@ defmodule BnBBot.Commands.NCP do
     "Null"
   ]
 
+  @colors [
+    "White",
+    "Pink",
+    "Yellow",
+    "Green",
+    "Blue",
+    "Red",
+    "Gray"
+  ]
+
   def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
     [sub_cmd] = inter.data.options
 
@@ -37,14 +47,17 @@ defmodule BnBBot.Commands.NCP do
         ncps = NCP.get_ncps_by_color(color)
         send_ncp_color(inter, color, ncps)
 
-        "starter" ->
-          elem = case sub_cmd.options do
+      "starter" ->
+        elem =
+          case sub_cmd.options do
             [opt] ->
               opt.value |> String.to_existing_atom()
+
             _ ->
               :null
           end
-          send_starter_ncps(inter, elem)
+
+        send_starter_ncps(inter, elem)
     end
 
     :ignore
@@ -65,19 +78,20 @@ defmodule BnBBot.Commands.NCP do
 
   def get_create_map() do
     color_choices =
-      Enum.map(["White", "Pink", "Yellow", "Green", "Blue", "Red", "Gray"], fn name ->
+      Enum.map(@colors, fn name ->
         %{
           name: name,
           value: String.downcase(name, :ascii)
         }
       end)
 
-    element_choices = Enum.map(@elements, fn name ->
-      %{
-        name: name,
-        value: String.downcase(name, :ascii)
-      }
-    end)
+    element_choices =
+      Enum.map(@elements, fn name ->
+        %{
+          name: name,
+          value: String.downcase(name, :ascii)
+        }
+      end)
 
     %{
       type: 1,
@@ -235,11 +249,11 @@ defmodule BnBBot.Commands.NCP do
 
     buttons = BnBBot.ButtonAwait.generate_persistent_buttons(starters, true)
 
-    {:ok, _message} = Api.edit_interaction_response(inter, %{
-      content: "These are the starters for #{elem_str}:",
-      components: buttons
-    })
-
+    {:ok, _message} =
+      Api.edit_interaction_response(inter, %{
+        content: "These are the starters for #{elem_str}:",
+        components: buttons
+      })
   end
 
   defp send_found_ncp(%Nostrum.Struct.Interaction{} = inter, %BnBBot.Library.NCP{} = ncp) do

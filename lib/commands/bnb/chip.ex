@@ -252,7 +252,7 @@ defmodule BnBBot.Commands.Chip do
 
     unless is_nil(btn_response) do
       [_, "c", chip] = String.split(btn_response.data.custom_id, "_", parts: 3)
-      {:found, chip} = BnBBot.Library.Battlechip.get_chip(chip)
+      chip = BnBBot.Library.Battlechip.get!(chip)
 
       Task.start(fn ->
         Api.request(:patch, route, %{

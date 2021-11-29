@@ -161,7 +161,7 @@ defmodule BnBBot.ButtonAwait do
           false
       end
     else
-      #route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
+      # route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
       Nostrum.Api.edit_interaction_response(inter, %{
         content: "Timed out waiting for response",
@@ -224,11 +224,18 @@ defmodule BnBBot.ButtonAwait do
   end
 
   def resp_to_persistent_btn(%Nostrum.Struct.Interaction{} = inter, kind, name) do
-    {:found, obj} =
+    res =
       case kind do
-        ?c -> BnBBot.Library.Battlechip.get_chip(name)
-        ?n -> BnBBot.Library.NCP.get_ncp(name)
-        ?v -> BnBBot.Library.Virus.get_virus(name)
+        ?c -> BnBBot.Library.Battlechip.get_or_nil(name)
+        ?n -> BnBBot.Library.NCP.get_or_nil(name)
+        ?v -> BnBBot.Library.Virus.get_or_nil(name)
+      end
+
+    resp =
+      unless is_nil(res) do
+        to_string(res)
+      else
+        "Seems that one couldn't be found, please inform Major"
       end
 
     {:ok} =
@@ -237,7 +244,7 @@ defmodule BnBBot.ButtonAwait do
         %{
           type: 4,
           data: %{
-            content: "#{obj}"
+            content: resp
           }
         }
       )

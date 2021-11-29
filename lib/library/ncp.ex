@@ -26,6 +26,21 @@ defmodule BnBBot.Library.NCP do
     GenServer.call(:ncp_table, {:get, name, min_dist})
   end
 
+  @spec get_or_nil(String.t()) :: BnBBot.Library.NCP.t() | nil
+  def get_or_nil(name) do
+    GenServer.call(:ncp_table, {:get_or_nil, name})
+  end
+
+  @spec get!(String.t()) :: BnBBot.Library.NCP.t()
+  def get!(name) do
+    res = GenServer.call(:ncp_table, {:get_or_nil, name})
+    unless is_nil(res) do
+      res
+    else
+      raise "NCP not found: #{name}"
+    end
+  end
+
   @spec get_autocomplete(String.t(), float()) :: [{float(), String.t()}]
   def get_autocomplete(name, min_dist \\ 0.7) when min_dist >= 0.0 and min_dist <= 1.0 do
     GenServer.call(:ncp_table, {:autocomplete, name, min_dist})
@@ -238,6 +253,15 @@ defmodule BnBBot.Library.NCPTable do
       end
 
     {:reply, resp, state}
+  end
+
+  @impl true
+  @spec handle_call({:get_or_nil, String.t()}, GenServer.from(), map()) ::
+          {:reply, BnBBot.Library.NCP.t() | nil, map()}
+  def handle_call({:get_or_nil, name}, _from, state) do
+    lower_name = String.downcase(name, :ascii)
+
+    {:reply, state[lower_name], state}
   end
 
   @spec handle_call({:autocomplete, String.t(), float()}, GenServer.from(), map()) ::

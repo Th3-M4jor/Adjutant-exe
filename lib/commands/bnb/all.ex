@@ -107,7 +107,7 @@ defmodule BnBBot.Commands.All do
         end
       end)
 
-    all_pos = Task.await_many([chips_task, ncps_task, viruses_task], :infinity) |> Enum.concat()
+    all_pos = Task.await_many([chips_task, ncps_task, viruses_task], :infinity) |> Stream.concat()
 
     exact_matches = Enum.filter(all_pos, fn {dist, _} -> dist == 1.0 end)
 
@@ -183,16 +183,13 @@ defmodule BnBBot.Commands.All do
       lib_obj =
         case String.split(btn_response.data.custom_id, "_", parts: 3) do
           [_, "c", chip] ->
-            {:found, chip} = BnBBot.Library.Battlechip.get_chip(chip)
-            chip
+            BnBBot.Library.Battlechip.get!(chip)
 
           [_, "n", ncp] ->
-            {:found, ncp} = BnBBot.Library.NCP.get_ncp(ncp)
-            ncp
+            BnBBot.Library.NCP.get!(ncp)
 
           [_, "v", virus] ->
-            {:found, virus} = BnBBot.Library.Virus.get_virus(virus)
-            virus
+            BnBBot.Library.Virus.get!(virus)
         end
 
       edit_task =

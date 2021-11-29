@@ -68,6 +68,21 @@ defmodule BnBBot.Library.Virus do
     GenServer.call(:virus_table, {:get, name, min_dist})
   end
 
+  @spec get_or_nil(String.t()) :: BnBBot.Library.Virus.t() | nil
+  def get_or_nil(name) do
+    GenServer.call(:virus_table, {:get_or_nil, name})
+  end
+
+  @spec get!(String.t()) :: BnBBot.Library.Virus.t()
+  def get!(name) do
+    res = GenServer.call(:virus_table, {:get_or_nil, name})
+    unless is_nil(res) do
+      res
+    else
+      raise "Virus not found: #{name}"
+    end
+  end
+
   @spec get_autocomplete(String.t(), float()) :: [{float(), String.t()}]
   def get_autocomplete(name, min_dist \\ 0.7) when min_dist >= 0.0 and min_dist <= 1.0 do
     GenServer.call(:virus_table, {:autocomplete, name, min_dist})
@@ -366,6 +381,14 @@ defmodule BnBBot.Library.VirusTable do
     #res = BnBBot.Library.Shared.gen_autocomplete(state, name, min_dist)
 
     {:noreply, state}
+  end
+
+  @spec handle_call({:get_or_nil, String.t()}, GenServer.from(), map()) ::
+          {:reply, BnBBot.Library.Virus.t() | nil, map()}
+  def handle_call({:get_or_nil, name}, _from, state) do
+    lower_name = String.downcase(name)
+
+    {:reply, state[lower_name], state}
   end
 
   @spec handle_call(:reload, GenServer.from(), map()) ::
