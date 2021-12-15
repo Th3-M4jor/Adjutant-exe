@@ -97,7 +97,7 @@ defmodule BnBBot.Util do
   def find_dm_channel_id(user_id) do
     # get the channel_id where it's first recipient's.id == user_id
     dm_channel_list =
-      :ets.select(:channels, [
+      :ets.select(:nostrum_channels, [
         {{:"$1", %{recipients: [%{id: :"$2"}]}}, [{:==, user_id, :"$2"}], [:"$1"]}
       ])
 
