@@ -425,7 +425,7 @@ defmodule BnBBot.Library.VirusTable do
   def handle_call({:encounter, count, cr}, _from, state) do
     viruses =
       Map.values(state)
-      |> Stream.filter(fn virus -> virus.cr == cr end)
+      |> Enum.filter(fn virus -> virus.cr == cr end)
 
     viruses =
       unless Enum.empty?(viruses) do
@@ -446,7 +446,7 @@ defmodule BnBBot.Library.VirusTable do
   def handle_call({:encounter, count, low_cr, high_cr}, _from, state) do
     viruses =
       Map.values(state)
-      |> Stream.filter(fn virus -> virus.cr in low_cr..high_cr end)
+      |> Enum.filter(fn virus -> virus.cr in low_cr..high_cr end)
 
     viruses =
       unless Enum.empty?(viruses) do
@@ -602,7 +602,7 @@ defmodule BnBBot.Library.VirusTable do
     nil
   end
 
-  defp string_list_to_atoms(list) do
+  defp string_list_to_atoms(list) when is_list(list) do
     Enum.map(list, fn x -> String.to_atom(x) end)
   end
 end
