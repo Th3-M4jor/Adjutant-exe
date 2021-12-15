@@ -329,23 +329,34 @@ defmodule BnBBot.Library.NCPTable do
         {:error, reason}
 
       {:ok, ncps} ->
-        {:ok, Map.new(ncps)}
+        {:ok, ncps}
     end
   end
 
   @spec decode_ncp_resp({:ok, HTTPoison.Response.t()} | {:error, HTTPoison.Error.t()}) ::
-          {:ok, [{String.t(), BnBBot.Library.NCP.t()}]} | {:http_err, String.t()}
+          {:ok, map()} | {:http_err, String.t()}
   defp decode_ncp_resp({:ok, %HTTPoison.Response{} = resp}) when resp.status_code in 200..299 do
-    maps =
-      Jason.decode!(resp.body, keys: :atoms, strings: :copy)
-      |> Enum.map(fn ncp ->
+
+    data_list = Jason.decode!(resp.body, keys: :atoms, strings: :copy)
+
+    ncp_map =
+      for ncp <- data_list, into: %{} do
         color = String.to_atom(ncp[:color])
         lower_name = String.downcase(ncp[:name], :ascii)
         ncp_map = Map.put(ncp, :color, color)
         {lower_name, struct(BnBBot.Library.NCP, ncp_map)}
-      end)
+      end
 
-    {:ok, maps}
+    #maps =
+    #  Jason.decode!(resp.body, keys: :atoms, strings: :copy)
+    #  |> Enum.map(fn ncp ->
+    #    color = String.to_atom(ncp[:color])
+    #    lower_name = String.downcase(ncp[:name], :ascii)
+    #    ncp_map = Map.put(ncp, :color, color)
+    #    {lower_name, struct(BnBBot.Library.NCP, ncp_map)}
+    #  end)
+
+    {:ok, ncp_map}
   end
 
   defp decode_ncp_resp({:ok, %HTTPoison.Response{} = resp}) do

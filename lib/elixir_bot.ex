@@ -68,10 +68,11 @@ defmodule BnBBot.Consumer do
 
   def start_link do
     Logger.debug("starting Consumer Link")
-    # don't restart crashed commands
+    # don't retry on events that raise an error
     Consumer.start_link(__MODULE__, max_restarts: 0)
   end
 
+  # ignore bots
   def handle_event({:MESSAGE_CREATE, %Nostrum.Struct.Message{} = msg, _ws_state})
       when msg.author.bot do
     :noop

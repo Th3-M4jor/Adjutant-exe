@@ -76,6 +76,7 @@ defmodule BnBBot.Library.Virus do
   @spec get!(String.t()) :: BnBBot.Library.Virus.t()
   def get!(name) do
     res = GenServer.call(:virus_table, {:get_or_nil, name})
+
     unless is_nil(res) do
       res
     else
@@ -370,15 +371,15 @@ defmodule BnBBot.Library.VirusTable do
   @spec handle_call({:autocomplete, String.t(), float()}, GenServer.from(), map()) ::
           {:reply, [{float(), String.t()}], map()}
   def handle_call({:autocomplete, name, min_dist}, from, state) do
-
-    vals = Map.to_list(state) |> Enum.map(fn {k, v} ->
-      {k, v.name}
-    end)
+    vals =
+      Map.to_list(state)
+      |> Enum.map(fn {k, v} ->
+        {k, v.name}
+      end)
 
     Task.start(BnBBot.Library.Shared, :return_autocomplete, [from, vals, name, min_dist])
 
-
-    #res = BnBBot.Library.Shared.gen_autocomplete(state, name, min_dist)
+    # res = BnBBot.Library.Shared.gen_autocomplete(state, name, min_dist)
 
     {:noreply, state}
   end
@@ -510,16 +511,17 @@ defmodule BnBBot.Library.VirusTable do
         {:error, reason}
 
       {:ok, viruses} ->
-        {:ok, Map.new(viruses)}
+        {:ok, viruses}
     end
   end
 
   @spec decode_virus_resp({:ok, HTTPoison.Response.t()} | {:error, HTTPoison.Error.t()}) ::
-          {:ok, [{String.t(), BnBBot.Library.Virus.t()}]} | {:http_err, String.t()}
+          {:ok, map()} | {:http_err, String.t()}
   defp decode_virus_resp({:ok, %HTTPoison.Response{} = resp}) when resp.status_code in 200..299 do
-    maps =
-      Jason.decode!(resp.body, keys: :atoms, strings: :copy)
-      |> Enum.map(fn virus ->
+    data_list = Jason.decode!(resp.body, keys: :atoms, strings: :copy)
+
+    virus_map =
+      for virus <- data_list, into: %{} do
         elem = virus[:element] |> string_list_to_atoms()
         dmg_elem = virus[:dmgelem] |> string_list_to_atoms()
         lower_name = virus[:name] |> String.downcase(:ascii)
@@ -549,9 +551,43 @@ defmodule BnBBot.Library.VirusTable do
         }
 
         {lower_name, virus}
-      end)
+      end
 
-    {:ok, maps}
+    # maps =
+    #   Jason.decode!(resp.body, keys: :atoms, strings: :copy)
+    #   |> Enum.map(fn virus ->
+    #     elem = virus[:element] |> string_list_to_atoms()
+    #     dmg_elem = virus[:dmgelem] |> string_list_to_atoms()
+    #     lower_name = virus[:name] |> String.downcase(:ascii)
+    #
+    #     drops =
+    #       virus[:drops]
+    #       |> Stream.map(fn [range, item] ->
+    #         {range, item}
+    #       end)
+    #       |> Map.new()
+    #
+    #     virus = %BnBBot.Library.Virus{
+    #       id: virus[:id],
+    #       name: virus[:name],
+    #       element: elem,
+    #       hp: virus[:hp],
+    #       ac: virus[:ac],
+    #       stats: virus[:stats],
+    #       skills: virus[:skills],
+    #       drops: drops,
+    #       description: virus[:description],
+    #       cr: virus[:cr],
+    #       abilities: virus[:abilities],
+    #       damage: virus[:damage],
+    #       dmgelem: dmg_elem,
+    #       blight: virus[:blight]
+    #     }
+    #
+    #     {lower_name, virus}
+    #   end)
+
+    {:ok, virus_map}
   end
 
   defp decode_virus_resp({:ok, %HTTPoison.Response{} = resp}) do

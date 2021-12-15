@@ -79,6 +79,7 @@ defmodule BnBBot.Library.Battlechip do
   @spec get!(String.t()) :: BnBBot.Library.Battlechip.t()
   def get!(name) do
     res = GenServer.call(:chip_table, {:get_or_nil, name})
+
     unless is_nil(res) do
       res
     else
@@ -296,14 +297,12 @@ defmodule BnBBot.Library.BattlechipTable do
 
   @impl true
   @spec handle_call({:get_or_nil, String.t()}, GenServer.from(), map()) ::
-          {:reply,
-           {BnBBot.Library.Battlechip.t() | nil}, map()}
+          {:reply, {BnBBot.Library.Battlechip.t() | nil}, map()}
   def handle_call({:get_or_nil, name}, _from, state) do
     lower_name = String.downcase(name, :ascii)
 
     {:reply, state[lower_name], state}
   end
-
 
   @spec handle_call(:reload, GenServer.from(), map()) ::
           {:reply, {:ok} | {:error, String.t()}, map()}
@@ -320,13 +319,15 @@ defmodule BnBBot.Library.BattlechipTable do
   @spec handle_call({:autocomplete, String.t(), float()}, GenServer.from(), map()) ::
           {:reply, [{float(), String.t()}], map()}
   def handle_call({:autocomplete, name, min_dist}, from, state) do
-    vals = Map.to_list(state) |> Enum.map(fn {k, v} ->
-      {k, v.name}
-    end)
+    vals =
+      Map.to_list(state)
+      |> Enum.map(fn {k, v} ->
+        {k, v.name}
+      end)
 
     Task.start(BnBBot.Library.Shared, :return_autocomplete, [from, vals, name, min_dist])
 
-    #res = BnBBot.Library.Shared.gen_autocomplete(state, name, min_dist)
+    # res = BnBBot.Library.Shared.gen_autocomplete(state, name, min_dist)
 
     {:noreply, state}
   end
@@ -356,16 +357,17 @@ defmodule BnBBot.Library.BattlechipTable do
         {:error, reason}
 
       {:ok, chips} ->
-        {:ok, Map.new(chips)}
+        {:ok, chips}
     end
   end
 
   @spec decode_chip_resp({:ok, HTTPoison.Response.t()} | {:error, HTTPoison.Error.t()}) ::
-          {:ok, [{String.t(), BnBBot.Library.Battlechip}]} | {:http_err, String.t()}
+          {:ok, map()} | {:http_err, String.t()}
   defp decode_chip_resp({:ok, %HTTPoison.Response{} = resp}) when resp.status_code in 200..299 do
-    maps =
-      Jason.decode!(resp.body, keys: :atoms, strings: :copy)
-      |> Enum.map(fn chip ->
+    data_list = Jason.decode!(resp.body, keys: :atoms, strings: :copy)
+
+    chip_map =
+      for chip <- data_list, into: %{} do
         elem = chip[:elem] |> string_list_to_atoms()
         skill = chip[:skill] |> string_list_to_atoms()
         range = chip[:range] |> String.to_atom()
@@ -391,9 +393,39 @@ defmodule BnBBot.Library.BattlechipTable do
         }
 
         {lower_name, chip}
-      end)
+      end
 
-    {:ok, maps}
+    # maps =
+    #   Jason.decode!(resp.body, keys: :atoms, strings: :copy)
+    #   |> Enum.map(fn chip ->
+    #     elem = chip[:elem] |> string_list_to_atoms()
+    #     skill = chip[:skill] |> string_list_to_atoms()
+    #     range = chip[:range] |> String.to_atom()
+    #     kind = chip[:kind] |> String.to_atom()
+    #     class = chip[:class] |> String.to_atom()
+    #     lower_name = String.downcase(chip[:name], :ascii)
+    #
+    #     chip = %BnBBot.Library.Battlechip{
+    #       id: chip[:id],
+    #       name: chip[:name],
+    #       elem: elem,
+    #       skill: skill,
+    #       range: range,
+    #       hits: chip[:hits],
+    #       targets: chip[:targets],
+    #       description: chip[:description],
+    #       effect: chip[:effect],
+    #       effduration: chip[:effduration],
+    #       blight: chip[:blight],
+    #       damage: chip[:damage],
+    #       kind: kind,
+    #       class: class
+    #     }
+    #
+    #     {lower_name, chip}
+    #   end)
+
+    {:ok, chip_map}
   end
 
   defp decode_chip_resp({:ok, %HTTPoison.Response{} = resp}) do

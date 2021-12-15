@@ -172,15 +172,6 @@ defmodule BnBBot.ButtonAwait do
     end
   end
 
-  #  defp tuple_to_btn({name, id, style}) do
-  #    %{
-  #      type: 2,
-  #      style: style,
-  #      label: name,
-  #      custom_id: id
-  #    }
-  #  end
-
   @doc """
   Awaits a button click on the given message from a user with the given ID (nil for any user)
   timeout is after 30 seconds

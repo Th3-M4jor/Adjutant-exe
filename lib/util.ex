@@ -5,19 +5,19 @@ defmodule BnBBot.Util do
   @spec react(Nostrum.Struct.Message.t(), boolean | String.t()) :: any()
   def react(msg, emote \\ "\u{1F44D}")
 
-  def react(%Nostrum.Struct.Message{} = msg, true) do
+  def react(%Nostrum.Struct.Message{channel_id: channel_id, id: msg_id}, true) do
     Logger.debug("Reacting with \u{2705}")
-    Api.create_reaction(msg.channel_id, msg.id, "\u{2705}")
+    Api.create_reaction(channel_id, msg_id, "\u{2705}")
   end
 
-  def react(%Nostrum.Struct.Message{} = msg, false) do
+  def react(%Nostrum.Struct.Message{channel_id: channel_id, id: msg_id}, false) do
     Logger.debug("Reacting with \u{274E}")
-    Api.create_reaction(msg.channel_id, msg.id, "\u{274E}")
+    Api.create_reaction(channel_id, msg_id, "\u{274E}")
   end
 
-  def react(%Nostrum.Struct.Message{} = msg, emote) do
+  def react(%Nostrum.Struct.Message{channel_id: channel_id, id: msg_id}, emote) do
     Logger.debug("Reacting with #{emote}")
-    Api.create_reaction(msg.channel_id, msg.id, emote)
+    Api.create_reaction(channel_id, msg_id, emote)
   end
 
   @spec get_user_perms(Nostrum.Struct.Message.t() | Nostrum.Struct.Interaction.t()) ::
