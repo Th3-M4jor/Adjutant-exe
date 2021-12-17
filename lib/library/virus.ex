@@ -114,6 +114,7 @@ defmodule BnBBot.Library.Virus do
     GenServer.call(:virus_table, {:encounter, num, low_cr, high_cr})
   end
 
+  @spec skills_to_io_list(BnBBot.Library.Virus.t()) :: iolist()
   def skills_to_io_list(%BnBBot.Library.Virus{} = virus) do
     per = num_to_2_digit_string(virus.skills[:per] || 0)
     inf = num_to_2_digit_string(virus.skills[:inf] || 0)
