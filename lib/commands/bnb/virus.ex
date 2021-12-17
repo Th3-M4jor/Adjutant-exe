@@ -176,7 +176,7 @@ defmodule BnBBot.Commands.Virus do
     })
   end
 
-  defp build_encounter(inter, [count | _rest]) when count.value > 25 do
+  defp build_encounter(inter, [count | _rest]) when count.value > 25 or count.value < 1 do
     Logger.info([
       "Got asked to build an encounter with ",
       "#{count.value}",
@@ -189,37 +189,44 @@ defmodule BnBBot.Commands.Virus do
         %{
           type: 4,
           data: %{
-            content: "Cowardly refusing to build an encounter with more than 25 viruses",
+            content: "Cowardly refusing to build an encounter with less than 1 or more than 25 viruses",
             flags: 64
           }
         }
       )
   end
 
-  defp build_encounter(inter, [count, cr]) do
+  defp build_encounter(inter, [%{value: count}, %{value: cr}]) do
     Logger.info([
       "Building an encounter with ",
-      "#{count.value}",
+      "#{count}",
       " viruses in CR ",
-      "#{cr.value}"
+      "#{cr}"
     ])
 
-    viruses = Virus.make_encounter(count.value, cr.value)
+    viruses = Virus.make_encounter(count, cr)
 
     send_encounter(inter, viruses)
   end
 
-  defp build_encounter(inter, [count, cr_low, cr_high]) do
+  defp build_encounter(inter, [%{value: _count} = ct_arg, %{value: cr1} = cr_arg, %{value: cr2}])
+       when cr1 == cr2 do
+    build_encounter(inter, [ct_arg, cr_arg])
+  end
+
+  defp build_encounter(inter, [%{value: count}, %{value: cr1}, %{value: cr2}]) do
+    {cr_low, cr_high} = if cr1 < cr2, do: {cr1, cr2}, else: {cr2, cr1}
+
     Logger.info([
       "Building an encounter with ",
-      "#{count.value}",
+      "#{count}",
       " viruses in CR ",
-      "#{cr_low.value}",
+      "#{cr_low}",
       " to ",
-      "#{cr_high.value}"
+      "#{cr_high}"
     ])
 
-    viruses = Virus.make_encounter(count.value, cr_low.value, cr_high.value)
+    viruses = Virus.make_encounter(count, cr_low, cr_high)
 
     send_encounter(inter, viruses)
   end

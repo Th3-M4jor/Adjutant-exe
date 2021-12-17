@@ -110,7 +110,7 @@ defmodule BnBBot.Library.Virus do
   end
 
   @spec make_encounter(pos_integer(), pos_integer(), pos_integer()) :: [BnBBot.Library.Virus.t()]
-  def make_encounter(num, low_cr, high_cr) do
+  def make_encounter(num, low_cr, high_cr) when low_cr < high_cr do
     GenServer.call(:virus_table, {:encounter, num, low_cr, high_cr})
   end
 
@@ -528,9 +528,7 @@ defmodule BnBBot.Library.VirusTable do
 
         drops =
           virus[:drops]
-          |> Stream.map(fn [range, item] ->
-            {range, item}
-          end)
+          |> Stream.map(&List.to_tuple/1)
           |> Map.new()
 
         virus = %BnBBot.Library.Virus{
