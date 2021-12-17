@@ -98,17 +98,17 @@ defmodule BnBBot.Library.Battlechip do
   end
 
   @spec effect_to_io_list(BnBBot.Library.Battlechip.t()) :: iolist()
-  def effect_to_io_list(%BnBBot.Library.Battlechip{effect: nil, effduration: nil}) do
+  def effect_to_io_list(%{effect: nil, effduration: nil}) do
     []
   end
 
-  def effect_to_io_list(%BnBBot.Library.Battlechip{effect: effect, effduration: effduration})
+  def effect_to_io_list(%{effect: effect, effduration: effduration})
       when is_nil(effduration) or effduration == 0 do
     eff_list = Enum.intersperse(effect, ", ")
     ["Effect: ", eff_list]
   end
 
-  def effect_to_io_list(%BnBBot.Library.Battlechip{effect: effect, effduration: effduration}) do
+  def effect_to_io_list(%{effect: effect, effduration: effduration}) do
     eff_list = Enum.intersperse(effect, ", ")
 
     [

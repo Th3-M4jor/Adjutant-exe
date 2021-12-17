@@ -62,7 +62,7 @@ defmodule BnBBot.Library.NCP do
   end
 
   @spec ncp_color_to_string(BnBBot.Library.NCP.t()) :: String.t()
-  def ncp_color_to_string(%BnBBot.Library.NCP{} = ncp) do
+  def ncp_color_to_string(ncp) do
     case ncp.color do
       :white -> "White"
       :pink -> "Pink"
@@ -75,7 +75,7 @@ defmodule BnBBot.Library.NCP do
   end
 
   @spec ncp_color_to_sort_number(BnBBot.Library.NCP.t()) :: non_neg_integer()
-  def ncp_color_to_sort_number(%BnBBot.Library.NCP{} = ncp) do
+  def ncp_color_to_sort_number(ncp) do
     case ncp.color do
       :white -> 0
       :pink -> 1
