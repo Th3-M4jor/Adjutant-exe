@@ -3,6 +3,9 @@ defmodule BnBBot.Commands.Ping do
   alias Nostrum.Struct.Embed
   require Logger
 
+  @backend_node_name :elixir_bot |> Application.compile_env!(:backend_node_name)
+  @webhook_node_name :elixir_bot |> Application.compile_env!(:webhook_node_name)
+
   @behaviour BnBBot.SlashCmdFn
 
   @spec call_slash(Nostrum.Struct.Interaction.t()) :: :ignore
@@ -81,12 +84,13 @@ defmodule BnBBot.Commands.Ping do
       ]
     }
 
-    #route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
+    # route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
-    {:ok, _message} = Api.edit_interaction_response(inter, %{
-      content: "",
-      embeds: [ping_embed]
-    })
+    {:ok, _message} =
+      Api.edit_interaction_response(inter, %{
+        content: "",
+        embeds: [ping_embed]
+      })
 
     # Api.execute_webhook(
     #  inter.application_id,
@@ -133,12 +137,9 @@ defmodule BnBBot.Commands.Ping do
   defp get_cross_node_memory_usage() do
     Logger.debug("Getting cross node memory usage")
 
-    backend_name = Application.fetch_env!(:elixir_bot, :backend_node_name)
-    webhook_name = Application.fetch_env!(:elixir_bot, :webhook_node_name)
-
-    if Node.alive?() and Node.connect(backend_name) and Node.connect(webhook_name) do
+    if Node.alive?() and Node.connect(@backend_node_name) and Node.connect(@webhook_node_name) do
       [{:ok, backend_memory_usage}, {:ok, webhook_memory_usage}] =
-        :erpc.multicall([backend_name, webhook_name], :erlang, :memory, [:total])
+        :erpc.multicall([@backend_node_name, @webhook_node_name], :erlang, :memory, [:total])
 
       round((backend_memory_usage + webhook_memory_usage) / (1024 * 1024))
     else

@@ -3,13 +3,15 @@ defmodule BnBBot.Commands.PHB do
 
   alias Nostrum.Api
 
+  @phb_links :elixir_bot |> Application.compile_env!(:phb_links)
+
   @behaviour BnBBot.SlashCmdFn
 
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     Logger.info("Recieved a links command")
 
     link_buttons =
-      Application.fetch_env!(:elixir_bot, :phb_links)
+      @phb_links
       |> Enum.chunk_every(5)
       |> Enum.map(fn links ->
         %{

@@ -176,17 +176,18 @@ defmodule BnBBot.Library.Virus do
 end
 
 defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Virus do
+  @virus_emoji :elixir_bot |> Application.compile_env!(:virus_emoji)
+
   def type(_value), do: :virus
 
   @spec to_btn(BnBBot.Library.Virus.t(), boolean()) :: BnBBot.Library.LibObj.button()
   def to_btn(virus, disabled \\ false) do
     lower_name = "v_#{String.downcase(virus.name, :ascii)}"
-    emoji = Application.fetch_env!(:elixir_bot, :virus_emoji)
 
     %{
       type: 2,
       style: 4,
-      emoji: emoji,
+      emoji: @virus_emoji,
       label: virus.name,
       custom_id: lower_name,
       disabled: disabled
@@ -197,12 +198,11 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Virus do
           BnBBot.Library.LibObj.button()
   def to_btn_with_uuid(virus, disabled \\ false, uuid) do
     lower_name = "#{uuid}_v_#{String.downcase(virus.name, :ascii)}"
-    emoji = Application.fetch_env!(:elixir_bot, :virus_emoji)
 
     %{
       type: 2,
       style: 4,
-      emoji: emoji,
+      emoji: @virus_emoji,
       label: virus.name,
       custom_id: lower_name,
       disabled: disabled
@@ -212,12 +212,11 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Virus do
   @spec to_persistent_btn(BnBBot.Library.Virus.t(), boolean()) :: BnBBot.Library.LibObj.button()
   def to_persistent_btn(virus, disabled \\ false) do
     lower_name = "vr_#{String.downcase(virus.name, :ascii)}"
-    emoji = Application.fetch_env!(:elixir_bot, :virus_emoji)
 
     %{
       type: 2,
       style: 4,
-      emoji: emoji,
+      emoji: @virus_emoji,
       label: virus.name,
       custom_id: lower_name,
       disabled: disabled
@@ -317,6 +316,8 @@ defmodule BnBBot.Library.VirusTable do
   require Logger
 
   use GenServer
+
+  @virus_url :elixir_bot |> Application.compile_env!(:virus_url)
 
   def start_link(arg) do
     GenServer.start_link(__MODULE__, arg, name: :virus_table)
@@ -503,8 +504,8 @@ defmodule BnBBot.Library.VirusTable do
 
   defp load_viruses() do
     Logger.info("(Re)loading viruses")
-    virus_url = Application.fetch_env!(:elixir_bot, :virus_url)
-    resp = HTTPoison.get(virus_url)
+
+    resp = HTTPoison.get(@virus_url)
     virus_list = decode_virus_resp(resp)
 
     case virus_list do

@@ -34,6 +34,7 @@ defmodule BnBBot.Library.NCP do
   @spec get!(String.t()) :: BnBBot.Library.NCP.t()
   def get!(name) do
     res = GenServer.call(:ncp_table, {:get_or_nil, name})
+
     unless is_nil(res) do
       res
     else
@@ -92,40 +93,58 @@ defmodule BnBBot.Library.NCP do
     case element do
       :fire ->
         [:white, :pink, :yellow, :blue, :gray]
+
       :aqua ->
         [:white, :pink, :yellow, :blue, :red]
+
       :elec ->
         [:white, :pink, :yellow, :green, :blue]
+
       :wood ->
         [:white, :pink, :yellow, :green, :red]
+
       :wind ->
         [:white, :pink, :yellow, :blue, :gray]
+
       :sword ->
         [:white, :pink, :yellow, :green, :red]
+
       :break ->
         [:white, :pink, :yellow, :green, :red]
+
       :cursor ->
         [:white, :pink, :yellow, :blue, :gray]
+
       :recov ->
         [:white, :pink, :yellow, :blue, :red]
+
       :invis ->
         [:white, :pink, :yellow, :green, :gray]
+
       :object ->
         [:white, :pink, :yellow, :red, :gray]
+
       :null ->
         [:white, :pink, :yellow, :green, :blue, :red, :gray]
     end
   end
-
 end
 
 defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
+  @white_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :white])
+  @pink_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :pink])
+  @yellow_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :yellow])
+  @green_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :green])
+  @blue_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :blue])
+  @red_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :red])
+  @gray_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :gray])
+
   def type(_value), do: :ncp
 
   @spec to_btn(BnBBot.Library.NCP.t(), boolean()) :: BnBBot.Library.LibObj.button()
   def to_btn(ncp, disabled \\ false) do
     lower_name = "n_#{String.downcase(ncp.name, :ascii)}"
-    emoji = Application.fetch_env!(:elixir_bot, :ncp_emoji)[ncp.color]
+    emoji = ncp_color_to_emoji(ncp.color)
 
     %{
       # type 2 for button
@@ -144,7 +163,7 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
           BnBBot.Library.LibObj.button()
   def to_btn_with_uuid(ncp, disabled \\ false, uuid) do
     lower_name = "#{uuid}_n_#{String.downcase(ncp.name, :ascii)}"
-    emoji = Application.fetch_env!(:elixir_bot, :ncp_emoji)[ncp.color]
+    emoji = ncp_color_to_emoji(ncp.color)
 
     %{
       # type 2 for button
@@ -162,7 +181,7 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
   @spec to_persistent_btn(BnBBot.Library.NCP.t(), boolean()) :: BnBBot.Library.LibObj.button()
   def to_persistent_btn(ncp, disabled \\ false) do
     lower_name = "nr_#{String.downcase(ncp.name, :ascii)}"
-    emoji = Application.fetch_env!(:elixir_bot, :ncp_emoji)[ncp.color]
+    emoji = ncp_color_to_emoji(ncp.color)
 
     %{
       # type 2 for button
@@ -175,6 +194,19 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
       custom_id: lower_name,
       disabled: disabled
     }
+  end
+
+  @spec ncp_color_to_emoji(BnBBot.Library.NCP.colors()) :: map()
+  defp ncp_color_to_emoji(color) do
+    case color do
+      :white -> @white_emoji
+      :pink -> @pink_emoji
+      :yellow -> @yellow_emoji
+      :green -> @green_emoji
+      :blue -> @blue_emoji
+      :red -> @red_emoji
+      :gray -> @gray_emoji
+    end
   end
 end
 
@@ -204,6 +236,7 @@ defmodule BnBBot.Library.NCPTable do
   use GenServer
   alias BnBBot.Library.NCP
 
+  @ncp_url :elixir_bot |> Application.compile_env!(:ncp_url)
   def start_link(arg) do
     GenServer.start_link(__MODULE__, arg, name: :ncp_table)
   end
@@ -267,14 +300,15 @@ defmodule BnBBot.Library.NCPTable do
   @spec handle_call({:autocomplete, String.t(), float()}, GenServer.from(), map()) ::
           {:reply, [{float(), String.t()}], map()}
   def handle_call({:autocomplete, name, min_dist}, from, state) do
-    vals = Map.to_list(state) |> Enum.map(fn {k, v} ->
-      {k, v.name}
-    end)
+    vals =
+      Map.to_list(state)
+      |> Enum.map(fn {k, v} ->
+        {k, v.name}
+      end)
 
     Task.start(BnBBot.Library.Shared, :return_autocomplete, [from, vals, name, min_dist])
 
-
-    #res = BnBBot.Library.Shared.gen_autocomplete(state, name, min_dist)
+    # res = BnBBot.Library.Shared.gen_autocomplete(state, name, min_dist)
 
     {:noreply, state}
   end
@@ -321,8 +355,7 @@ defmodule BnBBot.Library.NCPTable do
 
   defp load_ncps() do
     Logger.info("(Re)loading NCPs")
-    ncp_url = Application.fetch_env!(:elixir_bot, :ncp_url)
-    resp = HTTPoison.get(ncp_url)
+    resp = HTTPoison.get(@ncp_url)
 
     case decode_ncp_resp(resp) do
       {:http_err, reason} ->
@@ -336,7 +369,6 @@ defmodule BnBBot.Library.NCPTable do
   @spec decode_ncp_resp({:ok, HTTPoison.Response.t()} | {:error, HTTPoison.Error.t()}) ::
           {:ok, map()} | {:http_err, String.t()}
   defp decode_ncp_resp({:ok, %HTTPoison.Response{} = resp}) when resp.status_code in 200..299 do
-
     data_list = Jason.decode!(resp.body, keys: :atoms, strings: :copy)
 
     ncp_map =
@@ -347,7 +379,7 @@ defmodule BnBBot.Library.NCPTable do
         {lower_name, struct(BnBBot.Library.NCP, ncp_map)}
       end
 
-    #maps =
+    # maps =
     #  Jason.decode!(resp.body, keys: :atoms, strings: :copy)
     #  |> Enum.map(fn ncp ->
     #    color = String.to_atom(ncp[:color])

@@ -1,6 +1,8 @@
 defmodule BnBBot.DmLogger do
   require Logger
 
+  @dm_log_id :elixir_bot |> Application.compile_env!(:dm_log_id)
+
   def log_dm(%Nostrum.Struct.Message{} = msg) do
     unless BnBBot.Util.is_owner_msg?(msg) do
       link_regex =
@@ -15,9 +17,7 @@ defmodule BnBBot.DmLogger do
 
       embed = make_embed(msg)
 
-      {:ok, dm_channel_id} =
-        Application.fetch_env!(:elixir_bot, :dm_log_id)
-        |> Nostrum.Snowflake.cast()
+      dm_channel_id = @dm_log_id |> Nostrum.Snowflake.cast!()
 
       Nostrum.Api.create_message(dm_channel_id, embeds: [embed])
     end

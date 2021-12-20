@@ -122,17 +122,18 @@ defmodule BnBBot.Library.Battlechip do
 end
 
 defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Battlechip do
+  @chip_emoji :elixir_bot |> Application.compile_env!(:chip_emoji)
+
   def type(_value), do: :chip
 
   @spec to_btn(BnBBot.Library.Battlechip.t(), boolean()) :: BnBBot.Library.LibObj.button()
   def to_btn(chip, disabled \\ false) do
     lower_name = "c_#{String.downcase(chip.name, :ascii)}"
-    emoji = Application.fetch_env!(:elixir_bot, :chip_emoji)
 
     %{
       type: 2,
       style: 2,
-      emoji: emoji,
+      emoji: @chip_emoji,
       label: chip.name,
       custom_id: lower_name,
       disabled: disabled
@@ -143,12 +144,11 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Battlechip do
           BnBBot.Library.LibObj.button()
   def to_btn_with_uuid(chip, disabled \\ false, uuid) do
     lower_name = "#{uuid}_c_#{String.downcase(chip.name, :ascii)}"
-    emoji = Application.fetch_env!(:elixir_bot, :chip_emoji)
 
     %{
       type: 2,
       style: 2,
-      emoji: emoji,
+      emoji: @chip_emoji,
       label: chip.name,
       custom_id: lower_name,
       disabled: disabled
@@ -159,12 +159,11 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Battlechip do
           BnBBot.Library.LibObj.button()
   def to_persistent_btn(chip, disabled \\ false) do
     lower_name = "cr_#{String.downcase(chip.name, :ascii)}"
-    emoji = Application.fetch_env!(:elixir_bot, :chip_emoji)
 
     %{
       type: 2,
       style: 2,
-      emoji: emoji,
+      emoji: @chip_emoji,
       label: chip.name,
       custom_id: lower_name,
       disabled: disabled
@@ -243,6 +242,7 @@ defmodule BnBBot.Library.BattlechipTable do
   require Logger
   use GenServer
 
+  @chip_url :elixir_bot |> Application.compile_env!(:chip_url)
   def start_link(arg) do
     GenServer.start_link(__MODULE__, arg, name: :chip_table)
   end
@@ -348,8 +348,7 @@ defmodule BnBBot.Library.BattlechipTable do
   defp load_chips() do
     Logger.info("(Re)loading Chips")
 
-    chip_url = Application.fetch_env!(:elixir_bot, :chip_url)
-    resp = HTTPoison.get(chip_url)
+    resp = HTTPoison.get(@chip_url)
     chip_list = decode_chip_resp(resp)
 
     case chip_list do

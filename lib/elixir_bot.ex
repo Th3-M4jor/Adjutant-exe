@@ -66,6 +66,11 @@ defmodule BnBBot.Consumer do
 
   alias Nostrum.Api
 
+  @primary_guild_id :elixir_bot |> Application.compile_env!(:primary_guild_id)
+  @primary_guild_channel_id :elixir_bot |> Application.compile_env!(:primary_guild_channel_id)
+  @primary_guild_role_channel_id :elixir_bot
+                                 |> Application.compile_env!(:primary_guild_role_channel_id)
+  @log_channel_id :elixir_bot |> Application.compile_env!(:dm_log_id)
   def start_link do
     Logger.debug("starting Consumer Link")
     # don't retry on events that raise an error
@@ -95,31 +100,23 @@ defmodule BnBBot.Consumer do
   def handle_event(
         {:GUILD_MEMBER_ADD, {guild_id, %Nostrum.Struct.Guild.Member{} = member}, _ws_state}
       ) do
-    if guild_id == Application.fetch_env!(:elixir_bot, :primary_guild_id) do
-      primary_guild_channel = Application.fetch_env!(:elixir_bot, :primary_guild_channel_id)
-
-      primary_guild_role_channel =
-        Application.fetch_env!(:elixir_bot, :primary_guild_role_channel_id)
-
+    if guild_id == @primary_guild_id do
       text =
-        "Welcome to the Busters & Battlechips Discord <@#{member.user.id}>. Assign yourself roles in <##{primary_guild_role_channel}>"
+        "Welcome to the Busters & Battlechips Discord <@#{member.user.id}>. Assign yourself roles in <##{@primary_guild_role_channel_id}>"
 
-      Api.create_message!(primary_guild_channel, text)
+      Api.create_message!(@primary_guild_channel_id, text)
     end
   end
 
   def handle_event(
         {:GUILD_MEMBER_REMOVE, {guild_id, %Nostrum.Struct.Guild.Member{} = member}, _ws_state}
       ) do
-    log_channel_id = Application.fetch_env!(:elixir_bot, :dm_log_Id)
     text = "#{member.user.username} has left #{guild_id}"
-    Api.create_message!(log_channel_id, text)
+    Api.create_message!(@log_channel_id, text)
   end
 
   def handle_event({:READY, ready_data, _ws_state}) do
     Logger.debug("Bot ready")
-
-    # prefix = Application.fetch_env!(:elixir_bot, :prefix)
 
     Api.update_status(:online, "Now with Slash Commands")
 

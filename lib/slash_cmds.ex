@@ -5,9 +5,11 @@ defmodule BnBBot.SlashCommands do
 
   require Logger
 
+  @owner_id :elixir_bot |> Application.compile_env!(:owner_id)
+  @admins :elixir_bot |> Application.compile_env!(:admins)
+
   @spec create_all_slash_commands :: any()
   def create_all_slash_commands() do
-
     body = [
       Commands.Ping.get_create_map(),
       Commands.Dice.get_create_map(),
@@ -24,12 +26,10 @@ defmodule BnBBot.SlashCommands do
     ]
 
     Api.bulk_overwrite_global_application_commands(body)
-
   end
 
   @spec create_all_slash_commands(Nostrum.Snowflake.t()) :: any()
   def create_all_slash_commands(guild_id) do
-
     body = [
       Commands.Ping.get_create_map(),
       Commands.Dice.get_create_map(),
@@ -59,8 +59,8 @@ defmodule BnBBot.SlashCommands do
 
     perms =
       [
-        Application.fetch_env!(:elixir_bot, :owner_id)
-        | Application.fetch_env!(:elixir_bot, :admins)
+        @owner_id
+        | @admins
       ]
       |> Enum.map(fn id ->
         %{
@@ -91,8 +91,8 @@ defmodule BnBBot.SlashCommands do
 
     perms =
       [
-        Application.fetch_env!(:elixir_bot, :owner_id)
-        | Application.fetch_env!(:elixir_bot, :admins)
+        @owner_id
+        | @admins
       ]
       |> Enum.map(fn id ->
         %{

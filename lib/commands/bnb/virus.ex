@@ -189,7 +189,8 @@ defmodule BnBBot.Commands.Virus do
         %{
           type: 4,
           data: %{
-            content: "Cowardly refusing to build an encounter with less than 1 or more than 25 viruses",
+            content:
+              "Cowardly refusing to build an encounter with less than 1 or more than 25 viruses",
             flags: 64
           }
         }

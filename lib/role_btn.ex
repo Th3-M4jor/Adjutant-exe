@@ -2,8 +2,10 @@ defmodule BnBBot.RoleBtn do
   require Logger
   alias Nostrum.Api
 
+  @roles :elixir_bot |> Application.compile_env!(:roles)
+
   def generate_role_btns() do
-    Application.fetch_env!(:elixir_bot, :roles)
+    @roles
     |> Enum.chunk_every(5)
     |> Enum.map(fn row ->
       action_row =

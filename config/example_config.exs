@@ -65,36 +65,36 @@ config :elixir_bot,
   ncp_emoji: %{
     white: %{
       id: nil,
-      name: "\u{2B1C}",
+      name: "\u{2B1C}"
     },
     pink: %{
       id: "912046716767830036",
-      name: "pink_square",
+      name: "pink_square"
     },
     yellow: %{
       id: nil,
-      name: "\u{1F7E8}",
+      name: "\u{1F7E8}"
     },
     green: %{
       id: nil,
-      name: "\u{1F7E9}",
+      name: "\u{1F7E9}"
     },
     blue: %{
       id: nil,
-      name: "\u{1F7E6}",
+      name: "\u{1F7E6}"
     },
     red: %{
       id: nil,
-      name: "\u{1F7E5}",
+      name: "\u{1F7E5}"
     },
     gray: %{
       id: "912054778421448705",
-      name: "gray_square",
-    },
-    #id: nil,
+      name: "gray_square"
+    }
+    # id: nil,
 
     # jigsaw emoji
-    #name: "\u{1F9E9}"
+    # name: "\u{1F9E9}"
   },
   virus_emoji: %{
     id: nil,

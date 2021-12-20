@@ -3,16 +3,17 @@ defmodule BnBBot.Commands.Groups do
   alias Nostrum.Struct.Embed
   require Logger
 
+  @backend_node_name :elixir_bot |> Application.compile_env!(:backend_node_name)
+  @dm_log_id :elixir_bot |> Application.compile_env!(:dm_log_id)
+
   @behaviour BnBBot.SlashCmdFn
 
   @spec call_slash(Nostrum.Struct.Interaction.t()) :: :ignore
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     Logger.info("Recieved a groups command")
 
-    backend_name = Application.fetch_env!(:elixir_bot, :backend_node_name)
-
-    if Node.alive?() and Node.connect(backend_name) do
-      fetch_and_send_groups(inter, backend_name)
+    if Node.alive?() and Node.connect(@backend_node_name) do
+      fetch_and_send_groups(inter, @backend_node_name)
     else
       node_down(inter)
     end
@@ -28,9 +29,9 @@ defmodule BnBBot.Commands.Groups do
 
   @spec group_force_closed(String.t()) :: :ignore
   def group_force_closed(group_name) do
-    {:ok, dm_channel_id} =
-      Application.fetch_env!(:elixir_bot, :dm_log_id)
-      |> Nostrum.Snowflake.cast()
+    dm_channel_id =
+      @dm_log_id
+      |> Nostrum.Snowflake.cast!()
 
     Nostrum.Api.create_message(dm_channel_id, "Group #{group_name} has been force closed")
     :ignore

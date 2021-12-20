@@ -4,25 +4,25 @@ defmodule BnBBot.Commands do
 
   require Logger
 
+  @prefix :elixir_bot |> Application.compile_env!(:prefix)
+
   @spec cmd_check(Nostrum.Struct.Message.t()) :: :ignore | nil
   def cmd_check(%Nostrum.Struct.Message{} = msg) do
     contents = String.trim(msg.content)
-    prefix = Application.fetch_env!(:elixir_bot, :prefix)
-    prefix_len = String.length(prefix)
     perms = BnBBot.Util.get_user_perms(msg)
 
     case {contents, perms} do
-      {<<^prefix::binary-size(prefix_len), "reload">>, :admin} ->
+      {<<@prefix, "reload">>, :admin} ->
         Commands.Reload.call(msg, [])
 
-      {<<^prefix::binary-size(prefix_len), "">>, _} ->
+      {<<@prefix, "">>, _} ->
         nil
 
-      {<<^prefix::binary-size(prefix_len), rest::binary>>, :owner} ->
+      {<<@prefix, rest::binary>>, :owner} ->
         [cmd_name | args] = String.split(rest)
         cmd_call(cmd_name, msg, args)
 
-      {<<^prefix::binary-size(prefix_len), _rest::binary>>, :everyone} ->
+      {<<@prefix, _rest::binary>>, :everyone} ->
         Api.create_message(
           msg.channel_id,
           content: "I'm sorry, text based commands have been removed in favor of slash commands",
