@@ -1,5 +1,6 @@
 defmodule BnBBot.Util do
   alias Nostrum.Api
+  import Nostrum.Snowflake, only: [is_snowflake: 1]
   require Logger
 
   @owner_id :elixir_bot |> Application.compile_env!(:owner_id)
@@ -81,7 +82,7 @@ defmodule BnBBot.Util do
       end
 
     if res or override do
-      owner_id = @owner_id |> Nostrum.Snowflake.cast()
+      owner_id = @owner_id |> Nostrum.Snowflake.cast!()
 
       dm_channel_id = find_dm_channel_id(owner_id)
       Api.create_message(dm_channel_id, to_say)
@@ -92,12 +93,13 @@ defmodule BnBBot.Util do
   Finds the id of a the DM channel for a user, or fetches it from the API if its not in the cache
   """
   @spec find_dm_channel_id(Nostrum.Snowflake.t()) :: Nostrum.Snowflake.t()
-  def find_dm_channel_id(user_id) do
+  def find_dm_channel_id(user_id) when is_snowflake(user_id) do
     # get the channel_id where it's first recipient's.id == user_id
     dm_channel_list =
-      :ets.select(:nostrum_channels, [
-        {{:"$1", %{recipients: [%{id: :"$2"}]}}, [{:==, user_id, :"$2"}], [:"$1"]}
-      ])
+      :ets.select(
+        :nostrum_channels,
+        [{{:"$1", %{recipients: [%{id: :"$2"}]}}, [{:==, :"$2", user_id}], [:"$1"]}]
+      )
 
     case dm_channel_list do
       [id | _] ->
