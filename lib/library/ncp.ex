@@ -308,8 +308,6 @@ defmodule BnBBot.Library.NCPTable do
 
     Task.start(BnBBot.Library.Shared, :return_autocomplete, [from, vals, name, min_dist])
 
-    # res = BnBBot.Library.Shared.gen_autocomplete(state, name, min_dist)
-
     {:noreply, state}
   end
 
@@ -378,15 +376,6 @@ defmodule BnBBot.Library.NCPTable do
         ncp_map = Map.put(ncp, :color, color)
         {lower_name, struct(BnBBot.Library.NCP, ncp_map)}
       end
-
-    # maps =
-    #  Jason.decode!(resp.body, keys: :atoms, strings: :copy)
-    #  |> Enum.map(fn ncp ->
-    #    color = String.to_atom(ncp[:color])
-    #    lower_name = String.downcase(ncp[:name], :ascii)
-    #    ncp_map = Map.put(ncp, :color, color)
-    #    {lower_name, struct(BnBBot.Library.NCP, ncp_map)}
-    #  end)
 
     {:ok, ncp_map}
   end

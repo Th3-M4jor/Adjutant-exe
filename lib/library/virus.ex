@@ -116,15 +116,15 @@ defmodule BnBBot.Library.Virus do
 
   @spec skills_to_io_list(BnBBot.Library.Virus.t()) :: iolist()
   def skills_to_io_list(%BnBBot.Library.Virus{} = virus) do
-    per = num_to_2_digit_string(virus.skills[:per] || 0)
-    inf = num_to_2_digit_string(virus.skills[:inf] || 0)
-    tch = num_to_2_digit_string(virus.skills[:tch] || 0)
-    str = num_to_2_digit_string(virus.skills[:str] || 0)
-    agi = num_to_2_digit_string(virus.skills[:agi] || 0)
-    endr = num_to_2_digit_string(virus.skills[:end] || 0)
-    chm = num_to_2_digit_string(virus.skills[:chm] || 0)
-    vlr = num_to_2_digit_string(virus.skills[:vlr] || 0)
-    aff = num_to_2_digit_string(virus.skills[:aff] || 0)
+    per = Map.get(virus.skills, :per, 0) |> num_to_2_digit_string()
+    inf = Map.get(virus.skills, :inf, 0) |> num_to_2_digit_string()
+    tch = Map.get(virus.skills, :tch, 0) |> num_to_2_digit_string()
+    str = Map.get(virus.skills, :str, 0) |> num_to_2_digit_string()
+    agi = Map.get(virus.skills, :agi, 0) |> num_to_2_digit_string()
+    endr = Map.get(virus.skills, :end, 0) |> num_to_2_digit_string()
+    chm = Map.get(virus.skills, :chm, 0) |> num_to_2_digit_string()
+    vlr = Map.get(virus.skills, :vlr, 0) |> num_to_2_digit_string()
+    aff = Map.get(virus.skills, :aff, 0) |> num_to_2_digit_string()
 
     [
       "PER: ",
@@ -155,23 +155,23 @@ defmodule BnBBot.Library.Virus do
   end
 
   def drops_to_io_list(%BnBBot.Library.Virus{} = virus) do
-    Map.to_list(virus.drops)
+    virus.drops
     |> Enum.sort_by(fn {drop, _} ->
       {val, _} = Integer.parse(drop)
       val
     end)
-    |> Stream.map(fn {drop, num} ->
+    |> Enum.map(fn {drop, num} ->
       [drop, ": ", num]
     end)
     |> Enum.intersperse(" | ")
   end
 
-  defp num_to_2_digit_string(num) do
-    if num < 10 do
-      "0#{num}"
-    else
-      "#{num}"
-    end
+  defp num_to_2_digit_string(num) when is_integer(num) and num >= 10 do
+    "#{num}"
+  end
+
+  defp num_to_2_digit_string(num) when is_integer(num) and num >= 0 do
+    "0#{num}"
   end
 end
 
@@ -290,11 +290,11 @@ defimpl String.Chars, for: BnBBot.Library.Virus do
       " | AC: ",
       Kernel.to_string(virus.ac),
       "\nMind: ",
-      Kernel.to_string(virus.stats[:mind]),
+      Kernel.to_string(virus.stats.mind),
       " | Body: ",
-      Kernel.to_string(virus.stats[:body]),
+      Kernel.to_string(virus.stats.body),
       " | Spirit: ",
-      Kernel.to_string(virus.stats[:spirit]),
+      Kernel.to_string(virus.stats.spirit),
       "\n",
       skills,
       "\n",

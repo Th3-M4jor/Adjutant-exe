@@ -394,36 +394,6 @@ defmodule BnBBot.Library.BattlechipTable do
         {lower_name, chip}
       end
 
-    # maps =
-    #   Jason.decode!(resp.body, keys: :atoms, strings: :copy)
-    #   |> Enum.map(fn chip ->
-    #     elem = chip[:elem] |> string_list_to_atoms()
-    #     skill = chip[:skill] |> string_list_to_atoms()
-    #     range = chip[:range] |> String.to_atom()
-    #     kind = chip[:kind] |> String.to_atom()
-    #     class = chip[:class] |> String.to_atom()
-    #     lower_name = String.downcase(chip[:name], :ascii)
-    #
-    #     chip = %BnBBot.Library.Battlechip{
-    #       id: chip[:id],
-    #       name: chip[:name],
-    #       elem: elem,
-    #       skill: skill,
-    #       range: range,
-    #       hits: chip[:hits],
-    #       targets: chip[:targets],
-    #       description: chip[:description],
-    #       effect: chip[:effect],
-    #       effduration: chip[:effduration],
-    #       blight: chip[:blight],
-    #       damage: chip[:damage],
-    #       kind: kind,
-    #       class: class
-    #     }
-    #
-    #     {lower_name, chip}
-    #   end)
-
     {:ok, chip_map}
   end
 
