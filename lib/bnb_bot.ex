@@ -156,20 +156,20 @@ defmodule BnBBot.Consumer do
       inspect(inter, pretty: true)
     ])
 
-    case String.split(inter.data.custom_id, "_", parts: 3) do
-      # Ensure that the custom_id starts with a number before trying to parse
-      [<<head, _rest::binary>> = id, _, _] when head in ?1..?9 ->
-        id = String.to_integer(id)
-        BnBBot.ButtonAwait.resp_to_btn(inter, id)
+    case inter.data.custom_id do
+      #format is 6 hex digits, underscore, kind, underscore, name
+      <<id::binary-size(6), "_", kind::utf8, "_", name::binary>> when kind in [?c, ?n, ?v] ->
+        id = String.to_integer(id, 16)
+        BnBBot.ButtonAwait.resp_to_btn(inter, id, {kind, name})
 
-      ["yn", <<head, _rest::binary>> = id, _yes_no] when head in ?1..?9 ->
-        id = String.to_integer(id)
-        BnBBot.ButtonAwait.resp_to_btn(inter, id)
+      <<id::binary-size(6), "_yn_", yn::binary>> when yn in ["yes", "no"] ->
+        id = String.to_integer(id, 16)
+        BnBBot.ButtonAwait.resp_to_btn(inter, id, yn)
 
-      [<<kind::utf8, "r">>, name] when kind in [?c, ?n, ?v] ->
+      <<kind::utf8, "r_", name::binary>> when kind in [?c, ?n, ?v] ->
         BnBBot.ButtonAwait.resp_to_persistent_btn(inter, kind, name)
 
-      ["r", id] ->
+      <<"r_", id::binary>> ->
         BnBBot.RoleBtn.handle_role_btn_click(inter, id)
 
       _ ->

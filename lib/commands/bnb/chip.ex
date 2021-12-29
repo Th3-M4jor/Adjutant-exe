@@ -230,7 +230,8 @@ defmodule BnBBot.Commands.Chip do
 
   defp handle_chip_not_found(%Nostrum.Struct.Interaction{} = inter, possibilities) do
     obj_list = Enum.map(possibilities, fn {_, opt} -> opt end)
-    uuid = System.unique_integer([:positive]) |> rem(1000)
+    uuid = System.unique_integer([:positive])
+    |> Bitwise.band(0xFF_FF_FF) # constrain to be between 0 and 0xFF_FF_FF
     buttons = BnBBot.ButtonAwait.generate_msg_buttons_with_uuid(obj_list, uuid)
 
     {:ok} =
@@ -251,8 +252,8 @@ defmodule BnBBot.Commands.Chip do
     route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
     unless is_nil(btn_response) do
-      [_, "c", chip] = String.split(btn_response.data.custom_id, "_", parts: 3)
-      chip = BnBBot.Library.Battlechip.get!(chip)
+      {_, {?c, name}} = btn_response
+      chip = BnBBot.Library.Battlechip.get!(name)
 
       Task.start(fn ->
         Api.request(:patch, route, %{

@@ -6,7 +6,10 @@ defmodule BnBBot.Webhook.Update do
   @spec should_update?(String.t(), Nostrum.Snowflake.t()) :: boolean()
   def should_update?(msg, user_id) do
     try do
-      uuid = System.unique_integer([:positive]) |> rem(1000)
+      uuid =
+        System.unique_integer([:positive])
+        # constrain to be between 0 and 0xFF_FF_FF
+        |> Bitwise.band(0xFF_FF_FF)
 
       buttons = make_yes_no_buttons(uuid)
 
@@ -20,43 +23,46 @@ defmodule BnBBot.Webhook.Update do
 
       btn_response = BnBBot.ButtonAwait.await_btn_click(uuid, nil)
 
-      unless is_nil(btn_response) do
-        {should_update, resp} =
-          case String.split(btn_response.data.custom_id, "_", parts: 3) do
-            [_, "yes", _] ->
-              {true, "Updating..."}
+      case btn_response do
+        {btn_inter, "yes"} ->
+          Task.start(fn ->
+            {:ok} =
+              Api.create_interaction_response(btn_inter, %{
+                type: 7,
+                data: %{
+                  content: "Updating...",
+                  components: []
+                }
+              })
+          end)
 
-            [_, "no", _] ->
-              {false, "Not updating"}
+          true
 
-            _ ->
-              Logger.debug("Invalid custom_id? assuming false")
-              {false, "An error occurred, please inform Major"}
-          end
+        {btn_inter, "no"} ->
+          Task.start(fn ->
+            {:ok} =
+              Api.create_interaction_response(btn_inter, %{
+                type: 7,
+                data: %{
+                  content: "Not updating.",
+                  components: []
+                }
+              })
+          end)
 
-        Task.start(fn ->
-          {:ok} =
-            Api.create_interaction_response(btn_response, %{
-              type: 7,
-              data: %{
-                content: resp,
-                components: []
-              }
+          false
+
+        nil ->
+          Logger.debug("No response received, assuming false")
+
+          Task.start(fn ->
+            Api.edit_message!(msg, %{
+              content: "Timed out waiting for response, assuming No",
+              components: []
             })
-        end)
+          end)
 
-        should_update
-      else
-        Logger.debug("No response received, assuming false")
-
-        Task.start(fn ->
-          Api.edit_message!(msg, %{
-            content: "Timed out waiting for response, assuming No",
-            components: []
-          })
-        end)
-
-        false
+          false
       end
     rescue
       e ->
@@ -68,7 +74,10 @@ defmodule BnBBot.Webhook.Update do
   @spec should_announce?(String.t(), Nostrum.Snowflake.t()) :: boolean
   def should_announce?(msg, user_id) do
     try do
-      uuid = System.unique_integer([:positive]) |> rem(1000)
+      uuid =
+        System.unique_integer([:positive])
+        # constrain to be between 0 and 0xFF_FF_FF
+        |> Bitwise.band(0xFF_FF_FF)
 
       buttons = make_yes_no_buttons(uuid)
 
@@ -82,43 +91,46 @@ defmodule BnBBot.Webhook.Update do
 
       btn_response = BnBBot.ButtonAwait.await_btn_click(uuid, nil)
 
-      unless is_nil(btn_response) do
-        {should_announce, resp} =
-          case String.split(btn_response.data.custom_id, "_", parts: 3) do
-            [_, "yes", _] ->
-              {true, "Announcing..."}
+      case btn_response do
+        {btn_inter, "yes"} ->
+          Task.start(fn ->
+            {:ok} =
+              Api.create_interaction_response(btn_inter, %{
+                type: 7,
+                data: %{
+                  content: "Announcing...",
+                  components: []
+                }
+              })
+          end)
 
-            [_, "no", _] ->
-              {false, "Not announcing"}
+          true
 
-            _ ->
-              Logger.debug("Invalid custom_id? assuming false")
-              {false, "An error occurred, please inform Major"}
-          end
+        {btn_inter, "no"} ->
+          Task.start(fn ->
+            {:ok} =
+              Api.create_interaction_response(btn_inter, %{
+                type: 7,
+                data: %{
+                  content: "Not announcing",
+                  components: []
+                }
+              })
+          end)
 
-        Task.start(fn ->
-          {:ok} =
-            Api.create_interaction_response(btn_response, %{
-              type: 7,
-              data: %{
-                content: resp,
-                components: []
-              }
+          false
+
+        nil ->
+          Logger.debug("No response received, assuming false")
+
+          Task.start(fn ->
+            Api.edit_message!(msg, %{
+              content: "Timed out waiting for response, assuming No",
+              components: []
             })
-        end)
+          end)
 
-        should_announce
-      else
-        Logger.debug("No response received, assuming false")
-
-        Task.start(fn ->
-          Api.edit_message!(msg, %{
-            content: "Timed out waiting for response, assuming No",
-            components: []
-          })
-        end)
-
-        false
+          false
       end
     rescue
       e ->
@@ -140,19 +152,24 @@ defmodule BnBBot.Webhook.Update do
     Api.create_message!(dm_channel_id, msg)
   end
 
-  defp make_yes_no_buttons(uuid) do
+  defp make_yes_no_buttons(uuid) when uuid in 0..0xFF_FF_FF do
+    uuid_str =
+      uuid
+      |> Integer.to_string(16)
+      |> String.pad_leading(6, "0")
+
     yes = %{
       type: 2,
       style: 3,
       label: "yes",
-      custom_id: "#{uuid}_yes_btn"
+      custom_id: "#{uuid_str}_yn_yes"
     }
 
     no = %{
       type: 2,
       style: 4,
       label: "no",
-      custom_id: "#{uuid}_no_btn"
+      custom_id: "#{uuid_str}_yn_no"
     }
 
     action_row = %{

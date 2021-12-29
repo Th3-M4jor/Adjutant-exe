@@ -176,51 +176,44 @@ defmodule BnBBot.Library.Virus do
 end
 
 defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Virus do
+  alias Nostrum.Struct.Component.Button
+
   @virus_emoji :elixir_bot |> Application.compile_env!(:virus_emoji)
 
   def type(_value), do: :virus
 
-  @spec to_btn(BnBBot.Library.Virus.t(), boolean()) :: BnBBot.Library.LibObj.button()
+  @spec to_btn(BnBBot.Library.Virus.t(), boolean()) :: Button.t()
   def to_btn(virus, disabled \\ false) do
     lower_name = "v_#{String.downcase(virus.name, :ascii)}"
 
-    %{
-      type: 2,
+    Button.interaction_button(virus.name, lower_name,
       style: 4,
       emoji: @virus_emoji,
-      label: virus.name,
-      custom_id: lower_name,
       disabled: disabled
-    }
+    )
   end
 
-  @spec to_btn_with_uuid(BnBBot.Library.Virus.t(), boolean(), pos_integer()) ::
-          BnBBot.Library.LibObj.button()
-  def to_btn_with_uuid(virus, disabled \\ false, uuid) do
-    lower_name = "#{uuid}_v_#{String.downcase(virus.name, :ascii)}"
+  @spec to_btn_with_uuid(BnBBot.Library.Virus.t(), boolean(), 0..0xFF_FF_FF) :: Button.t()
+  def to_btn_with_uuid(virus, disabled \\ false, uuid) when uuid in 0..0xFF_FF_FF do
+    uuid_str = Integer.to_string(uuid, 16) |> String.pad_leading(6, "0")
+    lower_name = "#{uuid_str}_v_#{String.downcase(virus.name, :ascii)}"
 
-    %{
-      type: 2,
+    Button.interaction_button(virus.name, lower_name,
       style: 4,
       emoji: @virus_emoji,
-      label: virus.name,
-      custom_id: lower_name,
       disabled: disabled
-    }
+    )
   end
 
-  @spec to_persistent_btn(BnBBot.Library.Virus.t(), boolean()) :: BnBBot.Library.LibObj.button()
+  @spec to_persistent_btn(BnBBot.Library.Virus.t(), boolean()) :: Button.t()
   def to_persistent_btn(virus, disabled \\ false) do
     lower_name = "vr_#{String.downcase(virus.name, :ascii)}"
 
-    %{
-      type: 2,
+    Button.interaction_button(virus.name, lower_name,
       style: 4,
       emoji: @virus_emoji,
-      label: virus.name,
-      custom_id: lower_name,
       disabled: disabled
-    }
+    )
   end
 end
 

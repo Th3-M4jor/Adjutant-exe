@@ -122,52 +122,45 @@ defmodule BnBBot.Library.Battlechip do
 end
 
 defimpl BnBBot.Library.LibObj, for: BnBBot.Library.Battlechip do
+  alias Nostrum.Struct.Component.Button
+
   @chip_emoji :elixir_bot |> Application.compile_env!(:chip_emoji)
 
   def type(_value), do: :chip
 
-  @spec to_btn(BnBBot.Library.Battlechip.t(), boolean()) :: BnBBot.Library.LibObj.button()
+  @spec to_btn(BnBBot.Library.Battlechip.t(), boolean()) :: Button.t()
   def to_btn(chip, disabled \\ false) do
     lower_name = "c_#{String.downcase(chip.name, :ascii)}"
 
-    %{
-      type: 2,
+    Button.interaction_button(chip.name, lower_name,
       style: 2,
       emoji: @chip_emoji,
-      label: chip.name,
-      custom_id: lower_name,
       disabled: disabled
-    }
+    )
   end
 
-  @spec to_btn_with_uuid(BnBBot.Library.Battlechip.t(), boolean(), pos_integer()) ::
-          BnBBot.Library.LibObj.button()
-  def to_btn_with_uuid(chip, disabled \\ false, uuid) do
-    lower_name = "#{uuid}_c_#{String.downcase(chip.name, :ascii)}"
+  @spec to_btn_with_uuid(BnBBot.Library.Battlechip.t(), boolean(), 0..0xFF_FF_FF) ::
+          Button.t()
+  def to_btn_with_uuid(chip, disabled \\ false, uuid) when uuid in 0..0xFF_FF_FF do
+    uuid_str = Integer.to_string(uuid, 16) |> String.pad_leading(6, "0")
+    lower_name = "#{uuid_str}_c_#{String.downcase(chip.name, :ascii)}"
 
-    %{
-      type: 2,
+    Button.interaction_button(chip.name, lower_name,
       style: 2,
       emoji: @chip_emoji,
-      label: chip.name,
-      custom_id: lower_name,
       disabled: disabled
-    }
+    )
   end
 
-  @spec to_persistent_btn(BnBBot.Library.Battlechip.t(), boolean()) ::
-          BnBBot.Library.LibObj.button()
+  @spec to_persistent_btn(BnBBot.Library.Battlechip.t(), boolean()) :: Button.t()
   def to_persistent_btn(chip, disabled \\ false) do
     lower_name = "cr_#{String.downcase(chip.name, :ascii)}"
 
-    %{
-      type: 2,
+    Button.interaction_button(chip.name, lower_name,
       style: 2,
       emoji: @chip_emoji,
-      label: chip.name,
-      custom_id: lower_name,
       disabled: disabled
-    }
+    )
   end
 end
 

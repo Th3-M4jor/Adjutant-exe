@@ -198,12 +198,12 @@ defprotocol BnBBot.Library.LibObj do
   @doc """
   Return the libobj as a button.
   """
-  @spec to_btn(t, boolean()) :: button() | link_button()
+  @spec to_btn(t, boolean()) :: Nostrum.Struct.Component.Button.t()
   def to_btn(value, disabled \\ false)
 
-  @spec to_btn_with_uuid(t, boolean(), pos_integer()) :: button() | link_button()
+  @spec to_btn_with_uuid(t, boolean(), pos_integer()) :: Nostrum.Struct.Component.Button.t()
   def to_btn_with_uuid(value, disabled \\ false, uuid)
 
-  @spec to_persistent_btn(t, boolean()) :: button() | link_button()
+  @spec to_persistent_btn(t, boolean()) :: Nostrum.Struct.Component.Button.t()
   def to_persistent_btn(value, disabled \\ false)
 end

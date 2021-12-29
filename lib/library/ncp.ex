@@ -131,6 +131,8 @@ defmodule BnBBot.Library.NCP do
 end
 
 defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
+  alias Nostrum.Struct.Component.Button
+
   @white_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :white])
   @pink_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :pink])
   @yellow_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :yellow])
@@ -141,59 +143,42 @@ defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
 
   def type(_value), do: :ncp
 
-  @spec to_btn(BnBBot.Library.NCP.t(), boolean()) :: BnBBot.Library.LibObj.button()
+  @spec to_btn(BnBBot.Library.NCP.t(), boolean()) :: Button.t()
   def to_btn(ncp, disabled \\ false) do
     lower_name = "n_#{String.downcase(ncp.name, :ascii)}"
     emoji = ncp_color_to_emoji(ncp.color)
 
-    %{
-      # type 2 for button
-      type: 2,
-
-      # style 3 for green button
+    Button.interaction_button(ncp.name, lower_name,
       style: 3,
       emoji: emoji,
-      label: ncp.name,
-      custom_id: lower_name,
       disabled: disabled
-    }
+    )
   end
 
-  @spec to_btn_with_uuid(BnBBot.Library.NCP.t(), boolean(), pos_integer()) ::
-          BnBBot.Library.LibObj.button()
-  def to_btn_with_uuid(ncp, disabled \\ false, uuid) do
-    lower_name = "#{uuid}_n_#{String.downcase(ncp.name, :ascii)}"
+  @spec to_btn_with_uuid(BnBBot.Library.NCP.t(), boolean(), 0..0xFF_FF_FF) ::
+          Button.t()
+  def to_btn_with_uuid(ncp, disabled \\ false, uuid) when uuid in 0..0xFF_FF_FF do
+    uuid_str = Integer.to_string(uuid, 16) |> String.pad_leading(6, "0")
+    lower_name = "#{uuid_str}_n_#{String.downcase(ncp.name, :ascii)}"
     emoji = ncp_color_to_emoji(ncp.color)
 
-    %{
-      # type 2 for button
-      type: 2,
-
-      # style 3 for green button
+    Button.interaction_button(ncp.name, lower_name,
       style: 3,
       emoji: emoji,
-      label: ncp.name,
-      custom_id: lower_name,
       disabled: disabled
-    }
+    )
   end
 
-  @spec to_persistent_btn(BnBBot.Library.NCP.t(), boolean()) :: BnBBot.Library.LibObj.button()
+  @spec to_persistent_btn(BnBBot.Library.NCP.t(), boolean()) :: Button.t()
   def to_persistent_btn(ncp, disabled \\ false) do
     lower_name = "nr_#{String.downcase(ncp.name, :ascii)}"
     emoji = ncp_color_to_emoji(ncp.color)
 
-    %{
-      # type 2 for button
-      type: 2,
-
-      # style 3 for green button
+    Button.interaction_button(ncp.name, lower_name,
       style: 3,
       emoji: emoji,
-      label: ncp.name,
-      custom_id: lower_name,
       disabled: disabled
-    }
+    )
   end
 
   @spec ncp_color_to_emoji(BnBBot.Library.NCP.colors()) :: map()

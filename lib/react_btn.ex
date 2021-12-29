@@ -1,4 +1,6 @@
 defmodule BnBBot.ButtonAwait do
+  alias Nostrum.Struct.Component.{ActionRow, Button}
+
   require Logger
   # alias Nostrum.Api
 
@@ -9,14 +11,7 @@ defmodule BnBBot.ButtonAwait do
 
   Raises if there are more than 25 buttons
   """
-  @spec generate_msg_buttons([struct()], boolean()) ::
-          [
-            %{
-              type: pos_integer(),
-              components: [BnBBot.Library.LibObj.button() | BnBBot.Library.LibObj.link_button()]
-            }
-          ]
-          | no_return()
+  @spec generate_msg_buttons([struct()], boolean()) :: [ActionRow.t()] | no_return()
   def generate_msg_buttons(buttons, disabled \\ false)
 
   def generate_msg_buttons([], _disabled) do
@@ -31,24 +26,12 @@ defmodule BnBBot.ButtonAwait do
     row_chunks = Enum.chunk_every(content, 5)
 
     Enum.map(row_chunks, fn row ->
-      action_row = Enum.map(row, &BnBBot.Library.LibObj.to_btn(&1, disabled))
-
-      %{
-        type: 1,
-        components: action_row
-      }
+      Enum.map(row, &BnBBot.Library.LibObj.to_btn(&1, disabled)) |> ActionRow.action_row()
     end)
   end
 
   @spec generate_msg_buttons_with_uuid([struct()], boolean(), pos_integer()) ::
-          [
-            %{
-              type: pos_integer(),
-              components: [BnBBot.Library.LibObj.button() | BnBBot.Library.LibObj.link_button()]
-            }
-          ]
-          | no_return()
-
+          [ActionRow.t()] | no_return()
   def generate_msg_buttons_with_uuid(buttons, disabled \\ false, uuid)
 
   def generate_msg_buttons_with_uuid([], _disabled, _uuid) do
@@ -64,23 +47,13 @@ defmodule BnBBot.ButtonAwait do
     row_chunks = Enum.chunk_every(content, 5)
 
     Enum.map(row_chunks, fn row ->
-      action_row = Enum.map(row, &BnBBot.Library.LibObj.to_btn_with_uuid(&1, disabled, uuid))
-
-      %{
-        type: 1,
-        components: action_row
-      }
+      Enum.map(row, &BnBBot.Library.LibObj.to_btn_with_uuid(&1, disabled, uuid))
+      |> ActionRow.action_row()
     end)
   end
 
   @spec generate_persistent_buttons([struct()], boolean()) ::
-          [
-            %{
-              type: pos_integer(),
-              components: [BnBBot.Library.LibObj.button() | BnBBot.Library.LibObj.link_button()]
-            }
-          ]
-          | no_return()
+          [ActionRow.t()] | no_return()
   def generate_persistent_buttons(buttons, disabled \\ false)
 
   def generate_persistent_buttons([], _disabled) do
@@ -95,40 +68,29 @@ defmodule BnBBot.ButtonAwait do
     row_chunks = Enum.chunk_every(content, 5)
 
     Enum.map(row_chunks, fn row ->
-      action_row = Enum.map(row, &BnBBot.Library.LibObj.to_persistent_btn(&1, disabled))
-
-      %{
-        type: 1,
-        components: action_row
-      }
+      Enum.map(row, &BnBBot.Library.LibObj.to_persistent_btn(&1, disabled))
+      |> ActionRow.action_row()
     end)
   end
 
   @spec get_confirmation?(Nostrum.Struct.Interaction.t(), String.t()) :: boolean()
   def get_confirmation?(inter, content) do
-    uuid = System.unique_integer([:positive]) |> rem(1000)
+    uuid =
+      System.unique_integer([:positive])
+      # constrain to be between 0 and 0xFF_FF_FF
+      |> Bitwise.band(0xFF_FF_FF)
 
-    action_row = [
-      %{
-        type: 2,
-        style: 4,
-        label: "yes",
-        custom_id: "yn_#{uuid}_yes"
-      },
-      %{
-        type: 2,
-        style: 2,
-        label: "no",
-        custom_id: "yn_#{uuid}_no"
-      }
-    ]
+    uuid_str = uuid
+    |> Integer.to_string(16)
+    |> String.pad_leading(6, "0")
 
-    buttons = [
-      %{
-        type: 1,
-        components: action_row
-      }
-    ]
+    buttons =
+      [
+        Button.interaction_button("yes", "#{uuid_str}_yn_yes", style: 4),
+        Button.interaction_button("no", "#{uuid_str}_yn_no", style: 2)
+      ]
+      |> ActionRow.action_row()
+      |> List.wrap()
 
     {:ok} =
       Nostrum.Api.create_interaction_response(
@@ -145,30 +107,24 @@ defmodule BnBBot.ButtonAwait do
 
     btn_response = BnBBot.ButtonAwait.await_btn_click(uuid, nil)
 
-    unless is_nil(btn_response) do
-      Nostrum.Api.create_interaction_response(btn_response, %{
-        type: 7,
-        data: %{
+    case btn_response do
+      {btn_inter, yn} when yn in ["yes", "no"] ->
+        Nostrum.Api.create_interaction_response(btn_inter, %{
+          type: 7,
+          data: %{
+            components: []
+          }
+        })
+
+        yn == "yes"
+
+      nil ->
+        Nostrum.Api.edit_interaction_response(inter, %{
+          content: "Timed out waiting for response",
           components: []
-        }
-      })
+        })
 
-      case String.split(btn_response.data.custom_id, "_") do
-        [_, _, "yes"] ->
-          true
-
-        [_, _, "no"] ->
-          false
-      end
-    else
-      # route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
-
-      Nostrum.Api.edit_interaction_response(inter, %{
-        content: "Timed out waiting for response",
-        components: []
-      })
-
-      false
+        false
     end
   end
 
@@ -177,8 +133,8 @@ defmodule BnBBot.ButtonAwait do
   timeout is after 30 seconds
   """
   @spec await_btn_click(pos_integer() | Nostrum.Snowflake.t(), Nostrum.Snowflake.t() | nil) ::
-          %Nostrum.Struct.Interaction{} | nil | no_return()
-  def await_btn_click(uuid, user_id \\ nil) do
+          {%Nostrum.Struct.Interaction{}, any()} | %Nostrum.Struct.Interaction{} | nil | no_return()
+  def await_btn_click(uuid, user_id \\ nil) when uuid in 0..0xFF_FF_FF do
     Registry.register(:BUTTON_COLLECTOR, uuid, user_id)
     Logger.debug("Registering an await click on #{uuid} for #{user_id}")
     btn = await_btn_click_inner()
@@ -187,13 +143,14 @@ defmodule BnBBot.ButtonAwait do
     btn
   end
 
-  def resp_to_btn(%Nostrum.Struct.Interaction{} = inter, id) do
+  def resp_to_btn(%Nostrum.Struct.Interaction{} = inter, id, value \\ nil) do
+    Logger.debug("Looking up uuid #{id}")
     case Registry.lookup(:BUTTON_COLLECTOR, id) do
       [{pid, user_id}]
       when is_nil(user_id)
       when inter.user.id == user_id
       when inter.member.user.id == user_id ->
-        send(pid, {:btn_click, inter})
+        send(pid, {:btn_click, inter, value})
 
       _ ->
         Logger.debug("Interaction wasn't registered, or wasn't for said user")
@@ -252,8 +209,12 @@ defmodule BnBBot.ButtonAwait do
     end
   end
 
-  defp handle_btn_click({:btn_click, %Nostrum.Struct.Interaction{} = value}) do
+  defp handle_btn_click({:btn_click, %Nostrum.Struct.Interaction{} = value, nil}) do
     value
+  end
+
+  defp handle_btn_click({:btn_click, %Nostrum.Struct.Interaction{} = value, data}) do
+    {value, data}
   end
 
   defp handle_btn_click(other) do

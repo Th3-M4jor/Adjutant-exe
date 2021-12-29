@@ -159,7 +159,12 @@ defmodule BnBBot.Commands.All do
     Logger.debug(["Found ", to_string(length(all)), " options that were similar enough"])
 
     obj_list = Enum.map(all, fn {_, opt} -> opt end)
-    uuid = System.unique_integer([:positive]) |> rem(1000)
+
+    uuid =
+      System.unique_integer([:positive])
+      # constrain to be between 0 and 0xFF_FF_FF
+      |> Bitwise.band(0xFF_FF_FF)
+
     buttons = BnBBot.ButtonAwait.generate_msg_buttons_with_uuid(obj_list, uuid)
 
     {:ok} =
@@ -179,57 +184,62 @@ defmodule BnBBot.Commands.All do
 
     route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
-    unless is_nil(btn_response) do
-      lib_obj =
-        case String.split(btn_response.data.custom_id, "_", parts: 3) do
-          [_, "c", chip] ->
-            BnBBot.Library.Battlechip.get!(chip)
+    case btn_response do
+      {btn_inter, {kind, name}} ->
+        lib_obj = kind_name_to_lib_obj(kind, name)
 
-          [_, "n", ncp] ->
-            BnBBot.Library.NCP.get!(ncp)
+        edit_task =
+          Task.async(fn ->
+            {:ok} =
+              Api.create_interaction_response(btn_inter, %{
+                type: 7,
+                data: %{
+                  content: "You selected #{lib_obj.name}",
+                  components: []
+                }
+              })
+          end)
 
-          [_, "v", virus] ->
-            BnBBot.Library.Virus.get!(virus)
-        end
+        resp_task =
+          Task.async(fn ->
+            name = inter.data.name
 
-      edit_task =
-        Task.async(fn ->
-          {:ok} =
-            Api.create_interaction_response(btn_response, %{
-              type: 7,
-              data: %{
-                content: "You selected #{lib_obj.name}",
-                components: []
-              }
-            })
-        end)
+            resp_text =
+              if is_nil(inter.user) do
+                "<@#{inter.member.user.id}> used `/#{name}`\n#{lib_obj}"
+              else
+                "<@#{inter.user.id}> used `/#{name}`\n#{lib_obj}"
+              end
 
-      resp_task =
-        Task.async(fn ->
-          name = inter.data.name
+            Api.create_message!(inter.channel_id, resp_text)
 
-          resp_text =
-            if is_nil(inter.user) do
-              "<@#{inter.member.user.id}> used `/#{name}`\n#{lib_obj}"
-            else
-              "<@#{inter.user.id}> used `/#{name}`\n#{lib_obj}"
-            end
+            # Api.execute_webhook(inter.application_id, inter.token, %{
+            #  content: resp_text
+            # })
+          end)
 
-          Api.create_message!(inter.channel_id, resp_text)
+        Task.await_many([edit_task, resp_task], :infinity)
 
-          # Api.execute_webhook(inter.application_id, inter.token, %{
-          #  content: resp_text
-          # })
-        end)
-
-      Task.await_many([edit_task, resp_task], :infinity)
-    else
-      Api.request(:patch, route, %{
-        content: "Timed out waiting for response",
-        components: []
-      })
+      nil ->
+        Api.request(:patch, route, %{
+          content: "Timed out waiting for response",
+          components: []
+        })
     end
 
     :ignore
+  end
+
+  defp kind_name_to_lib_obj(kind, name) do
+    case kind do
+      ?n ->
+        BnBBot.Library.NCP.get!(name)
+
+      ?c ->
+        BnBBot.Library.Battlechip.get!(name)
+
+      ?v ->
+        BnBBot.Library.Virus.get!(name)
+    end
   end
 end
