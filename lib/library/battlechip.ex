@@ -59,12 +59,12 @@ defmodule BnBBot.Library.Battlechip do
         }
 
   @spec load_chips :: {:ok} | {:error, String.t()}
-  def load_chips() do
+  def load_chips do
     GenServer.call(:chip_table, :reload, :infinity)
   end
 
   @spec get_chip_ct() :: non_neg_integer()
-  def get_chip_ct() do
+  def get_chip_ct do
     GenServer.call(:chip_table, :len, :infinity)
   end
 
@@ -84,10 +84,10 @@ defmodule BnBBot.Library.Battlechip do
   def get!(name) do
     res = GenServer.call(:chip_table, {:get_or_nil, name})
 
-    unless is_nil(res) do
-      res
-    else
+    if is_nil(res) do
       raise "Chip not found: #{name}"
+    else
+      res
     end
   end
 
@@ -177,34 +177,24 @@ defimpl String.Chars, for: BnBBot.Library.Battlechip do
     ]
 
     skill =
-      unless is_nil(chip.skill) do
-        [String.upcase(Enum.join(chip.skill, ", "), :ascii), " | "]
-      else
+      if is_nil(chip.skill) do
         []
+      else
+        [String.upcase(Enum.join(chip.skill, ", "), :ascii), " | "]
       end
 
     range = [String.capitalize(Kernel.to_string(chip.range), :ascii), " | "]
     kind = String.capitalize(Kernel.to_string(chip.kind), :ascii)
 
-    hits =
-      case chip.hits do
-        nil -> []
-        "1" -> ["1 hit", " | "]
-        _ -> [chip.hits, " hits | "]
-      end
+    hits = hits_to_io_list(chip)
 
-    targets =
-      case chip.targets do
-        nil -> []
-        "1" -> ["1 target", " | "]
-        _ -> [chip.targets, " targets | "]
-      end
+    targets = targets_to_io_list(chip)
 
     damage =
-      unless is_nil(chip.damage) do
-        [BnBBot.Library.Shared.dice_to_io_list(chip.damage, " damage"), " | "]
-      else
+      if is_nil(chip.damage) do
         []
+      else
+        [BnBBot.Library.Shared.dice_to_io_list(chip.damage, " damage"), " | "]
       end
 
     class =
@@ -233,6 +223,31 @@ defimpl String.Chars, for: BnBBot.Library.Battlechip do
 
     IO.chardata_to_string(io_list)
   end
+
+  defp hits_to_io_list(%BnBBot.Library.Battlechip{hits: nil}) do
+    []
+  end
+
+  defp hits_to_io_list(%BnBBot.Library.Battlechip{hits: "1"}) do
+    ["1 hit", " | "]
+  end
+
+  defp hits_to_io_list(%BnBBot.Library.Battlechip{hits: hits}) do
+    [hits, " hits | "]
+  end
+
+  defp targets_to_io_list(%BnBBot.Library.Battlechip{targets: nil}) do
+    []
+  end
+
+  defp targets_to_io_list(%BnBBot.Library.Battlechip{targets: "1"}) do
+    ["1 target", " | "]
+  end
+
+  defp targets_to_io_list(%BnBBot.Library.Battlechip{targets: targets}) do
+    [targets, " targets | "]
+  end
+
 end
 
 defmodule BnBBot.Library.BattlechipTable do
@@ -337,7 +352,7 @@ defmodule BnBBot.Library.BattlechipTable do
     {:reply, exists, state}
   end
 
-  defp load_chips() do
+  defp load_chips do
     Logger.info("(Re)loading Chips")
 
     resp = HTTPoison.get(@chip_url)

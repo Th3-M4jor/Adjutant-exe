@@ -40,30 +40,28 @@ defmodule BnBBot.LogBackend do
         %{level: min_level, online: false} = state
       ) do
     # just drop the message if repo is offline, but check each time
-    try do
-      state =
-        if Ecto.Repo.all_running() |> Enum.member?(BnBBot.Repo) do
-          if right_log_level?(min_level, level) do
-            msg = IO.chardata_to_string(message)
+    state =
+      if Ecto.Repo.all_running() |> Enum.member?(BnBBot.Repo) do
+        if right_log_level?(min_level, level) do
+          msg = IO.chardata_to_string(message)
 
-            line = %BnBBot.LogLine{
-              level: level,
-              message: msg
-            }
+          line = %BnBBot.LogLine{
+            level: level,
+            message: msg
+          }
 
-            BnBBot.Repo.insert(line)
-          end
-
-          Map.put(state, :online, true)
-        else
-          state
+          BnBBot.Repo.insert(line)
         end
 
+        Map.put(state, :online, true)
+      else
+        state
+      end
+
+    {:ok, state}
+  rescue
+    _ ->
       {:ok, state}
-    rescue
-      _ ->
-        {:ok, state}
-    end
   end
 
   def handle_event(

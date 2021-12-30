@@ -60,7 +60,7 @@ defmodule BnBBot.Commands.All do
       })
   end
 
-  def get_create_map() do
+  def get_create_map do
     %{
       type: 1,
       name: "search",
@@ -115,14 +115,14 @@ defmodule BnBBot.Commands.All do
 
     exact_matches = Enum.filter(all_pos, fn {dist, _} -> dist == 1.0 end)
 
-    unless Enum.empty?(exact_matches) do
-      do_btn_response(msg_inter, exact_matches)
-    else
+    if Enum.empty?(exact_matches) do
       possibilities =
         Enum.sort_by(all_pos, fn {dist, _} -> dist end, &>=/2)
         |> Enum.take(25)
 
       do_btn_response(msg_inter, possibilities)
+    else
+      do_btn_response(msg_inter, exact_matches)
     end
   end
 

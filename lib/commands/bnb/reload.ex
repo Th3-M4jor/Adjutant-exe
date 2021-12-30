@@ -3,8 +3,9 @@ defmodule BnBBot.Commands.Reload do
   Command for telling the bot to reload all chips/viruses/NCPs
   """
 
-  alias Nostrum.Api
   alias BnBBot.Library
+  alias Nostrum.Api
+
   require Logger
 
   @behaviour BnBBot.SlashCmdFn
@@ -62,7 +63,7 @@ defmodule BnBBot.Commands.Reload do
     :ignore
   end
 
-  def get_create_map() do
+  def get_create_map do
     %{
       type: 1,
       name: "reload",
@@ -71,7 +72,7 @@ defmodule BnBBot.Commands.Reload do
     }
   end
 
-  defp do_reload() do
+  defp do_reload do
     ncp_task =
       Task.async(fn ->
         {:ok} = Library.NCP.load_ncps()

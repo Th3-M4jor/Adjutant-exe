@@ -20,7 +20,7 @@ defmodule BnBBot.Library.NCP do
         }
 
   @spec load_ncps() :: {:ok} | {:error, String.t()}
-  def load_ncps() do
+  def load_ncps do
     GenServer.call(:ncp_table, :reload, :infinity)
   end
 
@@ -39,10 +39,10 @@ defmodule BnBBot.Library.NCP do
   def get!(name) do
     res = GenServer.call(:ncp_table, {:get_or_nil, name})
 
-    unless is_nil(res) do
-      res
-    else
+    if is_nil(res) do
       raise "NCP not found: #{name}"
+    else
+      res
     end
   end
 
@@ -62,7 +62,7 @@ defmodule BnBBot.Library.NCP do
   end
 
   @spec get_ncp_ct() :: non_neg_integer()
-  def get_ncp_ct() do
+  def get_ncp_ct do
     GenServer.call(:ncp_table, :len, :infinity)
   end
 
@@ -92,6 +92,7 @@ defmodule BnBBot.Library.NCP do
     end
   end
 
+  # credo:disable-for-lines:30 Credo.Check.Refactor.CyclomaticComplexity
   @spec element_to_colors(BnBBot.Library.Shared.element()) :: [colors()]
   def element_to_colors(element) do
     case element do
@@ -337,7 +338,7 @@ defmodule BnBBot.Library.NCPTable do
     {:reply, size, state}
   end
 
-  defp load_ncps() do
+  defp load_ncps do
     Logger.info("(Re)loading NCPs")
     resp = HTTPoison.get(@ncp_url)
 

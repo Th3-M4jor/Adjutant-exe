@@ -2,6 +2,8 @@ defmodule BnBBot.ButtonAwait do
   @moduledoc """
   Module for creating buttons that wait for a response from the user.
   """
+
+  alias BnBBot.Library.{Battlechip, NCP, Virus}
   alias Nostrum.Struct.Component.{ActionRow, Button}
 
   require Logger
@@ -184,16 +186,16 @@ defmodule BnBBot.ButtonAwait do
   def resp_to_persistent_btn(%Nostrum.Struct.Interaction{} = inter, kind, name) do
     res =
       case kind do
-        ?c -> BnBBot.Library.Battlechip.get_or_nil(name)
-        ?n -> BnBBot.Library.NCP.get_or_nil(name)
-        ?v -> BnBBot.Library.Virus.get_or_nil(name)
+        ?c -> Battlechip.get_or_nil(name)
+        ?n -> NCP.get_or_nil(name)
+        ?v -> Virus.get_or_nil(name)
       end
 
     resp =
-      unless is_nil(res) do
-        to_string(res)
-      else
+      if is_nil(res) do
         "Seems that one couldn't be found, please inform Major"
+      else
+        to_string(res)
       end
 
     {:ok} =
@@ -208,7 +210,7 @@ defmodule BnBBot.ButtonAwait do
       )
   end
 
-  defp await_btn_click_inner() do
+  defp await_btn_click_inner do
     receive do
       value ->
         handle_btn_click(value)

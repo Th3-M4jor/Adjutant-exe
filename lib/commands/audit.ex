@@ -73,7 +73,7 @@ defmodule BnBBot.Commands.Audit do
     Nostrum.Api.create_message(msg, "I didn't recognize the args for that one")
   end
 
-  def last_one() do
+  def last_one do
     BnBBot.LogLine |> last |> BnBBot.Repo.one()
   end
 

@@ -59,7 +59,7 @@ defmodule BnBBot.Commands.Panels do
     :ignore
   end
 
-  def get_create_map() do
+  def get_create_map do
     choices =
       Enum.map(@panels, fn name ->
         %{
@@ -84,6 +84,7 @@ defmodule BnBBot.Commands.Panels do
     }
   end
 
+  # credo:disable-for-lines:30 Credo.Check.Refactor.CyclomaticComplexity
   defp panel_to_str(name) do
     case name do
       "Cracked" ->

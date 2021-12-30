@@ -57,12 +57,12 @@ defmodule BnBBot.Library.Virus do
         }
 
   @spec load_viruses() :: {:ok} | {:error, String.t()}
-  def load_viruses() do
+  def load_viruses do
     GenServer.call(:virus_table, :reload, :infinity)
   end
 
   @spec get_virus_ct() :: pos_integer()
-  def get_virus_ct() do
+  def get_virus_ct do
     GenServer.call(:virus_table, :len, :infinity)
   end
 
@@ -81,10 +81,10 @@ defmodule BnBBot.Library.Virus do
   def get!(name) do
     res = GenServer.call(:virus_table, {:get_or_nil, name})
 
-    unless is_nil(res) do
-      res
-    else
+    if is_nil(res) do
       raise "Virus not found: #{name}"
+    else
+      res
     end
   end
 
@@ -99,7 +99,7 @@ defmodule BnBBot.Library.Virus do
   end
 
   @spec validate_virus_drops() :: {:ok} | {:error, String.t()}
-  def validate_virus_drops() do
+  def validate_virus_drops do
     GenServer.call(:virus_table, :validate_drops, :infinity)
   end
 
@@ -170,6 +170,18 @@ defmodule BnBBot.Library.Virus do
     |> Enum.intersperse(" | ")
   end
 
+  def abilities_to_io_list(%BnBBot.Library.Virus{abilities: nil}) do
+    []
+  end
+
+  def abilities_to_io_list(%BnBBot.Library.Virus{abilities: abilities}) do
+    [
+      "Abilities: ",
+      Enum.intersperse(abilities, ", "),
+      "\n"
+    ]
+  end
+
   defp num_to_2_digit_string(num) when is_integer(num) and num >= 10 do
     "#{num}"
   end
@@ -229,50 +241,41 @@ defimpl String.Chars, for: BnBBot.Library.Virus do
 
     skills = BnBBot.Library.Virus.skills_to_io_list(virus)
 
-    abilities =
-      unless is_nil(virus.abilities) do
-        [
-          "Abilities: ",
-          Enum.intersperse(virus.abilities, ", "),
-          "\n"
-        ]
-      else
-        []
-      end
+    abilities = BnBBot.Library.Virus.abilities_to_io_list(virus)
 
     drops = BnBBot.Library.Virus.drops_to_io_list(virus)
 
     total_damage =
-      unless is_nil(virus.damage) do
+      if is_nil(virus.damage) do
+        []
+      else
         [
           "Total Damage: ",
           BnBBot.Library.Shared.dice_to_io_list(virus.damage),
           "\n"
         ]
-      else
-        []
       end
 
     damage_elem =
-      unless is_nil(virus.dmgelem) do
+      if is_nil(virus.dmgelem) do
+        []
+      else
         [
           "Damage Element(s): ",
           Stream.map(virus.dmgelem, &BnBBot.Library.Shared.element_to_string/1)
           |> Enum.intersperse(", "),
           "\n"
         ]
-      else
-        []
       end
 
     blight =
-      unless is_nil(virus.blight) do
+      if is_nil(virus.blight) do
+        []
+      else
         [
           BnBBot.Library.Shared.blight_to_io_list(virus.blight),
           "\n"
         ]
-      else
-        []
       end
 
     io_list = [
@@ -314,6 +317,8 @@ defmodule BnBBot.Library.VirusTable do
   VirusTable stores all the viruses currently in the game.
   """
 
+  alias BnBBot.Library.{Battlechip, Shared, Virus}
+
   require Logger
 
   use GenServer
@@ -326,7 +331,7 @@ defmodule BnBBot.Library.VirusTable do
 
   @impl true
   def init(_) do
-    #make loading data by async
+    # make loading data by async
     {:ok, %{}, {:continue, :reload}}
   end
 
@@ -345,15 +350,15 @@ defmodule BnBBot.Library.VirusTable do
   @impl true
   @spec handle_call({:get, String.t(), float()}, GenServer.from(), map()) ::
           {:reply,
-           {:found, BnBBot.Library.Virus.t()}
-           | {:not_found, [{float(), BnBBot.Library.Virus.t()}]}, map()}
+           {:found, Virus.t()}
+           | {:not_found, [{float(), Virus.t()}]}, map()}
   def handle_call({:get, name, min_dist}, _from, state) do
     lower_name = String.downcase(name)
 
     resp =
       case state[lower_name] do
         nil ->
-          res = BnBBot.Library.Shared.gen_suggestions(state, name, min_dist)
+          res = Shared.gen_suggestions(state, name, min_dist)
 
           {:not_found, res}
 
@@ -373,7 +378,7 @@ defmodule BnBBot.Library.VirusTable do
         {k, v.name}
       end)
 
-    Task.start(BnBBot.Library.Shared, :return_autocomplete, [from, vals, name, min_dist])
+    Task.start(Shared, :return_autocomplete, [from, vals, name, min_dist])
 
     # res = BnBBot.Library.Shared.gen_autocomplete(state, name, min_dist)
 
@@ -407,7 +412,7 @@ defmodule BnBBot.Library.VirusTable do
   end
 
   @spec handle_call({:cr, pos_integer()}, GenServer.from(), map()) ::
-          {:reply, [BnBBot.Library.Virus.t()], map()}
+          {:reply, [Virus.t()], map()}
   def handle_call({:cr, cr}, _from, state) do
     viruses =
       Map.values(state)
@@ -417,17 +422,19 @@ defmodule BnBBot.Library.VirusTable do
   end
 
   @spec handle_call({:encounter, pos_integer(), pos_integer()}, GenServer.from(), map()) ::
-          {:reply, [BnBBot.Library.Virus.t()], map()}
+          {:reply, [Virus.t()], map()}
   def handle_call({:encounter, count, cr}, _from, state) do
     viruses =
       Map.values(state)
       |> Enum.filter(fn virus -> virus.cr == cr end)
 
     viruses =
-      unless Enum.empty?(viruses) do
-        for _ <- 1..count, do: Enum.random(viruses)
-      else
-        []
+      case viruses do
+        [] ->
+          []
+
+        _ ->
+          for _ <- 1..count, do: Enum.random(viruses)
       end
 
     {:reply, viruses, state}
@@ -438,17 +445,19 @@ defmodule BnBBot.Library.VirusTable do
           GenServer.from(),
           map()
         ) ::
-          {:reply, [BnBBot.Library.Virus.t()], map()}
+          {:reply, [Virus.t()], map()}
   def handle_call({:encounter, count, low_cr, high_cr}, _from, state) do
     viruses =
       Map.values(state)
       |> Enum.filter(fn virus -> virus.cr in low_cr..high_cr end)
 
     viruses =
-      unless Enum.empty?(viruses) do
-        for _ <- 1..count, do: Enum.random(viruses)
-      else
-        []
+      case viruses do
+        [] ->
+          []
+
+        _ ->
+          for _ <- 1..count, do: Enum.random(viruses)
       end
 
     {:reply, viruses, state}
@@ -464,7 +473,7 @@ defmodule BnBBot.Library.VirusTable do
         drop =
           Map.to_list(virus.drops)
           |> Enum.find(fn {_, drop} ->
-            !String.contains?(drop, "Zenny") && !BnBBot.Library.Battlechip.exists?(drop)
+            not String.contains?(drop, "Zenny") and not Battlechip.exists?(drop)
           end)
 
         unless is_nil(drop) do
@@ -484,7 +493,7 @@ defmodule BnBBot.Library.VirusTable do
   end
 
   @spec handle_call({:drops, String.t()}, GenServer.from(), map()) ::
-          {:reply, [BnBBot.Library.Virus.t()], map()}
+          {:reply, [Virus.t()], map()}
   def handle_call({:drops, name}, _from, state) do
     viruses =
       Map.values(state)
@@ -496,7 +505,7 @@ defmodule BnBBot.Library.VirusTable do
     {:reply, viruses, state}
   end
 
-  defp load_viruses() do
+  defp load_viruses do
     Logger.info("(Re)loading viruses")
 
     resp = HTTPoison.get(@virus_url)
@@ -546,40 +555,6 @@ defmodule BnBBot.Library.VirusTable do
 
         {lower_name, virus}
       end
-
-    # maps =
-    #   Jason.decode!(resp.body, keys: :atoms, strings: :copy)
-    #   |> Enum.map(fn virus ->
-    #     elem = virus[:element] |> string_list_to_atoms()
-    #     dmg_elem = virus[:dmgelem] |> string_list_to_atoms()
-    #     lower_name = virus[:name] |> String.downcase(:ascii)
-    #
-    #     drops =
-    #       virus[:drops]
-    #       |> Stream.map(fn [range, item] ->
-    #         {range, item}
-    #       end)
-    #       |> Map.new()
-    #
-    #     virus = %BnBBot.Library.Virus{
-    #       id: virus[:id],
-    #       name: virus[:name],
-    #       element: elem,
-    #       hp: virus[:hp],
-    #       ac: virus[:ac],
-    #       stats: virus[:stats],
-    #       skills: virus[:skills],
-    #       drops: drops,
-    #       description: virus[:description],
-    #       cr: virus[:cr],
-    #       abilities: virus[:abilities],
-    #       damage: virus[:damage],
-    #       dmgelem: dmg_elem,
-    #       blight: virus[:blight]
-    #     }
-    #
-    #     {lower_name, virus}
-    #   end)
 
     {:ok, virus_map}
   end

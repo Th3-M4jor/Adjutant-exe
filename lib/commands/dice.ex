@@ -51,7 +51,7 @@ defmodule BnBBot.Commands.Dice do
     :ignore
   end
 
-  def get_create_map() do
+  def get_create_map do
     %{
       type: 1,
       name: "roll",

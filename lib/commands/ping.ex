@@ -47,12 +47,6 @@ defmodule BnBBot.Commands.Ping do
       {bot_memory_usage, total_memory_usage}
     ] = Task.await_many([utilization_task, memory_usage_task], :infinity)
 
-    #  {:ok, response} =
-    #    Api.create_message(
-    #      inter.channel_id,
-    #      content: "Checking response times..."
-    #    )
-
     milis = System.convert_time_unit(elapsed, :native, :microsecond) / 1000
     count = :erlang.float_to_binary(milis, decimals: 2)
 
@@ -90,29 +84,15 @@ defmodule BnBBot.Commands.Ping do
       ]
     }
 
-    # route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
-
     {:ok, _message} =
       Api.edit_interaction_response(inter, %{
         content: "",
         embeds: [ping_embed]
       })
-
-    # Api.execute_webhook(
-    #  inter.application_id,
-    #  inter.token,
-    #  %{
-    #    content: "",
-    #    embeds: [ping_embed]
-    #  },
-    #  true
-    # )
-
-    # Api.create_message(inter.channel_id, content: "", embeds: [ping_embed])
     :ignore
   end
 
-  def get_create_map() do
+  def get_create_map do
     %{
       type: 1,
       name: "ping",
@@ -120,7 +100,7 @@ defmodule BnBBot.Commands.Ping do
     }
   end
 
-  defp get_uptime_str() do
+  defp get_uptime_str do
     Logger.debug("Generating system uptime")
     {uptime, _} = :erlang.statistics(:wall_clock)
     uptime_seconds = System.convert_time_unit(uptime, :millisecond, :second)
@@ -140,7 +120,7 @@ defmodule BnBBot.Commands.Ping do
     "Bot was last restarted <t:#{startup_time}:R>"
   end
 
-  defp get_cross_node_memory_usage() do
+  defp get_cross_node_memory_usage do
     Logger.debug("Getting cross node memory usage")
 
     if Node.alive?() and Node.connect(@backend_node_name) and Node.connect(@webhook_node_name) do

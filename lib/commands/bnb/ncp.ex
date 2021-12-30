@@ -13,8 +13,8 @@ defmodule BnBBot.Commands.NCP do
 
   require Logger
 
-  alias Nostrum.Api
   alias BnBBot.Library.NCP
+  alias Nostrum.Api
 
   @behaviour BnBBot.SlashCmdFn
 
@@ -88,7 +88,7 @@ defmodule BnBBot.Commands.NCP do
     :ignore
   end
 
-  def get_create_map() do
+  def get_create_map do
     color_choices =
       Enum.map(@colors, fn name ->
         %{

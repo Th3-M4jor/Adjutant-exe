@@ -11,8 +11,8 @@ defmodule BnBBot.Commands.Virus do
   `encounter` - Build a random virus encounter.
   """
 
-  alias Nostrum.Api
   alias BnBBot.Library.Virus
+  alias Nostrum.Api
   require Logger
 
   @behaviour BnBBot.SlashCmdFn
@@ -52,7 +52,7 @@ defmodule BnBBot.Commands.Virus do
     :ignore
   end
 
-  def get_create_map() do
+  def get_create_map do
     %{
       type: 1,
       name: "virus",
@@ -258,12 +258,12 @@ defmodule BnBBot.Commands.Virus do
       )
   end
 
+  @spec send_encounter(Nostrum.Struct.Interaction.t(), [Virus.t()]) :: :ignore
   defp send_encounter(inter, viruses) do
-    names =
-      Enum.map(viruses, fn virus ->
-        virus.name
-      end)
-      |> Enum.join(", ")
+
+    names = Enum.map_join(viruses, ", ", fn virus ->
+      virus.name
+    end)
 
     buttons =
       Enum.sort_by(viruses, fn virus -> virus.name end)
@@ -290,6 +290,8 @@ defmodule BnBBot.Commands.Virus do
     Api.request(:patch, route, %{
       components: []
     })
+
+    :ignore
   end
 
   def send_found_virus(%Nostrum.Struct.Interaction{} = inter, virus) do

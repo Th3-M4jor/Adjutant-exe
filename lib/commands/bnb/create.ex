@@ -17,7 +17,7 @@ defmodule BnBBot.Commands.Create do
     raise UndefinedFunctionError
   end
 
-  def get_create_map() do
+  def get_create_map do
     %{
       type: 1,
       name: "create",
@@ -28,7 +28,7 @@ defmodule BnBBot.Commands.Create do
     }
   end
 
-  defp virus_create_map() do
+  defp virus_create_map do
     %{
       type: 1,
       name: "virus",

@@ -61,7 +61,7 @@ defmodule BnBBot.Commands.Blight do
     :ignore
   end
 
-  def get_create_map() do
+  def get_create_map do
     choices =
       Enum.map(@blight_elements, fn name ->
         %{
@@ -86,6 +86,7 @@ defmodule BnBBot.Commands.Blight do
     }
   end
 
+  # credo:disable-for-lines:30 Credo.Check.Refactor.CyclomaticComplexity
   defp blight_to_str(name) do
     case name do
       "Fire" ->

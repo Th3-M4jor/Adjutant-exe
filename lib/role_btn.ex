@@ -7,7 +7,7 @@ defmodule BnBBot.RoleBtn do
 
   @roles :elixir_bot |> Application.compile_env!(:roles)
 
-  def generate_role_btns() do
+  def generate_role_btns do
     @roles
     |> Enum.chunk_every(5)
     |> Enum.map(fn row ->
@@ -41,16 +41,16 @@ defmodule BnBBot.RoleBtn do
     id = Nostrum.Snowflake.cast!(id)
 
     add_or_remove =
-      unless Enum.member?(inter.member.roles, id) do
-        {:ok} =
-          Api.add_guild_member_role(inter.guild_id, inter.member.user.id, id, "Button Click")
-
-        "added"
-      else
+      if Enum.member?(inter.member.roles, id) do
         {:ok} =
           Api.remove_guild_member_role(inter.guild_id, inter.member.user.id, id, "Button Click")
 
         "removed"
+      else
+        {:ok} =
+          Api.add_guild_member_role(inter.guild_id, inter.member.user.id, id, "Button Click")
+
+        "added"
       end
 
     {:ok} =

@@ -48,6 +48,7 @@ defmodule BnBBot.Library.Shared do
 
   @type kind :: :burst | :construct | :melee | :projectile | :wave | :recovery | :summon | :trap
 
+  # credo:disable-for-lines:15 Credo.Check.Refactor.CyclomaticComplexity
   @spec element_to_string(element) :: String.t()
   def element_to_string(element) do
     case element do
@@ -108,6 +109,7 @@ defmodule BnBBot.Library.Shared do
     ]
   end
 
+  # credo:disable-for-lines:10 Credo.Check.Refactor.CyclomaticComplexity
   @spec skill_to_sort_pos(skill()) :: pos_integer()
   def skill_to_sort_pos(skill) do
     case skill do

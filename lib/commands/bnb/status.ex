@@ -74,7 +74,7 @@ defmodule BnBBot.Commands.Statuses do
     :ignore
   end
 
-  def get_create_map() do
+  def get_create_map do
     choices =
       Enum.map(@status_names, fn name ->
         %{
@@ -99,6 +99,7 @@ defmodule BnBBot.Commands.Statuses do
     }
   end
 
+  # credo:disable-for-lines:30 Credo.Check.Refactor.CyclomaticComplexity
   defp status_to_str(name) do
     case name do
       "Angry" ->

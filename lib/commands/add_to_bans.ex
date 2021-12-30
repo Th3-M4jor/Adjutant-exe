@@ -120,29 +120,26 @@ defmodule BnBBot.Commands.AddToBans do
 
     query = from(u in __MODULE__, where: u.to_ban == ^to_add)
 
-    unless BnBBot.Repo.exists?(query) do
-      row = %__MODULE__{
-        to_ban: to_add,
-        added_by: author_id
+    resp =
+      if BnBBot.Repo.exists?(query) do
+        "That user is already on the list"
+      else
+        row = %__MODULE__{
+          to_ban: to_add,
+          added_by: author_id
+        }
+
+        BnBBot.Repo.insert!(row)
+
+        "Added <@#{to_add}> to the banlist"
+      end
+
+    Api.create_interaction_response(inter, %{
+      type: 4,
+      data: %{
+        content: resp,
+        flags: 64
       }
-
-      BnBBot.Repo.insert!(row)
-
-      Api.create_interaction_response(inter, %{
-        type: 4,
-        data: %{
-          content: "Added <@#{to_add}> to the banlist",
-          flags: 64
-        }
-      })
-    else
-      Api.create_interaction_response(inter, %{
-        type: 4,
-        data: %{
-          content: "That user is already on the list",
-          flags: 64
-        }
-      })
-    end
+    })
   end
 end

@@ -94,7 +94,7 @@ defmodule BnBBot.Commands.Hidden do
       })
   end
 
-  def get_create_map() do
+  def get_create_map do
     %{
       type: 1,
       name: "hidden",

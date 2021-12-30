@@ -15,7 +15,7 @@ defmodule BnBBot.SlashCommands do
   Create all non-privileged slash commands globally
   """
   @spec create_all_slash_commands :: any()
-  def create_all_slash_commands() do
+  def create_all_slash_commands do
     body = [
       Commands.Ping.get_create_map(),
       Commands.Dice.get_create_map(),

@@ -9,21 +9,25 @@ defmodule BnBBot.DmLogger do
 
   def log_dm(%Nostrum.Struct.Message{} = msg) do
     unless BnBBot.Util.is_owner_msg?(msg) do
-      link_regex =
-        ~r/(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/
-
-      if (msg.content =~ link_regex or not Enum.empty?(msg.attachments)) and
-           :rand.uniform(100) == 1 do
-        Task.start(fn ->
-          Nostrum.Api.create_message(msg.channel_id, "I ain't clicking that shit")
-        end)
-      end
+      handle_attachment(msg)
 
       embed = make_embed(msg)
 
       dm_channel_id = @dm_log_id |> Nostrum.Snowflake.cast!()
 
       Nostrum.Api.create_message(dm_channel_id, embeds: [embed])
+    end
+  end
+
+  defp handle_attachment(%Nostrum.Struct.Message{} = msg) do
+    link_regex =
+      ~r/(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/
+
+    if (msg.content =~ link_regex or not Enum.empty?(msg.attachments)) and
+         :rand.uniform(100) == 1 do
+      Task.start(fn ->
+        Nostrum.Api.create_message(msg.channel_id, "I ain't clicking that shit")
+      end)
     end
   end
 

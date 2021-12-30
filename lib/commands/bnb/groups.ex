@@ -25,7 +25,7 @@ defmodule BnBBot.Commands.Groups do
     end
   end
 
-  def get_create_map() do
+  def get_create_map do
     %{
       type: 1,
       name: "groups",
