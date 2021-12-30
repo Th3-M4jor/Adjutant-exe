@@ -143,7 +143,7 @@ defmodule BnBBot.ButtonAwait do
   timeout is after 30 seconds
   """
   @spec await_btn_click(pos_integer() | Nostrum.Snowflake.t(), Nostrum.Snowflake.t() | nil) ::
-          {%Nostrum.Struct.Interaction{}, any()} | %Nostrum.Struct.Interaction{} | nil | no_return()
+          {Nostrum.Struct.Interaction.t(), any()} | Nostrum.Struct.Interaction.t() | nil | no_return()
   def await_btn_click(uuid, user_id \\ nil) when uuid in 0..0xFF_FF_FF do
     Registry.register(:BUTTON_COLLECTOR, uuid, user_id)
     Logger.debug("Registering an await click on #{uuid} for #{user_id}")
