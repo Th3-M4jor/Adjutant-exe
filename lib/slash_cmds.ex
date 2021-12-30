@@ -1,5 +1,8 @@
 defmodule BnBBot.SlashCommands do
-  # alias Nostrum.Api
+  @moduledoc """
+  Module for creating and performing dispatch on slash commands
+  """
+
   alias BnBBot.Commands
   alias Nostrum.Api
 
@@ -8,6 +11,9 @@ defmodule BnBBot.SlashCommands do
   @owner_id :elixir_bot |> Application.compile_env!(:owner_id)
   @admins :elixir_bot |> Application.compile_env!(:admins)
 
+  @doc """
+  Create all non-privileged slash commands globally
+  """
   @spec create_all_slash_commands :: any()
   def create_all_slash_commands() do
     body = [
@@ -28,6 +34,9 @@ defmodule BnBBot.SlashCommands do
     Api.bulk_overwrite_global_application_commands(body)
   end
 
+  @doc """
+  Create all non-privileged slash commands in a single guild
+  """
   @spec create_all_slash_commands(Nostrum.Snowflake.t()) :: any()
   def create_all_slash_commands(guild_id) do
     body = [
@@ -48,6 +57,9 @@ defmodule BnBBot.SlashCommands do
     Api.bulk_overwrite_guild_application_commands(guild_id, body)
   end
 
+  @doc """
+  Create all privileged slash commands in a single guild
+  """
   def create_locked_commands(guild_id) do
     me_id = Nostrum.Cache.Me.get().id
 
@@ -85,6 +97,10 @@ defmodule BnBBot.SlashCommands do
     })
   end
 
+  @doc """
+  Create all privileged slash commands globally,
+  expects a list of guild ids to create their permissions in
+  """
   @spec create_locked_global_commands([Nostrum.Snowflake.t()]) :: any()
   def create_locked_global_commands(guild_ids) do
     me_id = Nostrum.Cache.Me.get().id
@@ -127,6 +143,9 @@ defmodule BnBBot.SlashCommands do
     end
   end
 
+  @doc """
+  Dispatch functionality on slash commands, including autocomplete, its up the callee to differentiate
+  """
   @spec handle_command(Nostrum.Struct.Interaction.t()) :: any
   def handle_command(%Nostrum.Struct.Interaction{} = inter) do
     handle_slash_command(inter.data.name, inter)

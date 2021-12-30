@@ -1,4 +1,8 @@
 defmodule BnBBot.Commands.Die do
+  @moduledoc """
+  This module contains the text command for shutting down the bot.
+  """
+
   require Logger
 
   def call(%Nostrum.Struct.Message{} = msg, _args) do

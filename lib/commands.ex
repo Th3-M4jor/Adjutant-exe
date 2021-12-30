@@ -1,4 +1,11 @@
 defmodule BnBBot.Commands do
+  @moduledoc """
+  This module handles dispatch on the remaining text based commands.
+  All are owner/admin only, and are not available to the public.
+
+  Warns if the prefix is used by a non-admin.
+  """
+
   alias BnBBot.Commands
   alias Nostrum.Api
 

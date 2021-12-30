@@ -1,4 +1,8 @@
 defmodule BnBBot.Webhook.Update do
+  @moduledoc """
+  Functions that can be called by external nodes
+  """
+
   alias Nostrum.Api
 
   require Logger

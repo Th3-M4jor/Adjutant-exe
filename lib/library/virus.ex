@@ -1,4 +1,8 @@
 defmodule BnBBot.Library.Virus do
+  @moduledoc """
+  Defines the Virus struct, and functionality on it,
+  as well as methods for fetching viruses from GenServer that holds them.
+  """
   require Logger
 
   @enforce_keys [
@@ -306,6 +310,10 @@ defimpl String.Chars, for: BnBBot.Library.Virus do
 end
 
 defmodule BnBBot.Library.VirusTable do
+  @moduledoc """
+  VirusTable stores all the viruses currently in the game.
+  """
+
   require Logger
 
   use GenServer
@@ -318,15 +326,8 @@ defmodule BnBBot.Library.VirusTable do
 
   @impl true
   def init(_) do
+    #make loading data by async
     {:ok, %{}, {:continue, :reload}}
-    # case load_viruses() do
-    #  {:ok, viruses} ->
-    #    {:ok, viruses}
-    #
-    #  {:error, reason} ->
-    #    Logger.warn("Failed to load Viruses: #{reason}")
-    #    {:ok, %{}}
-    # end
   end
 
   @impl true

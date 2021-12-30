@@ -1,4 +1,10 @@
 defmodule BnBBot.Commands.Groups do
+  @moduledoc """
+  This module contains commands for getting information about folder groups.
+
+  `group_force_closed/1` is called by a remote node when it force closes a group.
+  """
+
   alias Nostrum.Api
   alias Nostrum.Struct.Embed
   require Logger

@@ -1,4 +1,8 @@
 defmodule BnBBot.Commands.Blight do
+  @moduledoc """
+  Command for getting the effect of each blight element.
+  """
+
   alias Nostrum.Api
   require Logger
 

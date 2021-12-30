@@ -1,4 +1,8 @@
 defmodule BnBBot.Commands.Dice do
+  @moduledoc """
+  Die roll command
+  """
+
   alias Nostrum.Api
   alias Nostrum.Struct.ApplicationCommandInteractionDataOption, as: Option
   require Logger
@@ -14,8 +18,6 @@ defmodule BnBBot.Commands.Dice do
         _ ->
           "1d20"
       end
-
-    # (opts && List.first(opts) && List.first(opts).value) || "1d20"
 
     Logger.info(["Got a request to roll ", die_str])
 
@@ -47,17 +49,6 @@ defmodule BnBBot.Commands.Dice do
       end
 
     :ignore
-
-    # Task.await(resp_task)
-
-    # Api.execute_webhook(
-    #   inter.application_id,
-    #   inter.token,
-    #   %{
-    #     content: resp_str
-    #   },
-    #   true
-    # )
   end
 
   def get_create_map() do
@@ -100,12 +91,11 @@ defmodule BnBBot.Commands.Dice do
 
     count =
       case die_and_size do
-        [num, size] when size > 0 and num in 1..65535 ->
+        [num, size] when size > 0 and num in 1..0xFF_FF -> # 0xFFFF is the max value for a uint16
           Logger.debug("Rolling #{num}d#{size}")
           roll_die(num, size, count)
 
         [num] ->
-          # count ++ [num]
           [num | count]
 
         _ ->

@@ -1,4 +1,8 @@
 defmodule BnBBot.Commands.Panels do
+  @moduledoc """
+  Command for getting information about all panel types currently in the game.
+  """
+
   alias Nostrum.Api
   require Logger
 

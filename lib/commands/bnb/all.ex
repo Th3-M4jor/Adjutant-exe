@@ -1,4 +1,8 @@
 defmodule BnBBot.Commands.All do
+  @moduledoc """
+  Command for searching all BattleChips/Viruses/NPCs for a given name.
+  """
+
   alias Nostrum.Api
   require Logger
 

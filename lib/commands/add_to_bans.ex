@@ -1,4 +1,8 @@
 defmodule BnBBot.Commands.AddToBans do
+  @moduledoc """
+  One of the "hidden" commands. Used to add a member to the list of who would be banned.
+  """
+
   require Logger
   alias Nostrum.Api
   alias Nostrum.Struct.ApplicationCommandInteractionDataOption, as: Option

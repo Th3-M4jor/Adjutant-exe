@@ -1,4 +1,8 @@
 defmodule BnBBot.Commands.PHB do
+  @moduledoc """
+  Command for getting a link to the PHB, and the chip manager.
+  """
+
   require Logger
 
   alias Nostrum.Api

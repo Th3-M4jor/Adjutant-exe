@@ -1,4 +1,8 @@
 defmodule BnBBot.Commands.Reload do
+  @moduledoc """
+  Command for telling the bot to reload all chips/viruses/NCPs
+  """
+
   alias Nostrum.Api
   alias BnBBot.Library
   require Logger

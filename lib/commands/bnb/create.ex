@@ -1,4 +1,11 @@
 defmodule BnBBot.Commands.Create do
+
+  @moduledoc """
+  This module contains commands for creating new Viruses, Chips, and NCPs.
+
+  Currently incomplete, waiting on better slash command functionality from Discord.
+  """
+
   # alias Nostrum.Api
   require Logger
 

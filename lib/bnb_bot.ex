@@ -1,4 +1,8 @@
 defmodule BnBBot.Supervisor do
+  @moduledoc """
+  Main entry point for the bot.
+  """
+
   require Logger
   use Supervisor
   # use Logger
@@ -61,6 +65,10 @@ defmodule BnBBot.Supervisor do
 end
 
 defmodule BnBBot.Consumer do
+  @moduledoc """
+  This module is responsible for consuming events from the gateway.
+  """
+
   require Logger
   use Nostrum.Consumer
 

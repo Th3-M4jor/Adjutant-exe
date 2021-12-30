@@ -1,4 +1,8 @@
 defmodule BnBBot.Commands.ShutUp do
+  @moduledoc """
+  Text based command for telling the bot to stop DMing the owner.
+  """
+
   require Logger
 
   def call(%Nostrum.Struct.Message{} = msg, _args) do

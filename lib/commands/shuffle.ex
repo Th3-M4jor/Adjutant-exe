@@ -1,4 +1,8 @@
 defmodule BnBBot.Commands.Shuffle do
+  @moduledoc """
+  Command for suffling a range of numbers.
+  """
+
   alias Nostrum.Api
   require Logger
 

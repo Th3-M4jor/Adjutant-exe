@@ -1,4 +1,8 @@
 defmodule BnBBot.Library.Battlechip do
+  @moduledoc """
+  Defines the BattleChip struct, and functions for interacting with them.
+  Also defines methods for fetching them from the GenServer that holds them.
+  """
   require Logger
 
   @enforce_keys [
@@ -232,6 +236,9 @@ defimpl String.Chars, for: BnBBot.Library.Battlechip do
 end
 
 defmodule BnBBot.Library.BattlechipTable do
+  @moduledoc """
+  BattleChipTable stores all BattleChips currently in the game
+  """
   require Logger
   use GenServer
 
@@ -242,16 +249,8 @@ defmodule BnBBot.Library.BattlechipTable do
 
   @impl true
   def init(_) do
+    #make loading data be async
     {:ok, %{}, {:continue, :reload}}
-
-    # case load_chips() do
-    #  {:ok, chips} ->
-    #    {:ok, chips}
-    #
-    #  {:error, reason} ->
-    #    Logger.warn("Failed to load Chips: #{reason}")
-    #    {:ok, %{}}
-    # end
   end
 
   @impl true

@@ -1,4 +1,8 @@
 defmodule BnBBot.DmLogger do
+  @moduledoc """
+  Used to log DMs from anyone except for the owner.
+  """
+
   require Logger
 
   @dm_log_id :elixir_bot |> Application.compile_env!(:dm_log_id)

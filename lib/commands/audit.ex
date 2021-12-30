@@ -1,4 +1,8 @@
 defmodule BnBBot.Commands.Audit do
+  @moduledoc """
+  Text based command for getting debug/error log information.
+  """
+
   # alias Nostrum.Api
   require Logger
   import Ecto.Query

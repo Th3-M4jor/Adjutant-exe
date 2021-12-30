@@ -1,4 +1,8 @@
 defmodule BnBBot do
+  @moduledoc """
+  Defines the Bot's "Application" for auto-startup
+  """
+
   use Application
 
   def start(_type, _args) do

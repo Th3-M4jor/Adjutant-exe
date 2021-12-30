@@ -1,4 +1,8 @@
 defmodule BnBBot.Commands.Debug do
+  @moduledoc """
+  This module contains commands for turning on and off debug mode.
+  """
+
   alias Nostrum.Api
   require Logger
 

@@ -1,4 +1,7 @@
 defmodule BnBBot.RepoSupervisor do
+  @moduledoc """
+  Supervises the sqlite repo.
+  """
   use Supervisor
 
   def start_link(args) do
@@ -12,5 +15,8 @@ defmodule BnBBot.RepoSupervisor do
 end
 
 defmodule BnBBot.Repo do
+  @moduledoc """
+  The sqlite repo.
+  """
   use Ecto.Repo, otp_app: :elixir_bot, adapter: Ecto.Adapters.SQLite3
 end

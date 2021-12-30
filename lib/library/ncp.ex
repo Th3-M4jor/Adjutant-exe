@@ -1,4 +1,8 @@
 defmodule BnBBot.Library.NCP do
+  @moduledoc """
+  Defines the NaviCust parts struct and functionality on them.
+  Also defines methods for fetching them from the GenServer that holds them.
+  """
   require Logger
 
   @enforce_keys [:id, :name, :cost, :color, :description]
@@ -217,6 +221,10 @@ defimpl String.Chars, for: BnBBot.Library.NCP do
 end
 
 defmodule BnBBot.Library.NCPTable do
+  @moduledoc """
+  NCPTable stores all the NCPs currently in the game.
+  """
+
   require Logger
   use GenServer
   alias BnBBot.Library.NCP
@@ -228,15 +236,8 @@ defmodule BnBBot.Library.NCPTable do
 
   @impl true
   def init(_) do
+    #make loading data be async
     {:ok, %{}, {:continue, :reload}}
-    # state = load_ncps()
-    # case load_ncps() do
-    #  {:ok, ncps} ->
-    #    {:ok, ncps}
-    #  {:error, reason} ->
-    #    Logger.warn("Failed to load NCPS: #{reason}")
-    #    {:ok, %{}}
-    # end
   end
 
   @impl true

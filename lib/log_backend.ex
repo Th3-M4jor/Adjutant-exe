@@ -1,4 +1,8 @@
 defmodule BnBBot.LogLine do
+  @moduledoc """
+  Defines the ecto schema for each log line.
+  """
+
   use Ecto.Schema
 
   @type t :: %__MODULE__{
@@ -19,6 +23,10 @@ defmodule BnBBot.LogLine do
 end
 
 defmodule BnBBot.LogBackend do
+  @moduledoc """
+  Module to handle logging to a sqlite database.
+  """
+
   def init({__MODULE__, name}) do
     {:ok, configure(name, [])}
   end

@@ -1,4 +1,8 @@
 defmodule BnBBot.Commands.Statuses do
+  @moduledoc """
+  Command for getting all possible Navi/Virus status effects.
+  """
+
   alias Nostrum.Api
   require Logger
 

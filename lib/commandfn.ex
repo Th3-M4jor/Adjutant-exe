@@ -1,4 +1,8 @@
 defmodule BnBBot.CommandFn do
+  @moduledoc """
+  Defines the behaviour to be used by text based commands.
+  """
+
   @typedoc """
   Who can use the command?
   """
@@ -19,6 +23,7 @@ defmodule BnBBot.SlashCmdFn do
   @moduledoc """
   Describes what public functions each slash command module must define
   """
+
   @typedoc """
   The name of the command
   """

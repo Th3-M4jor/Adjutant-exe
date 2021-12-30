@@ -1,4 +1,7 @@
 defmodule BnBBot.RoleBtn do
+  @moduledoc """
+  This module is used to handle the role button clicks.
+  """
   require Logger
   alias Nostrum.Api
 

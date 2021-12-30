@@ -1,4 +1,19 @@
 defmodule BnBBot.Commands.Hidden do
+  @moduledoc """
+  Module that defines "hidden" commands.
+
+  `die` to shutdown the bot.
+
+  `debug` to toggle debug mode.
+
+  `shut_up` to toggle if the bot should DM the owner.
+
+  `add_to_bans` to add people to the list of who would be banned by...
+
+  `salt the earth` to ban everyone on the list of people to ban from the server.
+
+  `list_bans` to list the people who would be banned from the server.
+  """
   require Logger
 
   alias Nostrum.Api

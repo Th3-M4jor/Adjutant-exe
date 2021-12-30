@@ -1,15 +1,17 @@
 defmodule BnBBot.ButtonAwait do
+  @moduledoc """
+  Module for creating buttons that wait for a response from the user.
+  """
   alias Nostrum.Struct.Component.{ActionRow, Button}
 
   require Logger
   # alias Nostrum.Api
 
   @doc """
-  First string in the tuple is the Name on the button
-  Second string is the id of the button
-  integer is the style of the button
+  Creates a list of ActionRows on the input by calling `BnBBot.Library.LibObj.to_btn/2`
+  on each list item.
 
-  Raises if there are more than 25 buttons
+  Raises if there are more than 25 buttons or if the list is empty
   """
   @spec generate_msg_buttons([struct()], boolean()) :: [ActionRow.t()] | no_return()
   def generate_msg_buttons(buttons, disabled \\ false)
@@ -30,6 +32,14 @@ defmodule BnBBot.ButtonAwait do
     end)
   end
 
+  @doc """
+  Creates a list of ActionRows on the input by calling `BnBBot.Library.LibObj.to_btn/3`
+  on each list item.
+
+  Expects an integer uuid to associate with the buttons which must be within the range 0 and 16,777,215 (0xFF_FF_FF)
+
+  Raises if there are more than 25 buttons, if the list is empty, or if the uuid is out of range
+  """
   @spec generate_msg_buttons_with_uuid([struct()], boolean(), pos_integer()) ::
           [ActionRow.t()] | no_return()
   def generate_msg_buttons_with_uuid(buttons, disabled \\ false, uuid)
@@ -42,7 +52,7 @@ defmodule BnBBot.ButtonAwait do
     raise "Too many buttons"
   end
 
-  def generate_msg_buttons_with_uuid(content, disabled, uuid) do
+  def generate_msg_buttons_with_uuid(content, disabled, uuid) when uuid in 0..0xFF_FF_FF do
     # uuid = System.unique_integer([:positive]) |> rem(1000)
     row_chunks = Enum.chunk_every(content, 5)
 

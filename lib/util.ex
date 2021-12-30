@@ -1,4 +1,8 @@
 defmodule BnBBot.Util do
+  @moduledoc """
+  Various internal utility functions
+  """
+
   alias Nostrum.Api
   import Nostrum.Snowflake, only: [is_snowflake: 1]
   require Logger
@@ -6,6 +10,10 @@ defmodule BnBBot.Util do
   @owner_id :elixir_bot |> Application.compile_env!(:owner_id)
   @admins :elixir_bot |> Application.compile_env!(:admins)
 
+  @doc """
+  React to a message with a given unicode emoji, if a boolean is given instead
+  then it will react with thumbs up or down
+  """
   @spec react(Nostrum.Struct.Message.t(), boolean | String.t()) :: any()
   def react(msg, emote \\ "\u{1F44D}")
 
@@ -24,6 +32,9 @@ defmodule BnBBot.Util do
     Api.create_reaction(channel_id, msg_id, emote)
   end
 
+  @doc """
+  Check if a message is from the owner or an admin
+  """
   @spec get_user_perms(Nostrum.Struct.Message.t() | Nostrum.Struct.Interaction.t()) ::
           :admin | :everyone | :owner
   def get_user_perms(msg) do
@@ -34,6 +45,9 @@ defmodule BnBBot.Util do
     end
   end
 
+  @doc """
+  Check if a message or interaction is from the owner
+  """
   @spec is_owner_msg?(Nostrum.Struct.Message.t() | Nostrum.Struct.Interaction.t()) :: boolean
   def is_owner_msg?(%Nostrum.Struct.Message{} = msg) do
     {:ok, owner_id} = Nostrum.Snowflake.cast(@owner_id)
@@ -55,6 +69,9 @@ defmodule BnBBot.Util do
     owner_id == inter_author_id
   end
 
+  @doc """
+  Check if a message or interaction is from an admin
+  """
   @spec is_admin_msg?(Nostrum.Struct.Message.t() | Nostrum.Struct.Interaction.t()) :: boolean
   def is_admin_msg?(%Nostrum.Struct.Message{} = msg) do
     Enum.any?(@admins, fn id -> id == msg.author.id end)
@@ -72,6 +89,9 @@ defmodule BnBBot.Util do
     Enum.any?(@admins, fn id -> id == inter_author_id end)
   end
 
+  @doc """
+  Send a DM to the owner, second argument is for if this should override a do not DM setting
+  """
   @spec dm_owner(keyword() | map() | String.t(), boolean()) ::
           {:ok, Nostrum.Struct.Message.t()} | :error | nil
   def dm_owner(to_say, override \\ false) do

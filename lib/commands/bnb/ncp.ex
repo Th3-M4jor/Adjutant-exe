@@ -1,4 +1,16 @@
 defmodule BnBBot.Commands.NCP do
+  @moduledoc """
+  Contains all NCP related commands.
+
+  Currently, there are:
+
+  `search` - Searches for a NCP.
+
+  `color` - Lists all NCPs of a given color
+
+  `starter` - Lists all NCPs that a particular element can select at the start.
+  """
+
   require Logger
 
   alias Nostrum.Api

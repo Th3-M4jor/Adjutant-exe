@@ -1,4 +1,10 @@
 defmodule BnBBot.Commands.Ping do
+  @moduledoc """
+  Ping command.
+
+  Gets bot latency, as well as uptime and RAM and CPU usage.
+  """
+
   alias Nostrum.Api
   alias Nostrum.Struct.Embed
   require Logger

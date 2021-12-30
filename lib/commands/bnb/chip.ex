@@ -1,4 +1,14 @@
 defmodule BnBBot.Commands.Chip do
+  @moduledoc """
+  Contains all BattleChip related commands.
+
+  Currently there are:
+
+  `search` - Searches for a BattleChip
+
+  `dropped-by` - Lists all viruses which drop that particular chip
+  """
+
   alias Nostrum.Api
   require Logger
 

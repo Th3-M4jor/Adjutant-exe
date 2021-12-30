@@ -1,4 +1,16 @@
 defmodule BnBBot.Commands.Virus do
+  @moduledoc """
+  Contains all virus related commands.
+
+  Currently there are:
+
+  `search` - Searches for a virus.
+
+  `cr` - Get a list of all viruses in a given CR.
+
+  `encounter` - Build a random virus encounter.
+  """
+
   alias Nostrum.Api
   alias BnBBot.Library.Virus
   require Logger
