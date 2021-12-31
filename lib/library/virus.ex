@@ -98,7 +98,7 @@ defmodule BnBBot.Library.Virus do
     GenServer.call(:virus_table, {:cr, cr})
   end
 
-  @spec validate_virus_drops() :: {:ok} | {:error, String.t()}
+  @spec validate_virus_drops() :: {:ok} | {:error, iodata()}
   def validate_virus_drops do
     GenServer.call(:virus_table, :validate_drops, :infinity)
   end
@@ -464,30 +464,44 @@ defmodule BnBBot.Library.VirusTable do
   end
 
   @spec handle_call(:validate_drops, GenServer.from(), map()) ::
-          {:reply, {:ok} | {:error, String.t()}, map()}
+          {:reply, {:ok} | {:error, iodata()}, map()}
   def handle_call(:validate_drops, _from, state) do
     viruses = Map.values(state)
 
     res =
-      Enum.find_value(viruses, fn virus ->
-        drop =
-          Map.to_list(virus.drops)
-          |> Enum.find(fn {_, drop} ->
-            not String.contains?(drop, "Zenny") and not Battlechip.exists?(drop)
-          end)
-
-        unless is_nil(drop) do
-          {pos, drop} = drop
-          "#{virus.name} drops #{drop} at #{pos}, however it doesn't exist"
-        end
-      end)
+      for virus <- viruses,
+          {pos, drop} <- virus.drops,
+          not String.contains?(drop, "Zenny") and not Battlechip.exists?(drop) do
+        "#{virus.name} : #{drop} at #{pos}\n"
+      end
 
     to_ret =
-      if is_nil(res) do
+      if IO.iodata_length(res) == 0 do
         {:ok}
       else
         {:error, res}
       end
+
+    # res =
+    #   Enum.find_value(viruses, fn virus ->
+    #     drop =
+    #       Map.to_list(virus.drops)
+    #       |> Enum.find(fn {_, drop} ->
+    #         not String.contains?(drop, "Zenny") and not Battlechip.exists?(drop)
+    #       end)
+
+    #     unless is_nil(drop) do
+    #       {pos, drop} = drop
+    #       "#{virus.name} drops #{drop} at #{pos}, however it doesn't exist"
+    #     end
+    #   end)
+
+    # to_ret =
+    #   if is_nil(res) do
+    #     {:ok}
+    #   else
+    #     {:error, res}
+    #   end
 
     {:reply, to_ret, state}
   end

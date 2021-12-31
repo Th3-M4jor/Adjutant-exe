@@ -16,11 +16,14 @@ defmodule BnBBot.Commands.Reload do
     perms_level = BnBBot.Util.get_user_perms(msg)
 
     if perms_level == :owner or perms_level == :admin do
-      Task.start(fn -> Api.start_typing(msg.channel_id) end)
+      #Task.start(fn -> Api.start_typing(msg.channel_id) end)
 
-      reload_msg = do_reload()
+      Task.start(Api, :start_typing, [msg.channel_id])
+
+      {reload_msg, validation_msg} = do_reload()
 
       Api.create_message!(msg.channel_id, reload_msg)
+      Api.create_message!(msg.channel_id, validation_msg)
     end
   end
 
@@ -40,15 +43,25 @@ defmodule BnBBot.Commands.Reload do
         })
       end)
 
-      res = do_reload()
+      {lib_str, validation_msg} = do_reload()
 
       route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
       :ok =
         Api.request(:patch, route, %{
-          content: res
+          content: lib_str
         })
         |> elem(0)
+
+      route = "/webhooks/#{inter.application_id}/#{inter.token}"
+
+      :ok =
+        Api.request(:post, route, %{
+          content: IO.iodata_to_binary(validation_msg),
+          flags: 64
+        })
+        |> elem(0)
+
     else
       {:ok} =
         Api.create_interaction_response(inter, %{
@@ -72,6 +85,7 @@ defmodule BnBBot.Commands.Reload do
     }
   end
 
+  @spec do_reload() :: {libstr :: String.t, chip_validation :: iodata()}
   defp do_reload do
     ncp_task =
       Task.async(fn ->
@@ -96,9 +110,9 @@ defmodule BnBBot.Commands.Reload do
     validation_msg =
       case Library.Virus.validate_virus_drops() do
         {:ok} -> "All virus drops exist"
-        {:error, msg} -> msg
+        {:error, msg} -> ["missing chips:\n", msg]
       end
 
-    "#{chip_len} Battlechips loaded\n#{virus_len} Viruses loaded\n#{ncp_len} NCPs loaded\n#{validation_msg}"
+    {"#{chip_len} Battlechips loaded\n#{virus_len} Viruses loaded\n#{ncp_len} NCPs loaded", validation_msg}
   end
 end
