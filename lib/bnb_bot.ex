@@ -96,13 +96,11 @@ defmodule BnBBot.Consumer do
       Task.start(fn -> BnBBot.DmLogger.log_dm(msg) end)
     end
 
-    try do
-      BnBBot.Commands.cmd_check(msg)
-    rescue
-      e ->
-        Logger.error(Exception.format(:error, e, __STACKTRACE__))
-        Api.create_message(msg.channel_id, "An error has occurred, inform Major")
-    end
+    BnBBot.Commands.cmd_check(msg)
+  rescue
+    e ->
+      Logger.error(Exception.format(:error, e, __STACKTRACE__))
+      Api.create_message(msg.channel_id, "An error has occurred, inform Major")
   end
 
   def handle_event(
@@ -165,7 +163,7 @@ defmodule BnBBot.Consumer do
     ])
 
     case inter.data.custom_id do
-      #format is 6 hex digits, underscore, kind, underscore, name
+      # format is 6 hex digits, underscore, kind, underscore, name
       <<id::binary-size(6), "_", kind::utf8, "_", name::binary>> when kind in [?c, ?n, ?v] ->
         id = String.to_integer(id, 16)
         BnBBot.ButtonAwait.resp_to_btn(inter, id, {kind, name})
@@ -188,35 +186,30 @@ defmodule BnBBot.Consumer do
   # slash commands and context menu
   def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{type: 2} = inter, _ws_state}) do
     Logger.debug(["Got an interaction command\n", inspect(inter, pretty: true)])
+    BnBBot.SlashCommands.handle_command(inter)
+  rescue
+    e ->
+      Logger.error(Exception.format(:error, e, __STACKTRACE__))
 
-    try do
-      BnBBot.SlashCommands.handle_command(inter)
-    rescue
-      e ->
-        Logger.error(Exception.format(:error, e, __STACKTRACE__))
-
-        Api.create_message!(
-          inter.channel_id,
-          "An error has occurred, inform Major"
-        )
-    end
+      Api.create_message!(
+        inter.channel_id,
+        "An error has occurred, inform Major"
+      )
   end
 
   # autocomplete, gonna leave it up to the individual commands to handle both types if they have both
   def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{type: 4} = inter, _ws_state}) do
     Logger.debug(["Got an interaction autocomplete req\n", inspect(inter, pretty: true)])
 
-    try do
-      BnBBot.SlashCommands.handle_command(inter)
-    rescue
-      e ->
-        Logger.error(Exception.format(:error, e, __STACKTRACE__))
+    BnBBot.SlashCommands.handle_command(inter)
+  rescue
+    e ->
+      Logger.error(Exception.format(:error, e, __STACKTRACE__))
 
-        Api.create_message!(
-          inter.channel_id,
-          "An error has occurred, inform Major"
-        )
-    end
+      Api.create_message!(
+        inter.channel_id,
+        "An error has occurred, inform Major"
+      )
   end
 
   # Default event handler, if you don't include this, your consumer WILL crash if
