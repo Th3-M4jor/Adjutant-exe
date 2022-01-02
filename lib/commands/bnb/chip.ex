@@ -27,6 +27,12 @@ defmodule BnBBot.Commands.Chip do
         [opt] = sub_cmd.options
         name = opt.value
         locate_drops(inter, name)
+
+      "cr" ->
+        [opt] = sub_cmd.options
+        cr = opt.value
+        cr_list = BnBBot.Library.Battlechip.get_cr(cr)
+        send_cr_list(inter, cr, cr_list)
     end
 
     :ignore
@@ -71,6 +77,21 @@ defmodule BnBBot.Commands.Chip do
               description: "The name of the chip",
               required: true,
               autocomplete: true
+            }
+          ]
+        },
+        %{
+          type: 1,
+          name: "cr",
+          description: "List all chips in a certain CR",
+          options: [
+            %{
+              type: 4,
+              name: "cr",
+              description: "The CR to search for",
+              required: true,
+              min_value: 1,
+              max_value: 20
             }
           ]
         }
@@ -214,6 +235,52 @@ defmodule BnBBot.Commands.Chip do
         components: []
       })
     end
+  end
+
+  defp send_cr_list(inter, cr, []) do
+    {:ok} =
+      Api.create_interaction_response(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: "There are no chips in CR #{cr} at present",
+            flags: 64
+          }
+        }
+      )
+  end
+
+  defp send_cr_list(inter, cr, cr_list) do
+    cr_list = Enum.sort_by(cr_list, fn chip ->
+      chip.id
+    end)
+
+    buttons = BnBBot.ButtonAwait.generate_persistent_buttons(cr_list)
+
+    {:ok} =
+      Api.create_interaction_response(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: "These chips are in CR #{cr}:",
+            components: buttons
+          }
+        }
+      )
+
+    route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
+
+    # five minutes
+    Process.sleep(300_000)
+
+    buttons = BnBBot.ButtonAwait.generate_persistent_buttons(cr_list, true)
+
+    Api.request(:patch, route, %{
+      content: "These chips are in CR #{cr}:",
+      components: buttons
+    })
   end
 
   defp handle_chip_not_found(%Nostrum.Struct.Interaction{} = inter, []) do

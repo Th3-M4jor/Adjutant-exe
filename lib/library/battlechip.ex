@@ -8,6 +8,7 @@ defmodule BnBBot.Library.Battlechip do
   @enforce_keys [
     :id,
     :name,
+    :cr,
     :elem,
     :skill,
     :range,
@@ -25,6 +26,7 @@ defmodule BnBBot.Library.Battlechip do
   defstruct [
     :id,
     :name,
+    :cr,
     :elem,
     :skill,
     :range,
@@ -44,6 +46,7 @@ defmodule BnBBot.Library.Battlechip do
   @type t :: %BnBBot.Library.Battlechip{
           id: pos_integer(),
           name: String.t(),
+          cr: non_neg_integer(),
           elem: [BnBBot.Library.Shared.element()],
           skill: [BnBBot.Library.Shared.skill()],
           range: BnBBot.Library.Shared.range(),
@@ -99,6 +102,11 @@ defmodule BnBBot.Library.Battlechip do
   @spec exists?(String.t()) :: boolean()
   def exists?(name) do
     GenServer.call(:chip_table, {:exists, name})
+  end
+
+  @spec get_cr(non_neg_integer()) :: [BnBBot.Library.Battlechip.t()]
+  def get_cr(cr) do
+    GenServer.call(:chip_table, {:get_cr, cr})
   end
 
   @spec effect_to_io_list(BnBBot.Library.Battlechip.t()) :: iolist()
@@ -247,7 +255,6 @@ defimpl String.Chars, for: BnBBot.Library.Battlechip do
   defp targets_to_io_list(%BnBBot.Library.Battlechip{targets: targets}) do
     [targets, " targets | "]
   end
-
 end
 
 defmodule BnBBot.Library.BattlechipTable do
@@ -264,7 +271,7 @@ defmodule BnBBot.Library.BattlechipTable do
 
   @impl true
   def init(_) do
-    #make loading data be async
+    # make loading data be async
     {:ok, %{}, {:continue, :reload}}
   end
 
@@ -352,6 +359,17 @@ defmodule BnBBot.Library.BattlechipTable do
     {:reply, exists, state}
   end
 
+  @spec handle_call({:get_cr, non_neg_integer()}, GenServer.from(), map()) ::
+          {:reply, [BnBBot.Library.Battlechip.t()], map()}
+  def handle_call({:get_cr, cr}, _from, state) do
+    chips = Map.values(state)
+    |> Enum.filter(fn chip ->
+      chip.cr == cr
+    end)
+
+    {:reply, chips, state}
+  end
+
   defp load_chips do
     Logger.info("(Re)loading Chips")
 
@@ -384,6 +402,7 @@ defmodule BnBBot.Library.BattlechipTable do
         chip = %BnBBot.Library.Battlechip{
           id: chip[:id],
           name: chip[:name],
+          cr: chip[:cr],
           elem: elem,
           skill: skill,
           range: range,

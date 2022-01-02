@@ -482,27 +482,6 @@ defmodule BnBBot.Library.VirusTable do
         {:error, res}
       end
 
-    # res =
-    #   Enum.find_value(viruses, fn virus ->
-    #     drop =
-    #       Map.to_list(virus.drops)
-    #       |> Enum.find(fn {_, drop} ->
-    #         not String.contains?(drop, "Zenny") and not Battlechip.exists?(drop)
-    #       end)
-
-    #     unless is_nil(drop) do
-    #       {pos, drop} = drop
-    #       "#{virus.name} drops #{drop} at #{pos}, however it doesn't exist"
-    #     end
-    #   end)
-
-    # to_ret =
-    #   if is_nil(res) do
-    #     {:ok}
-    #   else
-    #     {:error, res}
-    #   end
-
     {:reply, to_ret, state}
   end
 

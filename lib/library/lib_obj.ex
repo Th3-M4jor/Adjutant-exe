@@ -130,7 +130,7 @@ defmodule BnBBot.Library.Shared do
     do: gen_suggestions(Map.to_list(map), name, min_dist)
 
   def gen_suggestions(list, name, min_dist) when is_list(list) do
-    lower_name = String.downcase(name)
+    lower_name = String.downcase(name, :ascii)
 
     list
     |> Stream.map(fn {key, value} -> {String.jaro_distance(key, lower_name), value} end)
@@ -144,7 +144,7 @@ defmodule BnBBot.Library.Shared do
     do: gen_autocomplete(Map.to_list(map), to_search, min_dist)
 
   def gen_autocomplete(list, to_search, min_dist) when is_list(list) do
-    lower_name = String.downcase(to_search)
+    lower_name = String.downcase(to_search, :ascii)
 
     list
     |> Stream.map(fn {key, value} -> {String.jaro_distance(key, lower_name), value.name} end)
@@ -156,7 +156,7 @@ defmodule BnBBot.Library.Shared do
   @spec return_autocomplete(GenServer.from(), [{String.t(), String.t()}], String.t(), float()) ::
           :ok
   def return_autocomplete(from, list, to_search, min_dist) do
-    to_search = String.downcase(to_search)
+    to_search = String.downcase(to_search, :ascii)
 
     res =
       list

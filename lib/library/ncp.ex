@@ -209,7 +209,7 @@ defimpl String.Chars, for: BnBBot.Library.NCP do
       "```\n",
       ncp.name,
       " - (",
-      Kernel.to_string(ncp.cost),
+      Integer.to_string(ncp.cost),
       " EB) - ",
       BnBBot.Library.NCP.ncp_color_to_string(ncp),
       "\n",
