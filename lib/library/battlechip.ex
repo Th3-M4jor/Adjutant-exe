@@ -212,6 +212,12 @@ defimpl String.Chars, for: BnBBot.Library.Battlechip do
         [" | ", String.capitalize(Kernel.to_string(chip.class), :ascii)]
       end
 
+    cr = if chip.cr > 0 and chip.class == :standard do
+      [" | CR ", Integer.to_string(chip.cr)]
+    else
+      []
+    end
+
     io_list = [
       "```\n",
       chip.name,
@@ -224,6 +230,7 @@ defimpl String.Chars, for: BnBBot.Library.Battlechip do
       targets,
       kind,
       class,
+      cr,
       "\n\n",
       chip.description,
       "\n```"
