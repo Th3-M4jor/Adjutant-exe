@@ -208,6 +208,10 @@ defmodule BnBBot.SlashCommands do
     Commands.Hidden.call_slash(inter)
   end
 
+  defp handle_slash_command("create", inter) do
+    Commands.Create.call_slash(inter)
+  end
+
   defp handle_slash_command(name, inter) do
     Logger.warn("slash command #{name} doesn't exist")
 

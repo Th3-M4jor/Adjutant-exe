@@ -166,6 +166,35 @@ defmodule BnBBot.Commands.Hidden do
     debug(inter, [])
   end
 
+  defp debug(inter, [%Nostrum.Struct.ApplicationCommandInteractionDataOption{value: "dump"}]) do
+    if BnBBot.Util.is_owner_msg?(inter) do
+      Logger.debug("Dumping the current state of the bot")
+
+      #BnBBot.Commands.Audit.dump_log()
+
+      {lines1, lines2} = BnBBot.Commands.Audit.get_formatted(20) |> Enum.split(10)
+      lines1 = lines1 |> Enum.intersperse("\n\n")
+      lines2 = lines2 |> Enum.intersperse("\n\n")
+
+      Api.create_interaction_response(inter, %{
+        type: 4,
+        data: %{
+          content: "log_dump.txt written",
+          files: [%{name: "log_dump1.txt", body: lines1}, %{name: "log_dump2.txt", body: lines2}],
+          flags: 64
+        }
+      })
+    else
+      Api.create_interaction_response(inter, %{
+        type: 4,
+        data: %{
+          content: "You don't have permission to do that",
+          flags: 64
+        }
+      })
+    end
+  end
+
   defp debug(inter, [%Nostrum.Struct.ApplicationCommandInteractionDataOption{value: "off"}]) do
     if BnBBot.Util.is_owner_msg?(inter) do
       Logger.configure(level: :warning)

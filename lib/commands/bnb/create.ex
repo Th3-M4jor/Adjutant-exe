@@ -1,20 +1,34 @@
 defmodule BnBBot.Commands.Create do
-
   @moduledoc """
   This module contains commands for creating new Viruses, Chips, and NCPs.
 
-  Currently incomplete, waiting on better slash command functionality from Discord.
+  Currently incomplete, waiting on modal functionality from Discord.
   """
 
-  # alias Nostrum.Api
+  alias Nostrum.Api
   require Logger
 
   @behaviour BnBBot.SlashCmdFn
 
   # TODO
 
-  def call_slash(%Nostrum.Struct.Interaction{} = _inter) do
-    raise UndefinedFunctionError
+  @colors [
+    "White",
+    "Pink",
+    "Yellow",
+    "Green",
+    "Blue",
+    "Red",
+    "Gray"
+  ]
+
+  def call_slash(%Nostrum.Struct.Interaction{} = inter) do
+    [sub_cmd] = inter.data.options
+
+    case sub_cmd.name do
+      "ncp" ->
+        create_ncp(inter, sub_cmd.options)
+    end
   end
 
   def get_create_map do
@@ -23,24 +37,113 @@ defmodule BnBBot.Commands.Create do
       name: "create",
       description: "Create a new library object",
       options: [
-        virus_create_map()
+        ncp_create_map()
       ]
     }
   end
 
-  defp virus_create_map do
+  defp ncp_create_map do
+    color_choices =
+      Enum.map(@colors, fn name ->
+        %{
+          name: name,
+          value: String.downcase(name, :ascii)
+        }
+      end)
+
     %{
       type: 1,
-      name: "virus",
-      description: "Build the JSON object for adding a virus.",
+      name: "ncp",
+      description: "Build the JSON object for adding an NCP.",
       options: [
         %{
           type: 3,
           name: "name",
-          description: "The name of the virus.",
+          description: "The name of the NCP.",
+          required: true
+        },
+        %{
+          type: 3,
+          name: "color",
+          description: "The color of the NCP.",
+          required: true,
+          choices: color_choices
+        },
+        %{
+          type: 4,
+          name: "cost",
+          description: "The number of EB the NCP costs.",
+          min_value: 1,
+          max_value: 50,
           required: true
         }
       ]
     }
+  end
+
+  defp create_ncp(%Nostrum.Struct.Interaction{} = inter, options) do
+    [
+      name,
+      color,
+      cost
+    ] = options
+
+    Logger.debug(
+      "Got an NCP create request, #{name.name}:#{name.value} #{color.name}:#{color.value} #{cost.name}:#{cost.value}"
+    )
+
+    uuid =
+      System.unique_integer([:positive])
+      # constrain to be between 0 and 0xFF_FF_FF
+      |> Bitwise.band(0xFF_FF_FF)
+
+    uuid_str =
+      Integer.to_string(uuid, 16)
+      |> String.pad_leading(6, "0")
+
+    {:ok} =
+      Api.create_interaction_response(
+        inter,
+        %{
+          type: 9,
+          data: %{
+            custom_id: uuid_str,
+            title: "Virus Description",
+            components: [
+              %{
+                type: 1,
+                components: [
+                  %{
+                    type: 4,
+                    style: 2,
+                    custom_id: "Description",
+                    label: "NCP Description",
+                    placehold: "Please enter a description for the NCP.",
+                    required: true,
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      )
+
+      modal_response = BnBBot.ButtonAwait.await_modal_input(uuid)
+
+      unless is_nil(modal_response) do
+        {:ok} =
+          Nostrum.Api.create_interaction_response(
+            modal_response,
+            %{
+              type: 4,
+              data: %{
+                content:
+                  "Success?",
+                # 64 is the flag for ephemeral messages
+                flags: 64
+              }
+            }
+          )
+      end
   end
 end

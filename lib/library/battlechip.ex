@@ -109,6 +109,12 @@ defmodule BnBBot.Library.Battlechip do
     GenServer.call(:chip_table, {:get_cr, cr})
   end
 
+  @spec get_skill_cr(BnBBot.Library.Shared.skill(), non_neg_integer()) ::
+          [BnBBot.Library.Battlechip.t()]
+  def get_skill_cr(skill, cr) do
+    GenServer.call(:chip_table, {:skill_cr, skill, cr})
+  end
+
   @spec effect_to_io_list(BnBBot.Library.Battlechip.t()) :: iolist()
   def effect_to_io_list(%{effect: nil, effduration: nil}) do
     []
@@ -212,11 +218,12 @@ defimpl String.Chars, for: BnBBot.Library.Battlechip do
         [" | ", String.capitalize(Kernel.to_string(chip.class), :ascii)]
       end
 
-    cr = if chip.cr > 0 and chip.class == :standard do
-      [" | CR ", Integer.to_string(chip.cr)]
-    else
-      []
-    end
+    cr =
+      if chip.cr > 0 and chip.class == :standard do
+        [" | CR ", Integer.to_string(chip.cr)]
+      else
+        []
+      end
 
     io_list = [
       "```\n",
@@ -369,10 +376,40 @@ defmodule BnBBot.Library.BattlechipTable do
   @spec handle_call({:get_cr, non_neg_integer()}, GenServer.from(), map()) ::
           {:reply, [BnBBot.Library.Battlechip.t()], map()}
   def handle_call({:get_cr, cr}, _from, state) do
-    chips = Map.values(state)
-    |> Enum.filter(fn chip ->
-      chip.cr == cr
-    end)
+    chips =
+      Map.values(state)
+      |> Enum.filter(fn chip ->
+        chip.cr == cr
+      end)
+
+    {:reply, chips, state}
+  end
+
+  @spec handle_call(
+          {:skill_cr, BnBBot.Library.Shared.skill() | nil, non_neg_integer()},
+          GenServer.from(),
+          map()
+        ) ::
+          {:reply, [BnBBot.Library.Battlechip.t()], map()}
+  def handle_call({:skill_cr, nil, cr}, _from, state) do
+    chips =
+      Map.values(state)
+      |> Enum.filter(fn chip ->
+        chip.cr == cr &&
+          is_nil(chip.skill)
+      end)
+
+    {:reply, chips, state}
+  end
+
+  def handle_call({:skill_cr, skill, cr}, _from, state) do
+    chips =
+      Map.values(state)
+      |> Enum.filter(fn chip ->
+        chip.cr == cr &&
+          chip.skill != nil &&
+          Enum.member?(chip.skill, skill)
+      end)
 
     {:reply, chips, state}
   end

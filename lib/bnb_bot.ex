@@ -73,6 +73,7 @@ defmodule BnBBot.Consumer do
   use Nostrum.Consumer
 
   alias Nostrum.Api
+  alias Nostrum.Struct.Guild.ScheduledEvent
 
   @primary_guild_id :elixir_bot |> Application.compile_env!(:primary_guild_id)
   @primary_guild_channel_id :elixir_bot |> Application.compile_env!(:primary_guild_channel_id)
@@ -162,6 +163,7 @@ defmodule BnBBot.Consumer do
       inspect(inter, pretty: true)
     ])
 
+    #TODO: consider using a different encoding format, like etf |> base64
     case inter.data.custom_id do
       # format is 6 hex digits, underscore, kind, underscore, name
       <<id::binary-size(6), "_", kind::utf8, "_", name::binary>> when kind in [?c, ?n, ?v] ->
@@ -181,6 +183,13 @@ defmodule BnBBot.Consumer do
       _ ->
         BnBBot.ButtonAwait.resp_to_btn(inter, inter.message.id)
     end
+  end
+
+  #modals
+  def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{type: 5} = inter, _ws_state}) do
+    Logger.debug(["Got a Modal submit\n", inspect(inter, pretty: true)])
+    id = String.to_integer(inter.data.custom_id, 16)
+    BnBBot.ButtonAwait.resp_to_btn(inter, id)
   end
 
   # slash commands and context menu
@@ -211,6 +220,27 @@ defmodule BnBBot.Consumer do
         "An error has occurred, inform Major"
       )
   end
+
+
+  # def handle_event({:GUILD_SCHEDULED_EVENT_CREATE, %ScheduledEvent{} = event, _ws_state}) do
+  #   Logger.debug(["Got a scheduled event\n", inspect(event, pretty: true)])
+  # end
+
+  # def handle_event({:GUILD_SCHEDULED_EVENT_UPDATE, %ScheduledEvent{} = event, _ws_state}) do
+  #   Logger.debug(["Got a scheduled event update\n", inspect(event, pretty: true)])
+  # end
+
+  # def handle_event({:GUILD_SCHEDULED_EVENT_DELETE, %ScheduledEvent{} = event, _ws_state}) do
+  #   Logger.debug(["Got a scheduled event delete\n", inspect(event, pretty: true)])
+  # end
+
+  # def handle_event({:GUILD_SCHEDULED_EVENT_USER_ADD, event, _ws_state}) do
+  #   Logger.debug(["Got a scheduled event subscribe\n", inspect(event, pretty: true)])
+  # end
+
+  # def handle_event({:GUILD_SCHEDULED_EVENT_USER_REMOVE, event, _ws_state}) do
+  #   Logger.debug(["Got a scheduled event unsubscribe\n", inspect(event, pretty: true)])
+  # end
 
   # Default event handler, if you don't include this, your consumer WILL crash if
   # you don't have a method definition for each event type.

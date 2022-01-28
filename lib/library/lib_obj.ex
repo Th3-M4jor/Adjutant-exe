@@ -67,6 +67,39 @@ defmodule BnBBot.Library.Shared do
     end
   end
 
+  @spec skill_to_atom(skill) :: skill() | nil | no_return()
+  def skill_to_atom(skill) do
+    skill = String.downcase(skill, :ascii)
+    case skill do
+      "per" -> :per
+      "inf" -> :inf
+      "tch" -> :tch
+      "str" -> :str
+      "agi" -> :agi
+      "end" -> :end
+      "chm" -> :chm
+      "vlr" -> :vlr
+      "aff" -> :aff
+      "none" -> nil
+    end
+  end
+
+  @spec skill_to_string(skill() | nil) :: String.t()
+  def skill_to_string(skill) do
+    case skill do
+      :per -> "Perception"
+      :inf -> "Info"
+      :tch -> "Tech"
+      :str -> "Strength"
+      :agi -> "Agility"
+      :end -> "Endurance"
+      :chm -> "Charm"
+      :vlr -> "Valor"
+      :aff -> "Affinity"
+      nil -> "None"
+    end
+  end
+
   @spec dice_to_io_list(nil | dice(), iodata()) :: iolist()
   def dice_to_io_list(dice, last \\ "")
 

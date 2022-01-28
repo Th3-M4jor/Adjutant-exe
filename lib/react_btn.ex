@@ -155,6 +155,16 @@ defmodule BnBBot.ButtonAwait do
     btn
   end
 
+  @spec await_modal_input(pos_integer()) :: Nostrum.Struct.Interaction.t() | nil | no_return()
+  def await_modal_input(uuid) when uuid in 0..0xFF_FF_FF do
+    Registry.register(:BUTTON_COLLECTOR, uuid, nil)
+    Logger.debug("Registering an await modal input on #{uuid}")
+    input = await_btn_click_inner(:timer.minutes(30))
+    Logger.debug("Got a response to #{uuid} of #{inspect(input, pretty: true)}")
+    Registry.unregister(:BUTTON_COLLECTOR, uuid)
+    input
+  end
+
   def resp_to_btn(%Nostrum.Struct.Interaction{} = inter, id, value \\ nil) do
     Logger.debug("Looking up uuid #{id}")
     case Registry.lookup(:BUTTON_COLLECTOR, id) do
@@ -210,13 +220,13 @@ defmodule BnBBot.ButtonAwait do
       )
   end
 
-  defp await_btn_click_inner do
+  # default timeout is 30 seconds
+  defp await_btn_click_inner(timeout \\ 30_000) do
     receive do
       value ->
         handle_btn_click(value)
     after
-      # after 30 seconds, timeout
-      30_000 ->
+      timeout ->
         nil
     end
   end

@@ -32,6 +32,14 @@ config/test.exs
 
 COOKIE
 .env
+
+# Ignore release config files.
+/rel/
+
+#ignore beam dissassemblies
+*.disasm
+
+# Ignore redirection of stdout and stderr to a file.
 nohup.out
 
 #database files

@@ -13,6 +13,7 @@ defmodule BnBBot.Commands.Chip do
   require Logger
 
   @behaviour BnBBot.SlashCmdFn
+  @skills ~w(PER INF TCH STR AGI END CHM VLR AFF None)
 
   def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
     [sub_cmd] = inter.data.options
@@ -33,6 +34,13 @@ defmodule BnBBot.Commands.Chip do
         cr = opt.value
         cr_list = BnBBot.Library.Battlechip.get_cr(cr)
         send_cr_list(inter, cr, cr_list)
+
+      "skill-cr" ->
+        [cr, skill] = sub_cmd.options
+        cr = cr.value
+        skill = skill.value |> BnBBot.Library.Shared.skill_to_atom()
+        chips = BnBBot.Library.Battlechip.get_skill_cr(skill, cr)
+        send_skill_cr_list(inter, skill, cr, chips)
     end
 
     :ignore
@@ -47,6 +55,14 @@ defmodule BnBBot.Commands.Chip do
   end
 
   def get_create_map do
+
+    skill_choices = Enum.map(@skills, fn skill ->
+      %{
+        name: skill,
+        value: String.downcase(skill, :ascii)
+      }
+    end)
+
     %{
       type: 1,
       name: "chip",
@@ -77,6 +93,28 @@ defmodule BnBBot.Commands.Chip do
               description: "The name of the chip",
               required: true,
               autocomplete: true
+            }
+          ]
+        },
+        %{
+          type: 1,
+          name: "skill-cr",
+          description: "List all chips with a particular CR and skill",
+          options: [
+            %{
+              type: 4,
+              name: "cr",
+              description: "The CR of the chip",
+              required: true,
+              min_value: 1,
+              max_value: 20
+            },
+            %{
+              type: 3,
+              name: "skill",
+              description: "The skill of the chip",
+              required: true,
+              choices: skill_choices
             }
           ]
         },
@@ -279,6 +317,67 @@ defmodule BnBBot.Commands.Chip do
 
     Api.request(:patch, route, %{
       content: "These chips are in CR #{cr}:",
+      components: buttons
+    })
+  end
+
+  defp send_skill_cr_list(inter, skill, cr, []) do
+
+    str = if is_nil(skill) do
+      "There are no chips in CR #{cr} that do not have a skill"
+    else
+      skill = BnBBot.Library.Shared.skill_to_string(skill)
+      "There are no chips in CR #{cr} that use #{skill}"
+    end
+
+    {:ok} =
+      Api.create_interaction_response(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: str,
+            flags: 64
+          }
+        }
+      )
+  end
+
+  defp send_skill_cr_list(inter, skill, cr, cr_list) do
+    cr_list = Enum.sort_by(cr_list, fn chip ->
+      chip.id
+    end)
+
+    buttons = BnBBot.ButtonAwait.generate_persistent_buttons(cr_list)
+
+    msg = if is_nil(skill) do
+      "These chips are in CR #{cr} that do not have a skill:"
+    else
+      skill = BnBBot.Library.Shared.skill_to_string(skill)
+      "These chips are in CR #{cr} that use #{skill}:"
+    end
+
+    {:ok} =
+      Api.create_interaction_response(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: msg,
+            components: buttons
+          }
+        }
+      )
+
+    route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
+
+    # five minutes
+    Process.sleep(300_000)
+
+    buttons = BnBBot.ButtonAwait.generate_persistent_buttons(cr_list, true)
+
+    Api.request(:patch, route, %{
+      content: msg,
       components: buttons
     })
   end

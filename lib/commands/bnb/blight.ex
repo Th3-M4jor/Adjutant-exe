@@ -22,17 +22,17 @@ defmodule BnBBot.Commands.Blight do
     "Object"
   ]
 
-  @fire "```\nFire:\nWhen attacking, if your attack uses Strength or Agility to hit you must make it with disadvantage.\n```"
-  @aqua "```\nAqua:\nYou may only make half your maximum Move Actions on your turn (minimum 1).\n```"
-  @elec "```\nElec:\nInstead of taking damage at the start of your turn, you will take the damage listed by the Blight effect every time you make a Move Action.\n```"
+  @fire "```\nFire:\nMake all your damage rolls twice and use the lower of the two results.\n```"
+  @aqua "```\nAqua:\nYour AC is decreased by one until the start of your next turn each time you come into contact with Ice or Sea terrain.\n```"
+  @elec "```\nElec:\nTake this Blight's damage when you make Move Actions or get pushed or pulled from one panel to another instead of at the start of your turn.\n```"
   @wood "```\nWood:\nDamage done by Blight restores HP to the target who dealt it.\n```"
-  @wind "```\nWind:\nWhen attacking, if your attack uses Perception or Agility to hit you must make it with disadvantage.\n```"
-  @sword "```\nSword:\nWhen you deal damage to a target in your Close range, that target takes damage equal to half the result of your damage roll instead of the full amount.\n```"
-  @break "```\nBreak:\nEvery time you make a Move Action, you must make an Endurance Check or you will be considered Staggered.\n```"
-  @cursor "```\nCursor:\nWhen you use a Battlechip, you must make a Tech check of a given DC or lose an Attack Action on top of the action used for the chip.\n```"
+  @wind "```\nWind:\nYour maximum number of Move Actions is cut in half. (minimum 1)\n```"
+  @sword "```\nSword:\nWhen you make attacks against targets in Close range, they may each make one free attack against you per round.\n```"
+  @break "```\nBreak:\nYou are unable to reduce damage dealt to you by Shields, Barriers, Auras, Holy terrain, or any other source.\n```"
+  @cursor "```\nCursor:\nYou may only make Near attacks at Close range. Far attacks have their range limited to Near.\n```"
   @recov "```\nRecov:\nYou are unable to heal from any source.\n```"
-  @invis "```\nInvis:\nWhen you deal damage to a target in your Near range or beyond, the target takes damage equal to half the result of your damage roll instead of the full amount.\n```"
-  @object "```\nObject:\nAt the start of each turn, make an Info Check of a given DC. Should you fail, the target that Blighted you steals one chip from your Folder if any are present there.\n```"
+  @invis "```\nInvis:\nYou are unable to inflict Statuses on any target or grant them to allies.\n```"
+  @object "```\nObject:\nYou make all attack rolls with disadvantage.\n```"
 
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     Logger.info("Recieved a blight command")

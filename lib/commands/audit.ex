@@ -46,25 +46,12 @@ defmodule BnBBot.Commands.Audit do
     # text =
     #  BnBBot.Repo.all(BnBBot.LogLine) |> Enum.map(&format_entry/1) |> Enum.intersperse("\n\n")
 
-    file_ptr = File.open!("log_dump.txt", [:write, :delayed_write, :utf8])
+    dump_log()
 
-    line_stream =
-      BnBBot.Repo.stream(BnBBot.LogLine)
-      |> Stream.map(&format_entry/1)
-      |> Stream.intersperse("\n\n")
-      |> Stream.each(fn x ->
-        IO.write(file_ptr, x)
-        x
-      end)
-
-    # streams must happen in a transaction
-    BnBBot.Repo.transaction(fn ->
-      Stream.run(line_stream)
-    end)
-
-    :ok = File.close(file_ptr)
-
-    Nostrum.Api.create_message(msg, "Dumped log to log_dump.txt")
+    Nostrum.Api.create_message(msg, %{
+      content: "Dumped log to log_dump.txt",
+      files: ["log_dump.txt"]
+      })
   end
 
   def call(%Nostrum.Struct.Message{} = msg, _) do
@@ -81,6 +68,31 @@ defmodule BnBBot.Commands.Audit do
   def get_entries(count \\ 10) do
     query = from(log in BnBBot.LogLine, order_by: [desc: log.id], limit: ^count)
     BnBBot.Repo.all(query) |> Enum.reverse()
+  end
+
+  def get_formatted(count \\ 10) do
+    query = from(log in BnBBot.LogLine, order_by: [desc: log.id], limit: ^count)
+    BnBBot.Repo.all(query) |> Enum.reverse() |> Enum.map(&format_entry/1)
+  end
+
+  def dump_log do
+    file_ptr = File.open!("log_dump.txt", [:write, :delayed_write, :utf8])
+
+      line_stream =
+        BnBBot.Repo.stream(BnBBot.LogLine)
+        |> Stream.map(&format_entry/1)
+        |> Stream.intersperse("\n\n")
+        |> Stream.each(fn x ->
+          IO.write(file_ptr, x)
+          x
+        end)
+
+      # streams must happen in a transaction
+      BnBBot.Repo.transaction(fn ->
+        Stream.run(line_stream)
+      end)
+
+      :ok = File.close(file_ptr)
   end
 
   defp format_entry(%BnBBot.LogLine{} = line) do
