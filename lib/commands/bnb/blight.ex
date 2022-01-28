@@ -22,7 +22,7 @@ defmodule BnBBot.Commands.Blight do
     "Object"
   ]
 
-  @fire "```\nFire:\nMake all your damage rolls twice and use the lower of the two results.\n```"
+  @fire "```\nFire:\nWhen you make damage rolls, the rolled result and maximum result of each die is reduced by 1.\n```"
   @aqua "```\nAqua:\nYour AC is decreased by one until the start of your next turn each time you come into contact with Ice or Sea terrain.\n```"
   @elec "```\nElec:\nTake this Blight's damage when you make Move Actions or get pushed or pulled from one panel to another instead of at the start of your turn.\n```"
   @wood "```\nWood:\nDamage done by Blight restores HP to the target who dealt it.\n```"
