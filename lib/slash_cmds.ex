@@ -151,68 +151,31 @@ defmodule BnBBot.SlashCommands do
     handle_slash_command(inter.data.name, inter)
   end
 
-  @spec handle_slash_command(String.t(), Nostrum.Struct.Interaction.t()) :: :ignore
-  defp handle_slash_command("ping", inter) do
-    Commands.Ping.call_slash(inter)
+  @commands [
+    {Commands.Ping, "ping"},
+    {Commands.Dice, "dice"},
+    {Commands.Shuffle, "shuffle"},
+    {Commands.PHB, "links"},
+    {Commands.NCP, "ncp"},
+    {Commands.Chip, "chip"},
+    {Commands.Virus, "virus"},
+    {Commands.All, "search"},
+    {Commands.Statuses, "status"},
+    {Commands.Blight, "blight"},
+    {Commands.Panels, "panel"},
+    {Commands.Reload, "reload"},
+    {Commands.Groups, "groups"},
+    {Commands.Hidden, "hidden"},
+    {Commands.Create, "create"}
+  ]
+
+  for {cmd, name} <- @commands do
+    defp handle_slash_command(unquote(name), %Nostrum.Struct.Interaction{} = inter) do
+      unquote(cmd).call_slash(inter)
+    end
   end
 
-  defp handle_slash_command("roll", inter) do
-    Commands.Dice.call_slash(inter)
-  end
-
-  defp handle_slash_command("shuffle", inter) do
-    Commands.Shuffle.call_slash(inter)
-  end
-
-  defp handle_slash_command("links", inter) do
-    Commands.PHB.call_slash(inter)
-  end
-
-  defp handle_slash_command("ncp", inter) do
-    Commands.NCP.call_slash(inter)
-  end
-
-  defp handle_slash_command("chip", inter) do
-    Commands.Chip.call_slash(inter)
-  end
-
-  defp handle_slash_command("virus", inter) do
-    Commands.Virus.call_slash(inter)
-  end
-
-  defp handle_slash_command("search", inter) do
-    Commands.All.call_slash(inter)
-  end
-
-  defp handle_slash_command("status", inter) do
-    Commands.Statuses.call_slash(inter)
-  end
-
-  defp handle_slash_command("blight", inter) do
-    Commands.Blight.call_slash(inter)
-  end
-
-  defp handle_slash_command("panel", inter) do
-    Commands.Panels.call_slash(inter)
-  end
-
-  defp handle_slash_command("reload", inter) do
-    Commands.Reload.call_slash(inter)
-  end
-
-  defp handle_slash_command("groups", inter) do
-    Commands.Groups.call_slash(inter)
-  end
-
-  defp handle_slash_command("hidden", inter) do
-    Commands.Hidden.call_slash(inter)
-  end
-
-  defp handle_slash_command("create", inter) do
-    Commands.Create.call_slash(inter)
-  end
-
-  defp handle_slash_command(name, inter) do
+  defp handle_slash_command(name,  %Nostrum.Struct.Interaction{} = inter) do
     Logger.warn("slash command #{name} doesn't exist")
 
     {:ok} =
