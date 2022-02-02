@@ -152,30 +152,33 @@ defmodule BnBBot.SlashCommands do
   end
 
   @commands [
-    {Commands.Ping, "ping"},
-    {Commands.Dice, "dice"},
-    {Commands.Shuffle, "shuffle"},
-    {Commands.PHB, "links"},
-    {Commands.NCP, "ncp"},
-    {Commands.Chip, "chip"},
-    {Commands.Virus, "virus"},
-    {Commands.All, "search"},
-    {Commands.Statuses, "status"},
-    {Commands.Blight, "blight"},
-    {Commands.Panels, "panel"},
-    {Commands.Reload, "reload"},
-    {Commands.Groups, "groups"},
-    {Commands.Hidden, "hidden"},
-    {Commands.Create, "create"}
+    Commands.Dice,
+    Commands.Ping,
+    Commands.Shuffle,
+    Commands.PHB,
+    Commands.NCP,
+    Commands.Chip,
+    Commands.Virus,
+    Commands.All,
+    Commands.Statuses,
+    Commands.Blight,
+    Commands.Panels,
+    Commands.Reload,
+    Commands.Groups,
+    Commands.Hidden,
+    Commands.Create
   ]
 
-  for {cmd, name} <- @commands do
+  for cmd <- @commands, Code.ensure_compiled!(cmd) do
+    name = cmd.get_create_map()[:name]
+    true = function_exported?(cmd, :call_slash, 1)
+
     defp handle_slash_command(unquote(name), %Nostrum.Struct.Interaction{} = inter) do
       unquote(cmd).call_slash(inter)
     end
   end
 
-  defp handle_slash_command(name,  %Nostrum.Struct.Interaction{} = inter) do
+  defp handle_slash_command(name, %Nostrum.Struct.Interaction{} = inter) do
     Logger.warn("slash command #{name} doesn't exist")
 
     {:ok} =
