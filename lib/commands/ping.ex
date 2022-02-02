@@ -89,6 +89,7 @@ defmodule BnBBot.Commands.Ping do
         content: "",
         embeds: [ping_embed]
       })
+
     :ignore
   end
 

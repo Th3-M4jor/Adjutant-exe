@@ -163,7 +163,7 @@ defmodule BnBBot.Consumer do
       inspect(inter, pretty: true)
     ])
 
-    #TODO: consider using a different encoding format, like etf |> base64
+    # TODO: consider using a different encoding format, like etf |> base64
     case inter.data.custom_id do
       # format is 6 hex digits, underscore, kind, underscore, name
       <<id::binary-size(6), "_", kind::utf8, "_", name::binary>> when kind in [?c, ?n, ?v] ->
@@ -185,7 +185,7 @@ defmodule BnBBot.Consumer do
     end
   end
 
-  #modals
+  # modals
   def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{type: 5} = inter, _ws_state}) do
     Logger.debug(["Got a Modal submit\n", inspect(inter, pretty: true)])
     id = String.to_integer(inter.data.custom_id, 16)
@@ -220,7 +220,6 @@ defmodule BnBBot.Consumer do
         "An error has occurred, inform Major"
       )
   end
-
 
   # def handle_event({:GUILD_SCHEDULED_EVENT_CREATE, %ScheduledEvent{} = event, _ws_state}) do
   #   Logger.debug(["Got a scheduled event\n", inspect(event, pretty: true)])

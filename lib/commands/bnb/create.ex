@@ -119,7 +119,7 @@ defmodule BnBBot.Commands.Create do
                     custom_id: "Description",
                     label: "NCP Description",
                     placehold: "Please enter a description for the NCP.",
-                    required: true,
+                    required: true
                   }
                 ]
               }
@@ -128,22 +128,21 @@ defmodule BnBBot.Commands.Create do
         }
       )
 
-      modal_response = BnBBot.ButtonAwait.await_modal_input(uuid)
+    modal_response = BnBBot.ButtonAwait.await_modal_input(uuid)
 
-      unless is_nil(modal_response) do
-        {:ok} =
-          Nostrum.Api.create_interaction_response(
-            modal_response,
-            %{
-              type: 4,
-              data: %{
-                content:
-                  "Success?",
-                # 64 is the flag for ephemeral messages
-                flags: 64
-              }
+    unless is_nil(modal_response) do
+      {:ok} =
+        Nostrum.Api.create_interaction_response(
+          modal_response,
+          %{
+            type: 4,
+            data: %{
+              content: "Success?",
+              # 64 is the flag for ephemeral messages
+              flags: 64
             }
-          )
-      end
+          }
+        )
+    end
   end
 end

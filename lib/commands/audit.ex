@@ -51,7 +51,7 @@ defmodule BnBBot.Commands.Audit do
     Nostrum.Api.create_message(msg, %{
       content: "Dumped log to log_dump.txt",
       files: ["log_dump.txt"]
-      })
+    })
   end
 
   def call(%Nostrum.Struct.Message{} = msg, _) do
@@ -78,21 +78,21 @@ defmodule BnBBot.Commands.Audit do
   def dump_log do
     file_ptr = File.open!("log_dump.txt", [:write, :delayed_write, :utf8])
 
-      line_stream =
-        BnBBot.Repo.stream(BnBBot.LogLine)
-        |> Stream.map(&format_entry/1)
-        |> Stream.intersperse("\n\n")
-        |> Stream.each(fn x ->
-          IO.write(file_ptr, x)
-          x
-        end)
-
-      # streams must happen in a transaction
-      BnBBot.Repo.transaction(fn ->
-        Stream.run(line_stream)
+    line_stream =
+      BnBBot.Repo.stream(BnBBot.LogLine)
+      |> Stream.map(&format_entry/1)
+      |> Stream.intersperse("\n\n")
+      |> Stream.each(fn x ->
+        IO.write(file_ptr, x)
+        x
       end)
 
-      :ok = File.close(file_ptr)
+    # streams must happen in a transaction
+    BnBBot.Repo.transaction(fn ->
+      Stream.run(line_stream)
+    end)
+
+    :ok = File.close(file_ptr)
   end
 
   defp format_entry(%BnBBot.LogLine{} = line) do

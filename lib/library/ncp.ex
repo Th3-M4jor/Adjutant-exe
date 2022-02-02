@@ -237,7 +237,7 @@ defmodule BnBBot.Library.NCPTable do
 
   @impl true
   def init(_) do
-    #make loading data be async
+    # make loading data be async
     {:ok, %{}, {:continue, :reload}}
   end
 

@@ -91,7 +91,8 @@ defmodule BnBBot.Commands.Dice do
 
     count =
       case die_and_size do
-        [num, size] when size > 0 and num in 1..0xFF_FF -> # 0xFFFF is the max value for a uint16
+        # 0xFFFF is the max value for a uint16
+        [num, size] when size > 0 and num in 1..0xFF_FF ->
           Logger.debug("Rolling #{num}d#{size}")
           roll_die(num, size, count)
 

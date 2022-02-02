@@ -170,7 +170,7 @@ defmodule BnBBot.Commands.Hidden do
     if BnBBot.Util.is_owner_msg?(inter) do
       Logger.debug("Dumping the current state of the bot")
 
-      #BnBBot.Commands.Audit.dump_log()
+      # BnBBot.Commands.Audit.dump_log()
 
       {lines1, lines2} = BnBBot.Commands.Audit.get_formatted(20) |> Enum.split(10)
       lines1 = lines1 |> Enum.intersperse("\n\n")

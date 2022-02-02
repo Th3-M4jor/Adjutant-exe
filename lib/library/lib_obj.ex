@@ -70,6 +70,7 @@ defmodule BnBBot.Library.Shared do
   @spec skill_to_atom(skill) :: skill() | nil | no_return()
   def skill_to_atom(skill) do
     skill = String.downcase(skill, :ascii)
+
     case skill do
       "per" -> :per
       "inf" -> :inf

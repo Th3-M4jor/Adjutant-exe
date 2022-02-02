@@ -16,7 +16,7 @@ defmodule BnBBot.Commands.Reload do
     perms_level = BnBBot.Util.get_user_perms(msg)
 
     if perms_level == :owner or perms_level == :admin do
-      #Task.start(fn -> Api.start_typing(msg.channel_id) end)
+      # Task.start(fn -> Api.start_typing(msg.channel_id) end)
 
       Task.start(Api, :start_typing, [msg.channel_id])
 
@@ -61,7 +61,6 @@ defmodule BnBBot.Commands.Reload do
           flags: 64
         })
         |> elem(0)
-
     else
       {:ok} =
         Api.create_interaction_response(inter, %{
@@ -85,7 +84,7 @@ defmodule BnBBot.Commands.Reload do
     }
   end
 
-  @spec do_reload() :: {libstr :: String.t, chip_validation :: iodata()}
+  @spec do_reload() :: {libstr :: String.t(), chip_validation :: iodata()}
   defp do_reload do
     ncp_task =
       Task.async(fn ->
@@ -113,6 +112,7 @@ defmodule BnBBot.Commands.Reload do
         {:error, msg} -> ["missing chips:\n", msg]
       end
 
-    {"#{chip_len} Battlechips loaded\n#{virus_len} Viruses loaded\n#{ncp_len} NCPs loaded", validation_msg}
+    {"#{chip_len} Battlechips loaded\n#{virus_len} Viruses loaded\n#{ncp_len} NCPs loaded",
+     validation_msg}
   end
 end

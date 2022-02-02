@@ -260,10 +260,10 @@ defmodule BnBBot.Commands.Virus do
 
   @spec send_encounter(Nostrum.Struct.Interaction.t(), [Virus.t()]) :: :ignore
   defp send_encounter(inter, viruses) do
-
-    names = Enum.map_join(viruses, ", ", fn virus ->
-      virus.name
-    end)
+    names =
+      Enum.map_join(viruses, ", ", fn virus ->
+        virus.name
+      end)
 
     buttons =
       Enum.sort_by(viruses, fn virus -> virus.name end)

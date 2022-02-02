@@ -55,13 +55,13 @@ defmodule BnBBot.Commands.Chip do
   end
 
   def get_create_map do
-
-    skill_choices = Enum.map(@skills, fn skill ->
-      %{
-        name: skill,
-        value: String.downcase(skill, :ascii)
-      }
-    end)
+    skill_choices =
+      Enum.map(@skills, fn skill ->
+        %{
+          name: skill,
+          value: String.downcase(skill, :ascii)
+        }
+      end)
 
     %{
       type: 1,
@@ -290,9 +290,10 @@ defmodule BnBBot.Commands.Chip do
   end
 
   defp send_cr_list(inter, cr, cr_list) do
-    cr_list = Enum.sort_by(cr_list, fn chip ->
-      chip.id
-    end)
+    cr_list =
+      Enum.sort_by(cr_list, fn chip ->
+        chip.id
+      end)
 
     buttons = BnBBot.ButtonAwait.generate_persistent_buttons(cr_list)
 
@@ -322,13 +323,13 @@ defmodule BnBBot.Commands.Chip do
   end
 
   defp send_skill_cr_list(inter, skill, cr, []) do
-
-    str = if is_nil(skill) do
-      "There are no chips in CR #{cr} that do not have a skill"
-    else
-      skill = BnBBot.Library.Shared.skill_to_string(skill)
-      "There are no chips in CR #{cr} that use #{skill}"
-    end
+    str =
+      if is_nil(skill) do
+        "There are no chips in CR #{cr} that do not have a skill"
+      else
+        skill = BnBBot.Library.Shared.skill_to_string(skill)
+        "There are no chips in CR #{cr} that use #{skill}"
+      end
 
     {:ok} =
       Api.create_interaction_response(
@@ -344,18 +345,20 @@ defmodule BnBBot.Commands.Chip do
   end
 
   defp send_skill_cr_list(inter, skill, cr, cr_list) do
-    cr_list = Enum.sort_by(cr_list, fn chip ->
-      chip.id
-    end)
+    cr_list =
+      Enum.sort_by(cr_list, fn chip ->
+        chip.id
+      end)
 
     buttons = BnBBot.ButtonAwait.generate_persistent_buttons(cr_list)
 
-    msg = if is_nil(skill) do
-      "These chips are in CR #{cr} that do not have a skill:"
-    else
-      skill = BnBBot.Library.Shared.skill_to_string(skill)
-      "These chips are in CR #{cr} that use #{skill}:"
-    end
+    msg =
+      if is_nil(skill) do
+        "These chips are in CR #{cr} that do not have a skill:"
+      else
+        skill = BnBBot.Library.Shared.skill_to_string(skill)
+        "These chips are in CR #{cr} that use #{skill}:"
+      end
 
     {:ok} =
       Api.create_interaction_response(
