@@ -46,30 +46,28 @@ defmodule BnBBot.Commands.NCP do
   def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
     [sub_cmd] = inter.data.options
 
-    case sub_cmd.name do
-      "search" ->
-        [opt] = sub_cmd.options
-        name = opt.value
+    case {sub_cmd.name, sub_cmd.options} do
+      {"search", [%{value: name}]} ->
+        # [opt] = sub_cmd.options
+        # name = opt.value
         search_ncp(inter, name)
 
-      "color" ->
-        [opt] = sub_cmd.options
-        name = opt.value
-        color = String.to_existing_atom(name)
+      {"color", [%{value: color}]} ->
+        color = String.to_existing_atom(color)
         ncps = NCP.get_ncps_by_color(color)
         send_ncp_color(inter, color, ncps)
 
-      "starter" ->
-        elem =
-          case sub_cmd.options do
-            [opt] ->
-              opt.value |> String.to_existing_atom()
+      {"color", [%{value: color}, %{value: cost}]} when is_integer(cost) ->
+        color = String.to_existing_atom(color)
+        ncps = NCP.get_ncps_by_color(color) |> Enum.filter(fn ncp -> ncp.cost <= cost end)
+        send_ncp_color(inter, color, ncps, cost)
 
-            _ ->
-              :null
-          end
-
+      {"starter", [%{value: elem}]} ->
+        elem = String.to_existing_atom(elem)
         send_starter_ncps(inter, elem)
+
+      {"starter", _} ->
+        send_starter_ncps(inter, :null)
     end
 
     :ignore
@@ -149,6 +147,13 @@ defmodule BnBBot.Commands.NCP do
               description: "The color of the NCPs to search for",
               required: true,
               choices: color_choices
+            },
+            %{
+              type: 4,
+              name: "max_cost",
+              description: "The maximum cost of the NCPs to search for",
+              required: false,
+              min_value: 1
             }
           ]
         }
@@ -187,10 +192,19 @@ defmodule BnBBot.Commands.NCP do
       })
   end
 
-  defp send_ncp_color(inter, color, []) do
+  defp send_ncp_color(inter, color, ncps, cost \\ nil)
+
+  defp send_ncp_color(inter, color, [], cost) do
     Logger.debug(["No NCPs found for color: ", color])
 
     color_str = to_string(color) |> String.capitalize(:ascii)
+
+    content =
+      if is_nil(cost) do
+        "There are no #{color_str} NCPs"
+      else
+        "There are no #{color_str} NCPs with a cost no greater than #{cost} EB"
+      end
 
     {:ok} =
       Api.create_interaction_response(
@@ -198,17 +212,24 @@ defmodule BnBBot.Commands.NCP do
         %{
           type: 4,
           data: %{
-            content: "There are no #{color_str} NCPs",
+            content: content,
             flags: 64
           }
         }
       )
   end
 
-  defp send_ncp_color(inter, color, ncps) do
+  defp send_ncp_color(inter, color, ncps, cost) do
     buttons = BnBBot.ButtonAwait.generate_persistent_buttons(ncps)
 
     color_str = to_string(color) |> String.capitalize(:ascii)
+
+    content =
+      if is_nil(cost) do
+        "There are the #{color_str} NCPs"
+      else
+        "These are the #{color_str} NCPs with a cost no greater than #{cost} EB"
+      end
 
     {:ok} =
       Api.create_interaction_response(
@@ -216,7 +237,7 @@ defmodule BnBBot.Commands.NCP do
         %{
           type: 4,
           data: %{
-            content: "These are the #{color_str} NCPs:",
+            content: content,
             components: buttons
           }
         }
@@ -230,7 +251,7 @@ defmodule BnBBot.Commands.NCP do
     route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
     Api.request(:patch, route, %{
-      content: "These are the #{color_str} NCPs:",
+      content: content,
       components: buttons
     })
   end
