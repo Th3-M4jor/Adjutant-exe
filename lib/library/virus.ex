@@ -19,7 +19,8 @@ defmodule BnBBot.Library.Virus do
     :abilities,
     :damage,
     :dmgelem,
-    :blight
+    :blight,
+    :attack_kind
   ]
   @derive [Inspect]
   defstruct [
@@ -36,7 +37,8 @@ defmodule BnBBot.Library.Virus do
     :abilities,
     :damage,
     :dmgelem,
-    :blight
+    :blight,
+    :attack_kind
   ]
 
   @type t :: %BnBBot.Library.Virus{
@@ -53,7 +55,8 @@ defmodule BnBBot.Library.Virus do
           abilities: [String.t()] | nil,
           damage: BnBBot.Library.Shared.dice() | nil,
           dmgelem: [BnBBot.Library.Shared.element()] | nil,
-          blight: BnBBot.Library.Shared.blight() | nil
+          blight: BnBBot.Library.Shared.blight() | nil,
+          attack_kind: BnBBot.Library.Shared.kind() | nil
         }
 
   @spec load_viruses() :: {:ok} | {:error, String.t()}
@@ -523,6 +526,7 @@ defmodule BnBBot.Library.VirusTable do
         elem = virus[:element] |> string_list_to_atoms()
         dmg_elem = virus[:dmgelem] |> string_list_to_atoms()
         lower_name = virus[:name] |> String.downcase(:ascii)
+        kind = virus[:attack_kind] |> String.to_atom()
 
         drops =
           virus[:drops]
@@ -543,7 +547,8 @@ defmodule BnBBot.Library.VirusTable do
           abilities: virus[:abilities],
           damage: virus[:damage],
           dmgelem: dmg_elem,
-          blight: virus[:blight]
+          blight: virus[:blight],
+          attack_kind: kind
         }
 
         {lower_name, virus}
