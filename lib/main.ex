@@ -6,7 +6,11 @@ defmodule BnBBot do
   use Application
 
   def start(_type, _args) do
-    BnBBot.RepoSupervisor.start_link([])
-    BnBBot.Supervisor.start_link([])
+    children = [
+      BnBBot.Supervisor,
+      BnBBot.RepoSupervisor
+    ]
+
+    Supervisor.start_link(children, strategy: :one_for_one)
   end
 end

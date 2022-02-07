@@ -11,7 +11,7 @@ defmodule BnBBot.Supervisor do
     Supervisor.start_link(__MODULE__, args, name: __MODULE__)
 
     # Registry.start_link(keys: :unique, name: :REACTION_COLLECTOR)
-    Registry.start_link(keys: :unique, name: :BUTTON_COLLECTOR)
+    # Registry.start_link(keys: :unique, name: :BUTTON_COLLECTOR)
   end
 
   @impl true
@@ -30,6 +30,8 @@ defmodule BnBBot.Supervisor do
       end
 
     # Logger.debug(inspect(children))
+
+    button_collector = Registry.child_spec(keys: :unique, name: :BUTTON_COLLECTOR)
 
     ncp =
       Supervisor.child_spec(
@@ -52,9 +54,9 @@ defmodule BnBBot.Supervisor do
         restart: :transient
       )
 
-    children = [ncp | children]
-    children = [chips | children]
-    children = [viruses | children]
+    children = [ncp, chips, viruses, button_collector | children]
+    # children = [chips | children]
+    # children = [viruses | children]
     Logger.debug(inspect(children, pretty: true))
 
     res = Supervisor.init(children, strategy: :one_for_one)
