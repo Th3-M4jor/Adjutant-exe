@@ -29,6 +29,8 @@ defmodule BnBBot.Supervisor do
         )
       end
 
+    shutdown_registry = Registry.child_spec(keys: :unique, name: :SHUTDOWN_REGISTRY)
+
     # Logger.debug(inspect(children))
 
     button_collector = Registry.child_spec(keys: :unique, name: :BUTTON_COLLECTOR)
@@ -54,7 +56,7 @@ defmodule BnBBot.Supervisor do
         restart: :transient
       )
 
-    children = [ncp, chips, viruses, button_collector | children]
+    children = [ncp, chips, viruses, button_collector, shutdown_registry | children]
     # children = [chips | children]
     # children = [viruses | children]
     Logger.debug(inspect(children, pretty: true))

@@ -29,6 +29,7 @@ defmodule BnBBot.Commands.Create do
       "ncp" ->
         create_ncp(inter, sub_cmd.options)
     end
+    :ignore
   end
 
   def get_create_map do

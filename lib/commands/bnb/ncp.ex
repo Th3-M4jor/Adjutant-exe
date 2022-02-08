@@ -244,7 +244,7 @@ defmodule BnBBot.Commands.NCP do
       )
 
     # five minutes
-    Process.sleep(300_000)
+    BnBBot.Util.wait_or_shutdown(300_000)
 
     buttons = BnBBot.ButtonAwait.generate_persistent_buttons(ncps, true)
 
@@ -278,7 +278,7 @@ defmodule BnBBot.Commands.NCP do
       )
 
     # five minutes
-    Process.sleep(300_000)
+    BnBBot.Util.wait_or_shutdown(300_000)
 
     buttons = BnBBot.ButtonAwait.generate_persistent_buttons(starters, true)
 

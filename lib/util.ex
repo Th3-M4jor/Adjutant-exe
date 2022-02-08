@@ -130,4 +130,18 @@ defmodule BnBBot.Util do
         channel.id
     end
   end
+
+  def wait_or_shutdown(seconds) when is_integer(seconds) and seconds >= 0 do
+    Registry.register(:SHUTDOWN_REGISTRY, self(), nil)
+
+    receive do
+      :shutdown ->
+        nil
+    after
+      seconds ->
+        nil
+    end
+
+    Registry.unregister(:SHUTDOWN_REGISTRY, self())
+  end
 end

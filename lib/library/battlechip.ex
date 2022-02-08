@@ -109,7 +109,7 @@ defmodule BnBBot.Library.Battlechip do
     GenServer.call(:chip_table, {:get_cr, cr})
   end
 
-  @spec get_skill_cr(BnBBot.Library.Shared.skill(), non_neg_integer()) ::
+  @spec get_skill_cr(BnBBot.Library.Shared.skill() | nil, non_neg_integer()) ::
           [BnBBot.Library.Battlechip.t()]
   def get_skill_cr(skill, cr) do
     GenServer.call(:chip_table, {:skill_cr, skill, cr})

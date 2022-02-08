@@ -228,7 +228,7 @@ defmodule BnBBot.Commands.Chip do
       buttons = BnBBot.ButtonAwait.generate_persistent_buttons(drops, true)
 
       # five minutes
-      Process.sleep(300_000)
+      BnBBot.Util.wait_or_shutdown(300_000)
 
       Api.request(:patch, route, %{
         content: "The following viruses drop #{chip.name}:",
@@ -266,7 +266,7 @@ defmodule BnBBot.Commands.Chip do
         end)
 
       # five minutes
-      Process.sleep(300_000)
+      BnBBot.Util.wait_or_shutdown(300_000)
 
       Api.request(:patch, edit_route, %{
         content: "The following viruses drop #{chip.name}:\n#{names}",
@@ -312,7 +312,7 @@ defmodule BnBBot.Commands.Chip do
     route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
     # five minutes
-    Process.sleep(300_000)
+    BnBBot.Util.wait_or_shutdown(300_000)
 
     buttons = BnBBot.ButtonAwait.generate_persistent_buttons(cr_list, true)
 
@@ -375,7 +375,7 @@ defmodule BnBBot.Commands.Chip do
     route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
     # five minutes
-    Process.sleep(300_000)
+    BnBBot.Util.wait_or_shutdown(300_000)
 
     buttons = BnBBot.ButtonAwait.generate_persistent_buttons(cr_list, true)
 

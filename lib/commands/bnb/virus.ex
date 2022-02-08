@@ -178,7 +178,7 @@ defmodule BnBBot.Commands.Virus do
     route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
     # five minutes
-    Process.sleep(300_000)
+    BnBBot.Util.wait_or_shutdown(300_000)
 
     buttons = BnBBot.ButtonAwait.generate_persistent_buttons(cr_list, true)
 
@@ -283,7 +283,7 @@ defmodule BnBBot.Commands.Virus do
       )
 
     # five minutes
-    Process.sleep(300_000)
+    BnBBot.Util.wait_or_shutdown(300_000)
 
     route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
