@@ -2,12 +2,10 @@ defmodule BnBBot.Commands do
   @moduledoc """
   This module handles dispatch on the remaining text based commands.
   All are owner/admin only, and are not available to the public.
-
-  Warns if the prefix is used by a non-admin.
   """
 
   alias BnBBot.Commands
-  alias Nostrum.Api
+  #alias Nostrum.Api
 
   require Logger
 
@@ -28,13 +26,6 @@ defmodule BnBBot.Commands do
       {<<@prefix, rest::binary>>, :owner} ->
         [cmd_name | args] = String.split(rest)
         cmd_call(cmd_name, msg, args)
-
-      {<<@prefix, _rest::binary>>, :everyone} ->
-        Api.create_message(
-          msg.channel_id,
-          content: "I'm sorry, text based commands have been removed in favor of slash commands",
-          message_reference: %{message_id: msg.id}
-        )
 
       _ ->
         nil
