@@ -8,7 +8,7 @@ defmodule BnBBot.Commands.All do
 
   alias BnBBot.Library.{Battlechip, NCP, Virus}
 
-  @behaviour BnBBot.SlashCmdFn
+  use BnBBot.SlashCmdFn, permissions: :everyone
 
   def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
     [opt] = inter.data.options

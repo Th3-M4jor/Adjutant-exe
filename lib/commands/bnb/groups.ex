@@ -12,7 +12,7 @@ defmodule BnBBot.Commands.Groups do
   @backend_node_name :elixir_bot |> Application.compile_env!(:backend_node_name)
   @dm_log_id :elixir_bot |> Application.compile_env!(:dm_log_id)
 
-  @behaviour BnBBot.SlashCmdFn
+  use BnBBot.SlashCmdFn, permissions: :everyone
 
   @spec call_slash(Nostrum.Struct.Interaction.t()) :: :ignore
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do

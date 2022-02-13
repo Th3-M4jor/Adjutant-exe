@@ -7,7 +7,7 @@ defmodule BnBBot.Commands.Dice do
   alias Nostrum.Struct.ApplicationCommandInteractionDataOption, as: Option
   require Logger
 
-  @behaviour BnBBot.SlashCmdFn
+  use BnBBot.SlashCmdFn, permissions: :everyone
 
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     die_str =

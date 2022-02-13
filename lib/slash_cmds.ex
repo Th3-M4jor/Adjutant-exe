@@ -171,10 +171,11 @@ defmodule BnBBot.SlashCommands do
 
   for cmd <- @commands, Code.ensure_compiled!(cmd) do
     name = cmd.get_create_map()[:name]
+    true = function_exported?(cmd, :call, 1)
     true = function_exported?(cmd, :call_slash, 1)
 
     defp handle_slash_command(unquote(name), %Nostrum.Struct.Interaction{} = inter) do
-      unquote(cmd).call_slash(inter)
+      unquote(cmd).call(inter)
     end
   end
 

@@ -8,36 +8,19 @@ defmodule BnBBot.Commands.Reload do
 
   require Logger
 
-  @behaviour BnBBot.SlashCmdFn
-
-  def call(%Nostrum.Struct.Message{} = msg, _args) do
-    Logger.info("Recieved a reload command")
-
-    perms_level = BnBBot.Util.get_user_perms(msg)
-
-    if perms_level == :owner or perms_level == :admin do
-      # Task.start(fn -> Api.start_typing(msg.channel_id) end)
-
-      Task.start(Api, :start_typing, [msg.channel_id])
-
-      {reload_msg, validation_msg} = do_reload()
-
-      Api.create_message!(msg.channel_id, reload_msg)
-      Api.create_message!(msg.channel_id, validation_msg)
-    end
-  end
+  use BnBBot.SlashCmdFn, permissions: [:owner, :admin]
 
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     Logger.info("Recieved a reload slash command")
 
     perms_level = BnBBot.Util.get_user_perms(inter)
 
-    if perms_level == :owner or perms_level == :admin do
+    if perms_level in [:owner, :admin] do
       Task.start(fn ->
         Api.create_interaction_response(inter, %{
-          type: 4,
+          type: 5,
           data: %{
-            content: "Reloading...",
+            # Because apparently deferring the response needs the ephemeral flag for the followup to be ephemeral
             flags: 64
           }
         })
@@ -45,22 +28,48 @@ defmodule BnBBot.Commands.Reload do
 
       {lib_str, validation_msg} = do_reload()
 
-      route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
+      lib_str_len = byte_size(lib_str)
+      validation_msg_len = IO.iodata_length(validation_msg)
 
-      :ok =
-        Api.request(:patch, route, %{
-          content: lib_str
-        })
-        |> elem(0)
+      cond do
+        lib_str_len + validation_msg_len <= 2000 ->
+          # We can send the whole thing in one message
+          msg = [lib_str, "\n", validation_msg] |> IO.iodata_to_binary()
 
-      route = "/webhooks/#{inter.application_id}/#{inter.token}"
+          :ok =
+            Api.create_followup_message(inter.application_id, inter.token, %{
+              content: msg,
+              flags: 64
+            })
+            |> elem(0)
 
-      :ok =
-        Api.request(:post, route, %{
-          content: IO.iodata_to_binary(validation_msg),
-          flags: 64
-        })
-        |> elem(0)
+        validation_msg_len > 2000 ->
+          # The validation message is too long to send in one message, so just notify that it's too long
+          msg = lib_str <> "\nToo many viruses have drops that don't exist"
+
+          :ok =
+            Api.create_followup_message(inter.application_id, inter.token, %{
+              content: msg,
+              flags: 64
+            })
+            |> elem(0)
+
+        true ->
+          # Both messages are too long to send in one message, so send them in two messages
+          :ok =
+            Api.create_followup_message(inter.application_id, inter.token, %{
+              content: lib_str,
+              flags: 64
+            })
+            |> elem(0)
+
+          :ok =
+            Api.create_followup_message(inter.application_id, inter.token, %{
+              content: IO.iodata_to_binary(validation_msg),
+              flags: 64
+            })
+            |> elem(0)
+      end
     else
       {:ok} =
         Api.create_interaction_response(inter, %{

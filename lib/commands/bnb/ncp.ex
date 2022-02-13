@@ -16,7 +16,7 @@ defmodule BnBBot.Commands.NCP do
   alias BnBBot.Library.NCP
   alias Nostrum.Api
 
-  @behaviour BnBBot.SlashCmdFn
+  use BnBBot.SlashCmdFn, permissions: :everyone
 
   @elements [
     "Fire",

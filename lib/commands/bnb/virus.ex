@@ -15,7 +15,7 @@ defmodule BnBBot.Commands.Virus do
   alias Nostrum.Api
   require Logger
 
-  @behaviour BnBBot.SlashCmdFn
+  use BnBBot.SlashCmdFn, permissions: :everyone
 
   def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
     [sub_cmd] = inter.data.options

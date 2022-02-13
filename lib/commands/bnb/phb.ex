@@ -9,7 +9,7 @@ defmodule BnBBot.Commands.PHB do
 
   @phb_links :elixir_bot |> Application.compile_env!(:phb_links)
 
-  @behaviour BnBBot.SlashCmdFn
+  use BnBBot.SlashCmdFn, permissions: :everyone
 
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     Logger.info("Recieved a links command")

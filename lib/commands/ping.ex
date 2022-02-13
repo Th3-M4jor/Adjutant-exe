@@ -12,7 +12,7 @@ defmodule BnBBot.Commands.Ping do
   @backend_node_name :elixir_bot |> Application.compile_env!(:backend_node_name)
   @webhook_node_name :elixir_bot |> Application.compile_env!(:webhook_node_name)
 
-  @behaviour BnBBot.SlashCmdFn
+  use BnBBot.SlashCmdFn, permissions: :everyone
 
   @spec call_slash(Nostrum.Struct.Interaction.t()) :: :ignore
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do

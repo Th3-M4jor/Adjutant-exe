@@ -6,7 +6,7 @@ defmodule BnBBot.Commands.Shuffle do
   alias Nostrum.Api
   require Logger
 
-  @behaviour BnBBot.SlashCmdFn
+  use BnBBot.SlashCmdFn, permissions: :everyone
 
   @spec call_slash(Nostrum.Struct.Interaction.t()) :: :ignore
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do

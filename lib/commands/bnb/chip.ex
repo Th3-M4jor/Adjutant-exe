@@ -12,7 +12,7 @@ defmodule BnBBot.Commands.Chip do
   alias Nostrum.Api
   require Logger
 
-  @behaviour BnBBot.SlashCmdFn
+  use BnBBot.SlashCmdFn, permissions: :everyone
   @skills ~w(PER INF TCH STR AGI END CHM VLR AFF None)
 
   def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do

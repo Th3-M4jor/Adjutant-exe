@@ -19,7 +19,14 @@ defmodule BnBBot.Commands.Hidden do
   alias Nostrum.Api
   alias Nostrum.Struct.ApplicationCommandInteractionDataOption, as: Option
 
-  @behaviour BnBBot.SlashCmdFn
+  use BnBBot.SlashCmdFn, permissions: [:owner, :admin]
+
+  @doc """
+  Override the `call` method since this command works weirdly.
+  """
+  def call(inter) do
+    call_slash(inter)
+  end
 
   @ownercmds ["die", "debug", "shut_up", "add_to_bans", "salt_the_earth", "list_bans"]
   @admincmds ["die", "add_to_bans", "salt_the_earth", "list_bans"]

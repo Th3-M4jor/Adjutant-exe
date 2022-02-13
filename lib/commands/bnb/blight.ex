@@ -6,7 +6,7 @@ defmodule BnBBot.Commands.Blight do
   alias Nostrum.Api
   require Logger
 
-  @behaviour BnBBot.SlashCmdFn
+  use BnBBot.SlashCmdFn, permissions: :everyone
 
   @blight_elements [
     "Fire",

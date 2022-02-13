@@ -6,9 +6,10 @@ defmodule BnBBot.Commands.Create do
   """
 
   alias Nostrum.Api
+  alias Nostrum.Struct.Component.{ActionRow, TextInput}
   require Logger
 
-  @behaviour BnBBot.SlashCmdFn
+  use BnBBot.SlashCmdFn, permissions: [:owner, :admin]
 
   # TODO
 
@@ -29,6 +30,7 @@ defmodule BnBBot.Commands.Create do
       "ncp" ->
         create_ncp(inter, sub_cmd.options)
     end
+
     :ignore
   end
 
@@ -102,6 +104,22 @@ defmodule BnBBot.Commands.Create do
       Integer.to_string(uuid, 16)
       |> String.pad_leading(6, "0")
 
+    description_input =
+      TextInput.text_input("NCP Description", "Description",
+        style: 2,
+        min_length: 10,
+        placeholder: "Enter a description for the NCP",
+        required: true
+      )
+
+    Logger.debug(Kernel.inspect(description_input))
+
+    description_input =
+      description_input
+      |> ActionRow.action_row()
+
+    Logger.debug(Kernel.inspect(description_input))
+
     {:ok} =
       Api.create_interaction_response(
         inter,
@@ -109,22 +127,8 @@ defmodule BnBBot.Commands.Create do
           type: 9,
           data: %{
             custom_id: uuid_str,
-            title: "Virus Description",
-            components: [
-              %{
-                type: 1,
-                components: [
-                  %{
-                    type: 4,
-                    style: 2,
-                    custom_id: "Description",
-                    label: "NCP Description",
-                    placehold: "Please enter a description for the NCP.",
-                    required: true
-                  }
-                ]
-              }
-            ]
+            title: "NCP Description",
+            components: [description_input]
           }
         }
       )

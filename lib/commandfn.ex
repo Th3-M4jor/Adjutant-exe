@@ -22,7 +22,73 @@ end
 defmodule BnBBot.SlashCmdFn do
   @moduledoc """
   Describes what public functions each slash command module must define
+
+  All slash commands must implement the callbacks defined here, and may optionally `use`
+  this module to define a `call` function that will be called when the command is executed.
+
+  ```elixir
+  use BnBBot.SlashCmdFn, permissions: :everyone
+  ```
+
+  When `use`d, the macro expects a `:permissions` option, which defines who can use the command.
+  This option expects either a single `:everyone`, `:admin`, or `:owner` value or a list of such values.
   """
+
+  defmacro __using__(opts) do
+
+    # storing it like this is a bit of a hack, but it deduplicates code a little
+    else_option = quote do
+      Nostrum.Api.create_interaction_response(inter, %{
+        type: 4,
+        data: %{
+          content: "You don't have permission to do that",
+          flags: 64
+        }
+      })
+    end
+
+    case opts[:permissions] do
+      :everyone ->
+        quote do
+          @behaviour BnBBot.SlashCmdFn
+          def call(inter), do: call_slash(inter)
+
+          defoverridable call: 1
+        end
+
+      perms when is_list(perms) ->
+        quote do
+          @behaviour BnBBot.SlashCmdFn
+          def call(inter) do
+            user_perms = BnBBot.Util.get_user_perms(inter)
+
+            if user_perms in unquote(perms) do
+              call_slash(inter)
+            else
+              unquote(else_option)
+            end
+          end
+
+          defoverridable call: 1
+        end
+
+      perms when is_atom(perms) ->
+        quote do
+          @behaviour BnBBot.SlashCmdFn
+          def call(inter) do
+            user_perms = BnBBot.Util.get_user_perms(inter)
+
+            if user_perms == unquote(perms) do
+              call_slash(inter)
+            else
+              unquote(else_option)
+            end
+          end
+
+          defoverridable call: 1
+        end
+    end
+  end
 
   @typedoc """
   The name of the command

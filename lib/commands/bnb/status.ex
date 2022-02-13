@@ -6,7 +6,7 @@ defmodule BnBBot.Commands.Statuses do
   alias Nostrum.Api
   require Logger
 
-  @behaviour BnBBot.SlashCmdFn
+  use BnBBot.SlashCmdFn, permissions: :everyone
 
   @status_names [
     "Angry",
