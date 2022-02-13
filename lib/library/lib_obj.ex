@@ -204,7 +204,6 @@ defmodule BnBBot.Library.Shared do
 end
 
 defprotocol BnBBot.Library.LibObj do
-
   @doc """
   Return the type of the libobj.
   """

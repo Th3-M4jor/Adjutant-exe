@@ -9,7 +9,6 @@ defmodule BnBBot.Commands.Die do
     Logger.info("Recieved a die command")
 
     if BnBBot.Util.is_owner_msg?(msg) do
-
       # get all processes that are awaiting user input and tell them to stop
       pid_list = Registry.select(:SHUTDOWN_REGISTRY, [{{:_, :"$1", :_}, [], [:"$1"]}])
 

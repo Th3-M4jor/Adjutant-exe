@@ -234,6 +234,7 @@ defmodule BnBBot.ButtonAwait do
     receive do
       :shutdown ->
         nil
+
       value ->
         handle_btn_click(value)
     after
