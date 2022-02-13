@@ -15,6 +15,7 @@ defmodule BnBBot.Commands.Chip do
   use BnBBot.SlashCmdFn, permissions: :everyone
   @skills ~w(PER INF TCH STR AGI END CHM VLR AFF None)
 
+  @impl true
   def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
     [sub_cmd] = inter.data.options
 
@@ -54,6 +55,7 @@ defmodule BnBBot.Commands.Chip do
     search_chip(inter, name)
   end
 
+  @impl true
   def get_create_map do
     skill_choices =
       Enum.map(@skills, fn skill ->

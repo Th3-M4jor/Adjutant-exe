@@ -10,6 +10,7 @@ defmodule BnBBot.Commands.All do
 
   use BnBBot.SlashCmdFn, permissions: :everyone
 
+  @impl true
   def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
     [opt] = inter.data.options
     to_search = opt.value
@@ -19,6 +20,7 @@ defmodule BnBBot.Commands.All do
     :ignore
   end
 
+  @impl true
   def call_slash(%Nostrum.Struct.Interaction{type: 4} = inter) do
     [opt] = inter.data.options
     to_search = opt.value
@@ -60,6 +62,7 @@ defmodule BnBBot.Commands.All do
       })
   end
 
+  @impl true
   def get_create_map do
     %{
       type: 1,

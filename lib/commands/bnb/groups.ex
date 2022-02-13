@@ -14,6 +14,7 @@ defmodule BnBBot.Commands.Groups do
 
   use BnBBot.SlashCmdFn, permissions: :everyone
 
+  @impl true
   @spec call_slash(Nostrum.Struct.Interaction.t()) :: :ignore
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     Logger.info("Recieved a groups command")
@@ -25,6 +26,7 @@ defmodule BnBBot.Commands.Groups do
     end
   end
 
+  @impl true
   def get_create_map do
     %{
       type: 1,

@@ -11,6 +11,7 @@ defmodule BnBBot.Commands.PHB do
 
   use BnBBot.SlashCmdFn, permissions: :everyone
 
+  @impl true
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     Logger.info("Recieved a links command")
 
@@ -39,6 +40,7 @@ defmodule BnBBot.Commands.PHB do
     :ignore
   end
 
+  @impl true
   def get_create_map do
     %{
       type: 1,

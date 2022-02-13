@@ -169,6 +169,7 @@ defmodule BnBBot.SlashCommands do
     Commands.Create
   ]
 
+  # Generate the command handlers at compile time.
   for cmd <- @commands, Code.ensure_compiled!(cmd) do
     name = cmd.get_create_map()[:name]
     true = function_exported?(cmd, :call, 1)

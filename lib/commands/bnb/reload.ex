@@ -10,80 +10,69 @@ defmodule BnBBot.Commands.Reload do
 
   use BnBBot.SlashCmdFn, permissions: [:owner, :admin]
 
+  @impl true
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     Logger.info("Recieved a reload slash command")
 
-    perms_level = BnBBot.Util.get_user_perms(inter)
+    Task.start(fn ->
+      Api.create_interaction_response(inter, %{
+        type: 5,
+        data: %{
+          # Because apparently deferring the response needs the ephemeral flag for the followup to be ephemeral
+          flags: 64
+        }
+      })
+    end)
 
-    if perms_level in [:owner, :admin] do
-      Task.start(fn ->
-        Api.create_interaction_response(inter, %{
-          type: 5,
-          data: %{
-            # Because apparently deferring the response needs the ephemeral flag for the followup to be ephemeral
+    {lib_str, validation_msg} = do_reload()
+
+    lib_str_len = byte_size(lib_str)
+    validation_msg_len = IO.iodata_length(validation_msg)
+
+    cond do
+      lib_str_len + validation_msg_len <= 2000 ->
+        # We can send the whole thing in one message
+        msg = [lib_str, "\n", validation_msg] |> IO.iodata_to_binary()
+
+        :ok =
+          Api.create_followup_message(inter.application_id, inter.token, %{
+            content: msg,
             flags: 64
-          }
-        })
-      end)
+          })
+          |> elem(0)
 
-      {lib_str, validation_msg} = do_reload()
+      validation_msg_len > 2000 ->
+        # The validation message is too long to send in one message, so just notify that it's too long
+        msg = lib_str <> "\nToo many viruses have drops that don't exist"
 
-      lib_str_len = byte_size(lib_str)
-      validation_msg_len = IO.iodata_length(validation_msg)
-
-      cond do
-        lib_str_len + validation_msg_len <= 2000 ->
-          # We can send the whole thing in one message
-          msg = [lib_str, "\n", validation_msg] |> IO.iodata_to_binary()
-
-          :ok =
-            Api.create_followup_message(inter.application_id, inter.token, %{
-              content: msg,
-              flags: 64
-            })
-            |> elem(0)
-
-        validation_msg_len > 2000 ->
-          # The validation message is too long to send in one message, so just notify that it's too long
-          msg = lib_str <> "\nToo many viruses have drops that don't exist"
-
-          :ok =
-            Api.create_followup_message(inter.application_id, inter.token, %{
-              content: msg,
-              flags: 64
-            })
-            |> elem(0)
-
-        true ->
-          # Both messages are too long to send in one message, so send them in two messages
-          :ok =
-            Api.create_followup_message(inter.application_id, inter.token, %{
-              content: lib_str,
-              flags: 64
-            })
-            |> elem(0)
-
-          :ok =
-            Api.create_followup_message(inter.application_id, inter.token, %{
-              content: IO.iodata_to_binary(validation_msg),
-              flags: 64
-            })
-            |> elem(0)
-      end
-    else
-      {:ok} =
-        Api.create_interaction_response(inter, %{
-          type: 4,
-          data: %{
-            content: "You don't have permission to do that",
+        :ok =
+          Api.create_followup_message(inter.application_id, inter.token, %{
+            content: msg,
             flags: 64
-          }
-        })
+          })
+          |> elem(0)
+
+      true ->
+        # Both messages are too long to send in one message, so send them in two messages
+        :ok =
+          Api.create_followup_message(inter.application_id, inter.token, %{
+            content: lib_str,
+            flags: 64
+          })
+          |> elem(0)
+
+        :ok =
+          Api.create_followup_message(inter.application_id, inter.token, %{
+            content: IO.iodata_to_binary(validation_msg),
+            flags: 64
+          })
+          |> elem(0)
     end
 
     :ignore
   end
 
+  @impl true
   def get_create_map do
     %{
       type: 1,

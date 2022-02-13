@@ -43,6 +43,7 @@ defmodule BnBBot.Commands.NCP do
     "Gray"
   ]
 
+  @impl true
   def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
     [sub_cmd] = inter.data.options
 
@@ -86,6 +87,7 @@ defmodule BnBBot.Commands.NCP do
     :ignore
   end
 
+  @impl true
   def get_create_map do
     color_choices =
       Enum.map(@colors, fn name ->

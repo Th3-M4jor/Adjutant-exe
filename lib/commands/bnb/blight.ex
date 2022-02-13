@@ -34,6 +34,7 @@ defmodule BnBBot.Commands.Blight do
   @invis "```\nInvis:\nYou are unable to inflict Statuses on any target or grant them to allies.\n```"
   @object "```\nObject:\nYou make all attack rolls with disadvantage.\n```"
 
+  @impl true
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     Logger.info("Recieved a blight command")
 
@@ -61,6 +62,7 @@ defmodule BnBBot.Commands.Blight do
     :ignore
   end
 
+  @impl true
   def get_create_map do
     choices =
       Enum.map(@blight_elements, fn name ->

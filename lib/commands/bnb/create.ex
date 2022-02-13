@@ -11,8 +11,6 @@ defmodule BnBBot.Commands.Create do
 
   use BnBBot.SlashCmdFn, permissions: [:owner, :admin]
 
-  # TODO
-
   @colors [
     "White",
     "Pink",
@@ -23,6 +21,7 @@ defmodule BnBBot.Commands.Create do
     "Gray"
   ]
 
+  @impl true
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     [sub_cmd] = inter.data.options
 
@@ -34,6 +33,7 @@ defmodule BnBBot.Commands.Create do
     :ignore
   end
 
+  @impl true
   def get_create_map do
     %{
       type: 1,

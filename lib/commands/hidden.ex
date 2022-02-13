@@ -31,6 +31,7 @@ defmodule BnBBot.Commands.Hidden do
   @ownercmds ["die", "debug", "shut_up", "add_to_bans", "salt_the_earth", "list_bans"]
   @admincmds ["die", "add_to_bans", "salt_the_earth", "list_bans"]
 
+  @impl true
   def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
     case inter.data.options do
       [%Option{value: "die"} | _] ->
@@ -72,6 +73,7 @@ defmodule BnBBot.Commands.Hidden do
     :ignore
   end
 
+  @impl true
   def call_slash(%Nostrum.Struct.Interaction{type: 4} = inter) do
     Logger.debug("Recieved an autocomplete request for a hidden command")
 
@@ -101,6 +103,7 @@ defmodule BnBBot.Commands.Hidden do
       })
   end
 
+  @impl true
   def get_create_map do
     %{
       type: 1,

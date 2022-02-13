@@ -32,6 +32,7 @@ defmodule BnBBot.Commands.Panels do
   @sand "```\nSand:\nTargets stepping onto spaces of this type expend two Move Actions instead of one. If the target does not have two Move Actions remaining, they cannot step on these panels unless their Agility is less than 5. Wind attacks gain additional damage dice equal to half their regular value and immediately remove the terrain from these spaces when targeting them.\n```"
   @sea "```\nSea:\nTerrain of this type forces non-Aqua Element targets with less than 5 Agility that occupy it to use two Move Actions when moving away from it. Should these targets not have two Move Actions remanining, they cannot step off these panels. Elec attacks gain damage dice equal to half their regular value on targets standing in these spaces.\n```"
 
+  @impl true
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     Logger.info("Recieved a panel command")
 
@@ -59,6 +60,7 @@ defmodule BnBBot.Commands.Panels do
     :ignore
   end
 
+  @impl true
   def get_create_map do
     choices =
       Enum.map(@panels, fn name ->

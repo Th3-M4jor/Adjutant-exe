@@ -47,6 +47,7 @@ defmodule BnBBot.Commands.Statuses do
 
   @stagger "```When Staggered, your AC is reduced by your Body Stat. You also immediately fail any Strength Check you’re required to make. This includes Attack Rolls. This effect can be removed at the cost of all your remaining Move Actions for that round.```"
 
+  @impl true
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     Logger.info("Recieved a Status command")
 
@@ -74,6 +75,7 @@ defmodule BnBBot.Commands.Statuses do
     :ignore
   end
 
+  @impl true
   def get_create_map do
     choices =
       Enum.map(@status_names, fn name ->

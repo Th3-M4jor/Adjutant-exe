@@ -17,6 +17,7 @@ defmodule BnBBot.Commands.Virus do
 
   use BnBBot.SlashCmdFn, permissions: :everyone
 
+  @impl true
   def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
     [sub_cmd] = inter.data.options
 
@@ -39,6 +40,7 @@ defmodule BnBBot.Commands.Virus do
     :ignore
   end
 
+  @impl true
   def call_slash(%Nostrum.Struct.Interaction{type: 4} = inter) do
     [sub_cmd] = inter.data.options
 
@@ -52,6 +54,7 @@ defmodule BnBBot.Commands.Virus do
     :ignore
   end
 
+  @impl true
   def get_create_map do
     %{
       type: 1,

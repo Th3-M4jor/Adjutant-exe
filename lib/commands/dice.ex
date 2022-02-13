@@ -9,6 +9,7 @@ defmodule BnBBot.Commands.Dice do
 
   use BnBBot.SlashCmdFn, permissions: :everyone
 
+  @impl true
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     die_str =
       case inter.data.options do
@@ -51,6 +52,7 @@ defmodule BnBBot.Commands.Dice do
     :ignore
   end
 
+  @impl true
   def get_create_map do
     %{
       type: 1,
