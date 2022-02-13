@@ -50,3 +50,6 @@ priv/repo/structure.sql
 
 #log dump file
 log_dump.txt
+
+# ignore dialyzer files
+.elixir_ls/
