@@ -5,7 +5,7 @@ defmodule BnBBot.Commands do
   """
 
   alias BnBBot.Commands
-  #alias Nostrum.Api
+  # alias Nostrum.Api
 
   require Logger
 
@@ -17,9 +17,6 @@ defmodule BnBBot.Commands do
     perms = BnBBot.Util.get_user_perms(msg)
 
     case {contents, perms} do
-      {<<@prefix, "reload">>, :admin} ->
-        Commands.Reload.call(msg, [])
-
       {<<@prefix, "">>, _} ->
         nil
 
@@ -44,10 +41,6 @@ defmodule BnBBot.Commands do
 
   defp cmd_call("shut_up", msg, args) do
     Commands.ShutUp.call(msg, args)
-  end
-
-  defp cmd_call("reload", msg, args) do
-    Commands.Reload.call(msg, args)
   end
 
   defp cmd_call("audit", msg, args) do
