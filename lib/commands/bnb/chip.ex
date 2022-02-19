@@ -14,6 +14,8 @@ defmodule BnBBot.Commands.Chip do
 
   use BnBBot.SlashCmdFn, permissions: :everyone
   @skills ~w(PER INF TCH STR AGI END CHM VLR AFF None)
+  @elements ~w(Fire Aqua Elec Wood Wind Sword Break Cursor Recov Invis Object Null)
+  @chip_kinds ~w(Burst Construct Melee Projectile Wave Recovery Summon Trap)
 
   @impl true
   def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
@@ -30,18 +32,8 @@ defmodule BnBBot.Commands.Chip do
         name = opt.value
         locate_drops(inter, name)
 
-      "cr" ->
-        [opt] = sub_cmd.options
-        cr = opt.value
-        cr_list = BnBBot.Library.Battlechip.get_cr(cr)
-        send_cr_list(inter, cr, cr_list)
-
-      "skill-cr" ->
-        [cr, skill] = sub_cmd.options
-        cr = cr.value
-        skill = skill.value |> BnBBot.Library.Shared.skill_to_atom()
-        chips = BnBBot.Library.Battlechip.get_skill_cr(skill, cr)
-        send_skill_cr_list(inter, skill, cr, chips)
+      "filter" ->
+        filter_chip_list(inter, sub_cmd.options)
     end
 
     :ignore
@@ -55,8 +47,7 @@ defmodule BnBBot.Commands.Chip do
     search_chip(inter, name)
   end
 
-  @impl true
-  def get_create_map do
+  defp filter_chip_cmd_map do
     skill_choices =
       Enum.map(@skills, fn skill ->
         %{
@@ -65,6 +56,90 @@ defmodule BnBBot.Commands.Chip do
         }
       end)
 
+    element_choices =
+      Enum.map(@elements, fn element ->
+        %{
+          name: element,
+          value: String.downcase(element, :ascii)
+        }
+      end)
+
+    chip_kind_choices =
+      Enum.map(@chip_kinds, fn chip_kind ->
+        %{
+          name: chip_kind,
+          value: String.downcase(chip_kind, :ascii)
+        }
+      end)
+
+    %{
+      type: 1,
+      name: "filter",
+      description: "Filter the chip list, errors if more than 25 chips would be returned",
+      options: [
+        %{
+          type: 3,
+          name: "skill",
+          description: "The skill the chip uses",
+          choices: skill_choices
+        },
+        %{
+          type: 3,
+          name: "element",
+          description: "The element the chip uses",
+          choices: element_choices
+        },
+        %{
+          type: 4,
+          name: "cr",
+          description: "The CR of the chip",
+          min_value: 0,
+          max_value: 20
+        },
+        %{
+          type: 3,
+          name: "blight",
+          description: "The blight the chip causes, use null for none",
+          choices: element_choices
+        },
+        %{
+          type: 3,
+          name: "kind",
+          description: "The kind of attack the chip is",
+          choices: chip_kind_choices
+        },
+        %{
+          type: 4,
+          name: "min_cr",
+          description: "The minimum CR of the chip",
+          min_value: 1,
+          max_value: 20
+        },
+        %{
+          type: 4,
+          name: "max_cr",
+          description: "The maximum CR of the chip",
+          min_value: 1,
+          max_value: 20
+        },
+        %{
+          type: 4,
+          name: "min_avg_dmg",
+          description: "The minimum average damage of the chip",
+          min_value: 0
+        },
+        %{
+          type: 4,
+          name: "max_avg_dmg",
+          description: "The maximum average damage of the chip",
+          min_value: 1
+        }
+      ]
+    }
+  end
+
+  @impl true
+  def get_create_map do
     %{
       type: 1,
       name: "chip",
@@ -98,43 +173,7 @@ defmodule BnBBot.Commands.Chip do
             }
           ]
         },
-        %{
-          type: 1,
-          name: "skill-cr",
-          description: "List all chips with a particular CR and skill",
-          options: [
-            %{
-              type: 4,
-              name: "cr",
-              description: "The CR of the chip",
-              required: true,
-              min_value: 1,
-              max_value: 20
-            },
-            %{
-              type: 3,
-              name: "skill",
-              description: "The skill of the chip",
-              required: true,
-              choices: skill_choices
-            }
-          ]
-        },
-        %{
-          type: 1,
-          name: "cr",
-          description: "List all chips in a certain CR",
-          options: [
-            %{
-              type: 4,
-              name: "cr",
-              description: "The CR to search for",
-              required: true,
-              min_value: 1,
-              max_value: 20
-            }
-          ]
-        }
+        filter_chip_cmd_map()
       ]
     }
   end
@@ -277,116 +316,6 @@ defmodule BnBBot.Commands.Chip do
     end
   end
 
-  defp send_cr_list(inter, cr, []) do
-    {:ok} =
-      Api.create_interaction_response(
-        inter,
-        %{
-          type: 4,
-          data: %{
-            content: "There are no chips in CR #{cr} at present",
-            flags: 64
-          }
-        }
-      )
-  end
-
-  defp send_cr_list(inter, cr, cr_list) do
-    cr_list =
-      Enum.sort_by(cr_list, fn chip ->
-        chip.id
-      end)
-
-    buttons = BnBBot.ButtonAwait.generate_persistent_buttons(cr_list)
-
-    {:ok} =
-      Api.create_interaction_response(
-        inter,
-        %{
-          type: 4,
-          data: %{
-            content: "These chips are in CR #{cr}:",
-            components: buttons
-          }
-        }
-      )
-
-    route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
-
-    # five minutes
-    BnBBot.Util.wait_or_shutdown(300_000)
-
-    buttons = BnBBot.ButtonAwait.generate_persistent_buttons(cr_list, true)
-
-    Api.request(:patch, route, %{
-      content: "These chips are in CR #{cr}:",
-      components: buttons
-    })
-  end
-
-  defp send_skill_cr_list(inter, skill, cr, []) do
-    str =
-      if is_nil(skill) do
-        "There are no chips in CR #{cr} that do not have a skill"
-      else
-        skill = BnBBot.Library.Shared.skill_to_string(skill)
-        "There are no chips in CR #{cr} that use #{skill}"
-      end
-
-    {:ok} =
-      Api.create_interaction_response(
-        inter,
-        %{
-          type: 4,
-          data: %{
-            content: str,
-            flags: 64
-          }
-        }
-      )
-  end
-
-  defp send_skill_cr_list(inter, skill, cr, cr_list) do
-    cr_list =
-      Enum.sort_by(cr_list, fn chip ->
-        chip.id
-      end)
-
-    buttons = BnBBot.ButtonAwait.generate_persistent_buttons(cr_list)
-
-    msg =
-      if is_nil(skill) do
-        "These chips are in CR #{cr} that do not have a skill:"
-      else
-        skill = BnBBot.Library.Shared.skill_to_string(skill)
-        "These chips are in CR #{cr} that use #{skill}:"
-      end
-
-    {:ok} =
-      Api.create_interaction_response(
-        inter,
-        %{
-          type: 4,
-          data: %{
-            content: msg,
-            components: buttons
-          }
-        }
-      )
-
-    route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
-
-    # five minutes
-    BnBBot.Util.wait_or_shutdown(300_000)
-
-    buttons = BnBBot.ButtonAwait.generate_persistent_buttons(cr_list, true)
-
-    Api.request(:patch, route, %{
-      content: msg,
-      components: buttons
-    })
-  end
-
   defp handle_chip_not_found(%Nostrum.Struct.Interaction{} = inter, []) do
     {:ok} =
       Api.create_interaction_response(inter, %{
@@ -455,5 +384,169 @@ defmodule BnBBot.Commands.Chip do
     Logger.debug("No chip found, showing suggestions")
 
     BnBBot.Commands.All.do_btn_response(inter, opts)
+  end
+
+  defp filter_chip_list(inter, []) do
+    Api.create_interaction_response!(
+      inter,
+      %{
+        type: 4,
+        data: %{
+          content: "You must specify at least one argument",
+          flags: 64
+        }
+      }
+    )
+  end
+
+  defp filter_chip_list(inter, options) do
+    filters = Enum.map(options, &filter_arg_to_tuple/1)
+
+    with :ok <- validate_cr_args(filters),
+         :ok <- validate_dmg_args(filters),
+         chips when length(chips) in 1..25 <- BnBBot.Library.Battlechip.run_chip_filter(filters) do
+      buttons = BnBBot.ButtonAwait.generate_persistent_buttons(chips)
+
+      Api.create_interaction_response!(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: "found these chips:",
+            components: buttons
+          }
+        }
+      )
+
+      # five minutes
+      BnBBot.Util.wait_or_shutdown(300_000)
+      buttons = BnBBot.ButtonAwait.generate_persistent_buttons(chips, true)
+
+      Api.edit_interaction_response!(
+        inter,
+        %{
+          content: "found these chips:",
+          components: buttons
+        }
+      )
+    else
+      [] ->
+        Api.create_interaction_response!(
+          inter,
+          %{
+            type: 4,
+            data: %{
+              content: "No chips found",
+              flags: 64
+            }
+          }
+        )
+
+      {:error, msg} ->
+        Api.create_interaction_response!(
+          inter,
+          %{
+            type: 4,
+            data: %{
+              content: msg,
+              flags: 64
+            }
+          }
+        )
+
+      _ ->
+        Api.create_interaction_response!(
+          inter,
+          %{
+            type: 4,
+            data: %{
+              content: "This returned too many chips, I can't send more than 25 at a time",
+              flags: 64
+            }
+          }
+        )
+    end
+  end
+
+  defp filter_arg_to_tuple(arg) do
+    case arg.name do
+      "skill" ->
+        skill = BnBBot.Library.Shared.skill_to_atom(arg.value)
+        {:skill, skill}
+
+      "element" ->
+        element = arg.value |> String.downcase(:ascii) |> String.to_existing_atom()
+        {:element, element}
+
+      "cr" ->
+        {:cr, arg.value}
+
+      "kind" ->
+        kind = arg.value |> String.downcase(:ascii) |> String.to_existing_atom()
+        {:kind, kind}
+
+      "min_cr" ->
+        {:min_cr, arg.value}
+
+      "max_cr" ->
+        {:max_cr, arg.value}
+
+      "blight" ->
+        element = arg.value |> String.downcase(:ascii) |> String.to_existing_atom()
+        {:blight, element}
+
+      "min_avg_dmg" ->
+        {:min_avg_dmg, arg.value}
+
+      "max_avg_dmg" ->
+        {:max_avg_dmg, arg.value}
+    end
+  end
+
+  defp validate_cr_args(args) do
+    case {args[:min_cr], args[:max_cr], args[:cr]} do
+      {nil, nil, nil} ->
+        :ok
+
+      {nil, _, nil} ->
+        :ok
+
+      {_, nil, nil} ->
+        :ok
+
+      {nil, nil, _} ->
+        :ok
+
+      {min, max, nil} when min > max ->
+        {:error, "`min_cr` must be less than `max_cr`"}
+
+      {min, max, nil} when min == max ->
+        {:error, "`min_cr` and `max_cr` are equal, juse use `cr`"}
+
+      {_, _, cr} when not is_nil(cr) ->
+        {:error, "`cr` cannot be used with `min_cr` or `max_cr`"}
+
+      _ ->
+        :ok
+    end
+  end
+
+  defp validate_dmg_args(args) do
+    case {args[:min_avg_dmg], args[:max_avg_dmg]} do
+      {nil, nil} ->
+        :ok
+
+      {nil, _} ->
+        :ok
+
+      {_, nil} ->
+        :ok
+
+      {min, max} when min > max ->
+        {:error, "min_avg_dmg must be less than max_avg_dmg"}
+
+      _ ->
+        :ok
+    end
   end
 end

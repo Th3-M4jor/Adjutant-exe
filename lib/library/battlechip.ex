@@ -61,6 +61,14 @@ defmodule BnBBot.Library.Battlechip do
           class: class()
         }
 
+  def avg_dmg(%__MODULE__{damage: nil}) do
+    0
+  end
+
+  def avg_dmg(%__MODULE__{damage: dice}) do
+    floor(dice.dienum * (dice.dietype / 2 + 0.5))
+  end
+
   @spec load_chips :: {:ok} | {:error, String.t()}
   def load_chips do
     GenServer.call(:chip_table, :reload, :infinity)
@@ -104,15 +112,9 @@ defmodule BnBBot.Library.Battlechip do
     GenServer.call(:chip_table, {:exists, name})
   end
 
-  @spec get_cr(non_neg_integer()) :: [BnBBot.Library.Battlechip.t()]
-  def get_cr(cr) do
-    GenServer.call(:chip_table, {:get_cr, cr})
-  end
-
-  @spec get_skill_cr(BnBBot.Library.Shared.skill() | nil, non_neg_integer()) ::
-          [BnBBot.Library.Battlechip.t()]
-  def get_skill_cr(skill, cr) do
-    GenServer.call(:chip_table, {:skill_cr, skill, cr})
+  @spec run_chip_filter(keyword()) :: [BnBBot.Library.Battlechip.t()]
+  def run_chip_filter(args) do
+    GenServer.call(:chip_table, {:filter, args})
   end
 
   @spec effect_to_io_list(BnBBot.Library.Battlechip.t()) :: iolist()
@@ -277,6 +279,7 @@ defmodule BnBBot.Library.BattlechipTable do
   """
   require Logger
   use GenServer
+  alias BnBBot.Library.Battlechip
 
   @chip_url :elixir_bot |> Application.compile_env!(:chip_url)
   def start_link(arg) do
@@ -304,8 +307,8 @@ defmodule BnBBot.Library.BattlechipTable do
   @impl true
   @spec handle_call({:get, String.t(), float()}, GenServer.from(), map()) ::
           {:reply,
-           {:found, BnBBot.Library.Battlechip.t()}
-           | {:not_found, [{float(), BnBBot.Library.Battlechip.t()}]}, map()}
+           {:found, Battlechip.t()}
+           | {:not_found, [{float(), Battlechip.t()}]}, map()}
   def handle_call({:get, name, min_dist}, _from, state) do
     lower_name = String.downcase(name, :ascii)
 
@@ -325,7 +328,7 @@ defmodule BnBBot.Library.BattlechipTable do
 
   @impl true
   @spec handle_call({:get_or_nil, String.t()}, GenServer.from(), map()) ::
-          {:reply, {BnBBot.Library.Battlechip.t() | nil}, map()}
+          {:reply, {Battlechip.t() | nil}, map()}
   def handle_call({:get_or_nil, name}, _from, state) do
     lower_name = String.downcase(name, :ascii)
 
@@ -373,45 +376,79 @@ defmodule BnBBot.Library.BattlechipTable do
     {:reply, exists, state}
   end
 
-  @spec handle_call({:get_cr, non_neg_integer()}, GenServer.from(), map()) ::
-          {:reply, [BnBBot.Library.Battlechip.t()], map()}
-  def handle_call({:get_cr, cr}, _from, state) do
+  def handle_call({:filter, args}, _from, state) do
     chips =
       Map.values(state)
-      |> Enum.filter(fn chip ->
-        chip.cr == cr
-      end)
+      |> run_filter(args)
 
     {:reply, chips, state}
   end
 
-  @spec handle_call(
-          {:skill_cr, BnBBot.Library.Shared.skill() | nil, non_neg_integer()},
-          GenServer.from(),
-          map()
-        ) ::
-          {:reply, [BnBBot.Library.Battlechip.t()], map()}
-  def handle_call({:skill_cr, nil, cr}, _from, state) do
-    chips =
-      Map.values(state)
-      |> Enum.filter(fn chip ->
-        chip.cr == cr &&
-          is_nil(chip.skill)
-      end)
-
-    {:reply, chips, state}
+  defp run_filter(stream, []) do
+    Enum.to_list(stream)
   end
 
-  def handle_call({:skill_cr, skill, cr}, _from, state) do
-    chips =
-      Map.values(state)
-      |> Enum.filter(fn chip ->
-        chip.cr == cr &&
-          chip.skill != nil &&
-          Enum.member?(chip.skill, skill)
-      end)
+  defp run_filter(stream, [arg | rest]) do
+    func =
+      case arg do
+        {:skill, :none} ->
+          fn chip ->
+            is_nil(chip.skill)
+          end
 
-    {:reply, chips, state}
+        {:skill, skill} ->
+          fn chip ->
+            chip.skill != nil && Enum.member?(chip.skill, skill)
+          end
+
+        {:element, element} ->
+          fn chip ->
+            Enum.member?(chip.elem, element)
+          end
+
+        {:cr, cr} ->
+          fn chip ->
+            chip.cr == cr
+          end
+
+        {:kind, kind} ->
+          fn chip ->
+            chip.kind == kind
+          end
+
+        {:min_cr, min_cr} ->
+          fn chip ->
+            chip.cr >= min_cr
+          end
+
+        {:max_cr, max_cr} ->
+          fn chip ->
+            chip.cr <= max_cr
+          end
+
+        {:blight, :null} ->
+          fn chip ->
+            is_nil(chip.blight)
+          end
+
+        {:blight, element} ->
+          fn chip ->
+            chip.blight[:elem] == element
+          end
+
+        {:min_avg_dmg, dmg} ->
+          fn chip ->
+            Battlechip.avg_dmg(chip) >= dmg
+          end
+
+        {:max_avg_dmg, dmg} ->
+          fn chip ->
+            Battlechip.avg_dmg(chip) <= dmg
+          end
+      end
+
+    stream = stream |> Stream.filter(func)
+    run_filter(stream, rest)
   end
 
   defp load_chips do
@@ -442,6 +479,7 @@ defmodule BnBBot.Library.BattlechipTable do
         kind = chip[:kind] |> String.to_atom()
         class = chip[:class] |> String.to_atom()
         lower_name = String.downcase(chip[:name], :ascii)
+        blight = chip[:blight] |> convert_blight_elem()
 
         chip = %BnBBot.Library.Battlechip{
           id: chip[:id],
@@ -455,7 +493,7 @@ defmodule BnBBot.Library.BattlechipTable do
           description: chip[:description],
           effect: chip[:effect],
           effduration: chip[:effduration],
-          blight: chip[:blight],
+          blight: blight,
           damage: chip[:damage],
           kind: kind,
           class: class
@@ -481,5 +519,13 @@ defmodule BnBBot.Library.BattlechipTable do
 
   defp string_list_to_atoms(list) do
     Enum.map(list, fn x -> String.to_atom(x) end)
+  end
+
+  defp convert_blight_elem(nil) do
+    nil
+  end
+
+  defp convert_blight_elem(blight) when is_map(blight) do
+    Map.update!(blight, :elem, &String.to_existing_atom/1)
   end
 end

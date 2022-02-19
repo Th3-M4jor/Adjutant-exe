@@ -34,59 +34,74 @@ defmodule BnBBot.SlashCmdFn do
   This option expects either a single `:everyone`, `:admin`, or `:owner` value or a list of such values.
   """
 
-  defmacro __using__(opts) do
+  defp everyone_perms do
+    quote do
+      @behaviour BnBBot.SlashCmdFn
+      def call(inter), do: call_slash(inter)
 
-    # storing it like this is a bit of a hack, but it deduplicates code a little
-    else_option = quote do
-      Nostrum.Api.create_interaction_response(inter, %{
-        type: 4,
-        data: %{
-          content: "You don't have permission to do that",
-          flags: 64
-        }
-      })
+      defoverridable call: 1
     end
+  end
 
+  defp list_perms(perms) when is_list(perms) do
+    quote do
+      @behaviour BnBBot.SlashCmdFn
+      def call(inter) do
+        user_perms = BnBBot.Util.get_user_perms(inter)
+
+        if user_perms in unquote(perms) do
+          call_slash(inter)
+        else
+          Nostrum.Api.create_interaction_response(inter, %{
+            type: 4,
+            data: %{
+              content: "You don't have permission to do that",
+              flags: 64
+            }
+          })
+        end
+      end
+
+      defoverridable call: 1
+    end
+  end
+
+  defp atom_perms(perm) when perm in [:owner, :admin] do
+    quote do
+      @behaviour BnBBot.SlashCmdFn
+      def call(inter) do
+        user_perms = BnBBot.Util.get_user_perms(inter)
+
+        if user_perms == unquote(perm) do
+          call_slash(inter)
+        else
+          Nostrum.Api.create_interaction_response(inter, %{
+            type: 4,
+            data: %{
+              content: "You don't have permission to do that",
+              flags: 64
+            }
+          })
+        end
+      end
+
+      defoverridable call: 1
+    end
+  end
+
+  defmacro __using__(opts) do
     case opts[:permissions] do
       :everyone ->
-        quote do
-          @behaviour BnBBot.SlashCmdFn
-          def call(inter), do: call_slash(inter)
+        everyone_perms()
 
-          defoverridable call: 1
-        end
+      [first, second] = perms when first in [:admin, :owner] and second in [:admin, :owner] ->
+        list_perms(perms)
 
-      perms when is_list(perms) ->
-        quote do
-          @behaviour BnBBot.SlashCmdFn
-          def call(inter) do
-            user_perms = BnBBot.Util.get_user_perms(inter)
+      perms when perms in [:admin, :owner] ->
+        atom_perms(perms)
 
-            if user_perms in unquote(perms) do
-              call_slash(inter)
-            else
-              unquote(else_option)
-            end
-          end
-
-          defoverridable call: 1
-        end
-
-      perms when is_atom(perms) ->
-        quote do
-          @behaviour BnBBot.SlashCmdFn
-          def call(inter) do
-            user_perms = BnBBot.Util.get_user_perms(inter)
-
-            if user_perms == unquote(perms) do
-              call_slash(inter)
-            else
-              unquote(else_option)
-            end
-          end
-
-          defoverridable call: 1
-        end
+      _ ->
+        raise "\":permissions\" option must be either :everyone, :admin, :owner or a list of [:admin, :owner]"
     end
   end
 

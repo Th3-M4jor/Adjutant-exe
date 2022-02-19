@@ -527,6 +527,7 @@ defmodule BnBBot.Library.VirusTable do
         dmg_elem = virus[:dmgelem] |> string_list_to_atoms()
         lower_name = virus[:name] |> String.downcase(:ascii)
         kind = virus[:attack_kind] |> String.to_atom()
+        blight = virus[:blight] |> convert_blight_elem()
 
         drops =
           virus[:drops]
@@ -547,7 +548,7 @@ defmodule BnBBot.Library.VirusTable do
           abilities: virus[:abilities],
           damage: virus[:damage],
           dmgelem: dmg_elem,
-          blight: virus[:blight],
+          blight: blight,
           attack_kind: kind
         }
 
@@ -571,5 +572,13 @@ defmodule BnBBot.Library.VirusTable do
 
   defp string_list_to_atoms(list) when is_list(list) do
     Enum.map(list, fn x -> String.to_atom(x) end)
+  end
+
+  defp convert_blight_elem(nil) do
+    nil
+  end
+
+  defp convert_blight_elem(blight) when is_map(blight) do
+    Map.update!(blight, :elem, &String.to_existing_atom/1)
   end
 end

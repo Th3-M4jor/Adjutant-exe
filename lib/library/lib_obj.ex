@@ -67,7 +67,7 @@ defmodule BnBBot.Library.Shared do
     end
   end
 
-  @spec skill_to_atom(skill) :: skill() | nil | no_return()
+  @spec skill_to_atom(String.t()) :: skill | nil
   def skill_to_atom(skill) do
     skill = String.downcase(skill, :ascii)
 
@@ -134,7 +134,7 @@ defmodule BnBBot.Library.Shared do
   def blight_to_io_list(%{elem: elem, dmg: dmg, duration: duration}, last) do
     [
       "Blight (",
-      to_string(elem) |> String.capitalize(),
+      to_string(elem) |> String.capitalize(:ascii),
       "): ",
       dice_to_io_list(dmg, " damage"),
       " for ",

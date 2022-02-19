@@ -126,7 +126,7 @@ defmodule BnBBot.Consumer do
     Api.create_message!(@log_channel_id, text)
   end
 
-  def handle_event({:READY, ready_data, _ws_state}) do
+  def handle_event({:READY, %Nostrum.Struct.Event.Ready{} = ready_data, _ws_state}) do
     Logger.debug("Bot ready")
 
     Api.update_status(:online, "Now with Slash Commands")
