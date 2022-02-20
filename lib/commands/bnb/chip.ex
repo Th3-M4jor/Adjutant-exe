@@ -15,7 +15,7 @@ defmodule BnBBot.Commands.Chip do
   use BnBBot.SlashCmdFn, permissions: :everyone
   @skills ~w(PER INF TCH STR AGI END CHM VLR AFF None)
   @elements ~w(Fire Aqua Elec Wood Wind Sword Break Cursor Recov Invis Object Null)
-  @chip_kinds ~w(Burst Construct Melee Projectile Wave Recovery Summon Trap)
+  @chip_kinds ~w(Burst Construct Melee Projectile Wave Heal Summon Trap)
 
   @impl true
   def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
