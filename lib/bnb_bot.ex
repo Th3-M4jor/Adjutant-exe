@@ -103,9 +103,20 @@ defmodule BnBBot.Consumer do
 
     BnBBot.Commands.cmd_check(msg)
   rescue
+    e when is_exception(e) ->
+      Logger.error(Exception.format(:error, e, __STACKTRACE__))
+
+      Api.create_message(
+        msg.channel_id,
+        "An error has occurred, inform Major\n#{Exception.message(e)}"
+      )
     e ->
       Logger.error(Exception.format(:error, e, __STACKTRACE__))
-      Api.create_message(msg.channel_id, "An error has occurred, inform Major")
+
+      Api.create_message(
+        msg.channel_id,
+        "An unknown error has occurred, inform Major"
+      )
   end
 
   def handle_event(
@@ -201,12 +212,19 @@ defmodule BnBBot.Consumer do
     Logger.debug(["Got an interaction command\n", inspect(inter, pretty: true)])
     BnBBot.SlashCommands.handle_command(inter)
   rescue
+    e when is_exception(e) ->
+      Logger.error(Exception.format(:error, e, __STACKTRACE__))
+
+      Api.create_message(
+        inter.channel_id,
+        "An error has occurred, inform Major\n#{Exception.message(e)}"
+      )
     e ->
       Logger.error(Exception.format(:error, e, __STACKTRACE__))
 
-      Api.create_message!(
+      Api.create_message(
         inter.channel_id,
-        "An error has occurred, inform Major"
+        "An unknown error has occurred, inform Major"
       )
   end
 
@@ -216,13 +234,21 @@ defmodule BnBBot.Consumer do
 
     BnBBot.SlashCommands.handle_command(inter)
   rescue
+    e when is_exception(e) ->
+      Logger.error(Exception.format(:error, e, __STACKTRACE__))
+
+      Api.create_message(
+        inter.channel_id,
+        "An error has occurred, inform Major\n#{Exception.message(e)}"
+      )
     e ->
       Logger.error(Exception.format(:error, e, __STACKTRACE__))
 
-      Api.create_message!(
+      Api.create_message(
         inter.channel_id,
-        "An error has occurred, inform Major"
+        "An unknown error has occurred, inform Major"
       )
+
   end
 
   # def handle_event({:GUILD_SCHEDULED_EVENT_CREATE, %ScheduledEvent{} = event, _ws_state}) do
