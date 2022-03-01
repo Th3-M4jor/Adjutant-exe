@@ -77,7 +77,6 @@ defmodule BnBBot.Consumer do
   use Nostrum.Consumer
 
   alias Nostrum.Api
-  alias Nostrum.Struct.Guild.ScheduledEvent
 
   @primary_guild_id :elixir_bot |> Application.compile_env!(:primary_guild_id)
   @primary_guild_channel_id :elixir_bot |> Application.compile_env!(:primary_guild_channel_id)
@@ -103,19 +102,12 @@ defmodule BnBBot.Consumer do
 
     BnBBot.Commands.cmd_check(msg)
   rescue
-    e when is_exception(e) ->
+    e->
       Logger.error(Exception.format(:error, e, __STACKTRACE__))
 
       Api.create_message(
         msg.channel_id,
         "An error has occurred, inform Major\n#{Exception.message(e)}"
-      )
-    e ->
-      Logger.error(Exception.format(:error, e, __STACKTRACE__))
-
-      Api.create_message(
-        msg.channel_id,
-        "An unknown error has occurred, inform Major"
       )
   end
 
@@ -212,19 +204,12 @@ defmodule BnBBot.Consumer do
     Logger.debug(["Got an interaction command\n", inspect(inter, pretty: true)])
     BnBBot.SlashCommands.handle_command(inter)
   rescue
-    e when is_exception(e) ->
-      Logger.error(Exception.format(:error, e, __STACKTRACE__))
-
-      Api.create_message(
-        inter.channel_id,
-        "An error has occurred, inform Major\n#{Exception.message(e)}"
-      )
     e ->
       Logger.error(Exception.format(:error, e, __STACKTRACE__))
 
       Api.create_message(
         inter.channel_id,
-        "An unknown error has occurred, inform Major"
+        "An error has occurred, inform Major\n#{Exception.message(e)}"
       )
   end
 
@@ -234,42 +219,14 @@ defmodule BnBBot.Consumer do
 
     BnBBot.SlashCommands.handle_command(inter)
   rescue
-    e when is_exception(e) ->
+    e ->
       Logger.error(Exception.format(:error, e, __STACKTRACE__))
 
       Api.create_message(
         inter.channel_id,
         "An error has occurred, inform Major\n#{Exception.message(e)}"
       )
-    e ->
-      Logger.error(Exception.format(:error, e, __STACKTRACE__))
-
-      Api.create_message(
-        inter.channel_id,
-        "An unknown error has occurred, inform Major"
-      )
-
   end
-
-  # def handle_event({:GUILD_SCHEDULED_EVENT_CREATE, %ScheduledEvent{} = event, _ws_state}) do
-  #   Logger.debug(["Got a scheduled event\n", inspect(event, pretty: true)])
-  # end
-
-  # def handle_event({:GUILD_SCHEDULED_EVENT_UPDATE, %ScheduledEvent{} = event, _ws_state}) do
-  #   Logger.debug(["Got a scheduled event update\n", inspect(event, pretty: true)])
-  # end
-
-  # def handle_event({:GUILD_SCHEDULED_EVENT_DELETE, %ScheduledEvent{} = event, _ws_state}) do
-  #   Logger.debug(["Got a scheduled event delete\n", inspect(event, pretty: true)])
-  # end
-
-  # def handle_event({:GUILD_SCHEDULED_EVENT_USER_ADD, event, _ws_state}) do
-  #   Logger.debug(["Got a scheduled event subscribe\n", inspect(event, pretty: true)])
-  # end
-
-  # def handle_event({:GUILD_SCHEDULED_EVENT_USER_REMOVE, event, _ws_state}) do
-  #   Logger.debug(["Got a scheduled event unsubscribe\n", inspect(event, pretty: true)])
-  # end
 
   # Default event handler, if you don't include this, your consumer WILL crash if
   # you don't have a method definition for each event type.
