@@ -250,14 +250,14 @@ defmodule BnBBot.Commands.Hidden do
   defp shut_up(inter) do
     if BnBBot.Util.is_owner_msg?(inter) do
       res =
-        case :ets.lookup(:bnb_bot_data, :dm_owner) do
-          [dm_owner: val] -> val
-          _ -> true
+        case GenServer.call(:bnb_bot_data, {:get, :dm_owner}) do
+          nil -> true
+          val when is_boolean(val) -> val
         end
 
       Logger.debug("Currently set to DM messages: #{res}")
       new_val = not res
-      :ets.insert(:bnb_bot_data, dm_owner: new_val)
+      GenServer.cast(:bnb_bot_data, {:insert, :dm_owner, new_val})
 
       Api.create_interaction_response(inter, %{
         type: 4,

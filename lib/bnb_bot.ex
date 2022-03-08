@@ -18,7 +18,7 @@ defmodule BnBBot.Supervisor do
   def init(_init_arg) do
     Logger.debug("Starting Supervisor")
 
-    :ets.new(:bnb_bot_data, [:set, :public, :named_table, read_concurrency: true])
+    # :ets.new(:bnb_bot_data, [:set, :public, :named_table, read_concurrency: true])
     # recommended to spawn one per scheduler (default is number of cores)
     children =
       for n <- 1..System.schedulers_online() do
@@ -56,7 +56,14 @@ defmodule BnBBot.Supervisor do
         restart: :transient
       )
 
-    children = [ncp, chips, viruses, button_collector, shutdown_registry | children]
+    bot_data =
+      Supervisor.child_spec(
+        {BnBBot.Util.KVP, []},
+        id: {:bnb_bot, :bnb_bot_data},
+        restart: :transient
+      )
+
+    children = [ncp, chips, viruses, button_collector, shutdown_registry, bot_data | children]
     # children = [chips | children]
     # children = [viruses | children]
     Logger.debug(inspect(children, pretty: true))
@@ -102,7 +109,7 @@ defmodule BnBBot.Consumer do
 
     BnBBot.Commands.cmd_check(msg)
   rescue
-    e->
+    e ->
       Logger.error(Exception.format(:error, e, __STACKTRACE__))
 
       Api.create_message(
@@ -135,13 +142,13 @@ defmodule BnBBot.Consumer do
     Api.update_status(:online, "Now with Slash Commands")
 
     {dm_msg, override} =
-      case :ets.lookup(:bnb_bot_data, :first_ready) do
-        [first_ready: false] ->
+      case GenServer.call(:bnb_bot_data, {:get, :first_ready}) do
+        false ->
           Logger.warn(["Ready re-emitted\n", inspect(ready_data, pretty: true)])
           {"ready re-emitted", true}
 
         _ ->
-          :ets.insert(:bnb_bot_data, first_ready: false)
+          GenServer.cast(:bnb_bot_data, {:insert, :first_ready, false})
 
           # ncp_task = Task.async(fn -> BnBBot.Library.NCP.load_ncps() end)
           # chips_task = Task.async(fn -> BnBBot.Library.Battlechip.load_chips() end)
