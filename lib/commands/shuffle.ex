@@ -12,24 +12,19 @@ defmodule BnBBot.Commands.Shuffle do
   @spec call_slash(Nostrum.Struct.Interaction.t()) :: :ignore
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     Logger.info("Recieved a shuffle command")
+    [sub_cmd] = inter.data.options
 
-    resp =
-      case inter.data.options do
-        [stop, start] ->
-          start_val = start.value
-          stop_val = stop.value
-          shuffle_two_nums(start_val, stop_val)
+    res =
+      case sub_cmd.name do
+        "numbers" ->
+          number_shuffle_cmd(inter, sub_cmd.options)
 
-        [stop] ->
-          stop_val = stop.value
-          shuffle_single_num(stop_val)
-
-        _ ->
-          {:error, "An unknown error occurred"}
+        "names" ->
+          name_shuffle_cmd(inter, sub_cmd.options)
       end
 
     {:ok} =
-      case resp do
+      case res do
         {:ok, resp_str} ->
           Api.create_interaction_response(
             inter,
@@ -53,8 +48,6 @@ defmodule BnBBot.Commands.Shuffle do
             }
           )
       end
-
-    :ignore
   end
 
   @impl true
@@ -65,18 +58,79 @@ defmodule BnBBot.Commands.Shuffle do
       description: "Shuffle a series of numbers",
       options: [
         %{
-          type: 4,
-          name: "end",
-          description: "The last number in the sequence",
-          required: true
+          type: 1,
+          name: "numbers",
+          description: "Shuffle a series of numbers",
+          options: [
+            %{
+              type: 4,
+              name: "end",
+              description: "The last number in the sequence",
+              required: true
+            },
+            %{
+              type: 4,
+              name: "start",
+              description: "The first number in the sequence, defaults to 1"
+            }
+          ]
         },
         %{
-          type: 4,
-          name: "start",
-          description: "The first number in the sequence, defaults to 1"
+          type: 1,
+          name: "names",
+          description: "Shuffle a given set of comma separated names",
+          options: [
+            %{
+              type: 3,
+              name: "list",
+              description: "The names to shuffle, comma separated",
+              required: true
+            }
+          ]
         }
       ]
     }
+  end
+
+  defp number_shuffle_cmd(_inter, opts) do
+    case opts do
+      [stop, start] ->
+        start_val = start.value
+        stop_val = stop.value
+        shuffle_two_nums(start_val, stop_val)
+
+      [stop] ->
+        stop_val = stop.value
+        shuffle_single_num(stop_val)
+    end
+  end
+
+  defp name_shuffle_cmd(_inter, [names]) do
+    name_list =
+      names.value
+      |> String.split(~r/,\s*/)
+      |> Stream.map(&String.trim/1)
+      |> Stream.filter(fn x -> x != "" end)
+      |> Enum.to_list()
+
+    len = length(name_list)
+
+    cond do
+      len <= 1 ->
+        {:error, "Cowardly refusing to shuffle less than 2 names"}
+
+      len > 64 ->
+        {:error, "Cowardly refusing to shuffle more than 64 names"}
+
+      true ->
+        list = Enum.shuffle(name_list) |> Enum.intersperse(", ")
+
+        if IO.iodata_length(list) > 1950 do
+          {:error, "Resulting message length would be too long"}
+        else
+          {:ok, IO.iodata_to_binary(list)}
+        end
+    end
   end
 
   defp shuffle_nums(start, stop) when start < stop do
