@@ -296,11 +296,11 @@ defmodule BnBBot.Library.BattlechipTable do
   def handle_continue(:reload, _state) do
     case load_chips() do
       {:ok, chips} ->
-        {:noreply, chips}
+        {:noreply, chips, :hibernate}
 
       {:error, reason} ->
         Logger.warn("Failed to load Chips: #{reason}")
-        {:noreply, %{}}
+        {:noreply, %{}, :hibernate}
     end
   end
 
@@ -340,10 +340,10 @@ defmodule BnBBot.Library.BattlechipTable do
   def handle_call(:reload, _from, _state) do
     case load_chips() do
       {:ok, chips} ->
-        {:reply, {:ok}, chips}
+        {:reply, {:ok}, chips, :hibernate}
 
       {:error, reason} ->
-        {:reply, {:error, reason}, Map.new()}
+        {:reply, {:error, reason}, %{}, :hibernate}
     end
   end
 

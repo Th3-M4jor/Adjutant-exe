@@ -245,11 +245,11 @@ defmodule BnBBot.Library.NCPTable do
   def handle_continue(:reload, _state) do
     case load_ncps() do
       {:ok, ncps} ->
-        {:noreply, ncps}
+        {:noreply, ncps, :hibernate}
 
       {:error, reason} ->
         Logger.warn("Failed to load NCPS: #{reason}")
-        {:noreply, %{}}
+        {:noreply, %{}, :hibernate}
     end
   end
 
@@ -325,10 +325,10 @@ defmodule BnBBot.Library.NCPTable do
   def handle_call(:reload, _from, _state) do
     case load_ncps() do
       {:ok, ncps} ->
-        {:reply, {:ok}, ncps}
+        {:reply, {:ok}, ncps, :hibernate}
 
       {:error, reason} ->
-        {:reply, {:error, reason}, Map.new()}
+        {:reply, {:error, reason}, Map.new(), :hibernate}
     end
   end
 

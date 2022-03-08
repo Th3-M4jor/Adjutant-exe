@@ -342,11 +342,11 @@ defmodule BnBBot.Library.VirusTable do
   def handle_continue(:reload, _state) do
     case load_viruses() do
       {:ok, viruses} ->
-        {:noreply, viruses}
+        {:noreply, viruses, :hibernate}
 
       {:error, reason} ->
         Logger.warn("Failed to load Viruses: #{reason}")
-        {:noreply, %{}}
+        {:noreply, %{}, :hibernate}
     end
   end
 
@@ -401,10 +401,10 @@ defmodule BnBBot.Library.VirusTable do
   def handle_call(:reload, _from, _state) do
     case load_viruses() do
       {:ok, viruses} ->
-        {:reply, {:ok}, viruses}
+        {:reply, {:ok}, viruses, :hibernate}
 
       {:error, reason} ->
-        {:reply, {:error, reason}, Map.new()}
+        {:reply, {:error, reason}, Map.new(), :hibernate}
     end
   end
 
