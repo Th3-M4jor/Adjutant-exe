@@ -94,13 +94,12 @@ defmodule BnBBot.Commands.Hidden do
         %{name: cmd, value: cmd}
       end)
 
-    {:ok} =
-      Api.create_interaction_response(inter, %{
-        type: 8,
-        data: %{
-          choices: resp
-        }
-      })
+    Api.create_interaction_response!(inter, %{
+      type: 8,
+      data: %{
+        choices: resp
+      }
+    })
   end
 
   @impl true

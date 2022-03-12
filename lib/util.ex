@@ -50,13 +50,13 @@ defmodule BnBBot.Util do
   """
   @spec is_owner_msg?(Nostrum.Struct.Message.t() | Nostrum.Struct.Interaction.t()) :: boolean
   def is_owner_msg?(%Nostrum.Struct.Message{} = msg) do
-    {:ok, owner_id} = Nostrum.Snowflake.cast(@owner_id)
-    {:ok, msg_author_id} = Nostrum.Snowflake.cast(msg.author.id)
+    owner_id = Nostrum.Snowflake.cast!(@owner_id)
+    msg_author_id = Nostrum.Snowflake.cast!(msg.author.id)
     owner_id == msg_author_id
   end
 
   def is_owner_msg?(%Nostrum.Struct.Interaction{} = inter) do
-    {:ok, owner_id} = Nostrum.Snowflake.cast(@owner_id)
+    owner_id = Nostrum.Snowflake.cast!(@owner_id)
 
     inter_author_id =
       if is_nil(inter.member) do
@@ -126,7 +126,7 @@ defmodule BnBBot.Util do
         id
 
       _ ->
-        {:ok, channel} = Api.create_dm(user_id)
+        channel = Api.create_dm!(user_id)
         channel.id
     end
   end

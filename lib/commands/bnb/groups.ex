@@ -51,13 +51,12 @@ defmodule BnBBot.Commands.Groups do
       :erpc.call(backend_name, ElixirBackend.FolderGroups, :get_groups_and_ct, [])
       |> groups_to_embed()
 
-    {:ok} =
-      Api.create_interaction_response(inter, %{
-        type: 4,
-        data: %{
-          embeds: [embed]
-        }
-      })
+    Api.create_interaction_response!(inter, %{
+      type: 4,
+      data: %{
+        embeds: [embed]
+      }
+    })
 
     :ignore
   end
@@ -93,14 +92,13 @@ defmodule BnBBot.Commands.Groups do
 
   @spec node_down(Nostrum.Struct.Interaction.t()) :: :ignore
   defp node_down(%Nostrum.Struct.Interaction{} = inter) do
-    {:ok} =
-      Api.create_interaction_response(inter, %{
-        type: 4,
-        data: %{
-          content: "The backend is currently down, please inform Major",
-          flags: 64
-        }
-      })
+    Api.create_interaction_response!(inter, %{
+      type: 4,
+      data: %{
+        content: "The backend is currently down, please inform Major",
+        flags: 64
+      }
+    })
 
     :ignore
   end

@@ -23,31 +23,30 @@ defmodule BnBBot.Commands.Shuffle do
           name_shuffle_cmd(inter, sub_cmd.options)
       end
 
-    {:ok} =
-      case res do
-        {:ok, resp_str} ->
-          Api.create_interaction_response(
-            inter,
-            %{
-              type: 4,
-              data: %{
-                content: resp_str
-              }
+    case res do
+      {:ok, resp_str} ->
+        Api.create_interaction_response!(
+          inter,
+          %{
+            type: 4,
+            data: %{
+              content: resp_str
             }
-          )
+          }
+        )
 
-        {:error, str} ->
-          Api.create_interaction_response(
-            inter,
-            %{
-              type: 4,
-              data: %{
-                content: str,
-                flags: 64
-              }
+      {:error, str} ->
+        Api.create_interaction_response!(
+          inter,
+          %{
+            type: 4,
+            data: %{
+              content: str,
+              flags: 64
             }
-          )
-      end
+          }
+        )
+    end
   end
 
   @impl true

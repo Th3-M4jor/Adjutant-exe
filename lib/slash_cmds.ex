@@ -183,16 +183,15 @@ defmodule BnBBot.SlashCommands do
   defp handle_slash_command(name, %Nostrum.Struct.Interaction{} = inter) do
     Logger.warn("slash command #{name} doesn't exist")
 
-    {:ok} =
-      Api.create_interaction_response(
-        inter,
-        %{
-          type: 4,
-          data: %{
-            content: "Woops, Major forgot to implement this command",
-            flags: 64
-          }
+    Api.create_interaction_response!(
+      inter,
+      %{
+        type: 4,
+        data: %{
+          content: "Woops, Major forgot to implement this command",
+          flags: 64
         }
-      )
+      }
+    )
   end
 end

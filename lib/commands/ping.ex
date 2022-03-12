@@ -33,10 +33,9 @@ defmodule BnBBot.Commands.Ping do
 
     now = System.monotonic_time()
 
-    {:ok} =
-      Api.create_interaction_response(inter, %{
-        type: 5
-      })
+    Api.create_interaction_response!(inter, %{
+      type: 5
+    })
 
     elapsed = System.monotonic_time() - now
 
@@ -85,11 +84,10 @@ defmodule BnBBot.Commands.Ping do
       ]
     }
 
-    {:ok, _message} =
-      Api.edit_interaction_response(inter, %{
-        content: "",
-        embeds: [ping_embed]
-      })
+    Api.edit_interaction_response!(inter, %{
+      content: "",
+      embeds: [ping_embed]
+    })
 
     :ignore
   end

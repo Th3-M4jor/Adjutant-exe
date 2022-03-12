@@ -105,18 +105,17 @@ defmodule BnBBot.ButtonAwait do
       |> ActionRow.action_row()
       |> List.wrap()
 
-    {:ok} =
-      Nostrum.Api.create_interaction_response(
-        inter,
-        %{
-          type: 4,
-          data: %{
-            content: content,
-            flags: 64,
-            components: buttons
-          }
+    Nostrum.Api.create_interaction_response!(
+      inter,
+      %{
+        type: 4,
+        data: %{
+          content: content,
+          flags: 64,
+          components: buttons
         }
-      )
+      }
+    )
 
     btn_response = BnBBot.ButtonAwait.await_btn_click(uuid, nil)
 
@@ -186,19 +185,18 @@ defmodule BnBBot.ButtonAwait do
       _ ->
         Logger.debug("Interaction wasn't registered, or wasn't for said user")
 
-        {:ok} =
-          Nostrum.Api.create_interaction_response(
-            inter,
-            %{
-              type: 4,
-              data: %{
-                content:
-                  "You're not the one that I created this for, or I'm no longer listening for events on it, sorry",
-                # 64 is the flag for ephemeral messages
-                flags: 64
-              }
+        Nostrum.Api.create_interaction_response!(
+          inter,
+          %{
+            type: 4,
+            data: %{
+              content:
+                "You're not the one that I created this for, or I'm no longer listening for events on it, sorry",
+              # 64 is the flag for ephemeral messages
+              flags: 64
             }
-          )
+          }
+        )
     end
   end
 
@@ -217,16 +215,15 @@ defmodule BnBBot.ButtonAwait do
         to_string(res)
       end
 
-    {:ok} =
-      Nostrum.Api.create_interaction_response(
-        inter,
-        %{
-          type: 4,
-          data: %{
-            content: resp
-          }
+    Nostrum.Api.create_interaction_response!(
+      inter,
+      %{
+        type: 4,
+        data: %{
+          content: resp
         }
-      )
+      }
+    )
   end
 
   # default timeout is 30 seconds

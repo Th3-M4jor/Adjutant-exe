@@ -29,25 +29,24 @@ defmodule BnBBot.Commands.Dice do
         {:error, "An invalid character was found, must be in the format XdY[ + X[dY]]"}
       end
 
-    {:ok} =
-      case roll_result do
-        {:error, text} ->
-          Api.create_interaction_response(inter, %{
-            type: 4,
-            data: %{
-              content: text,
-              flags: 64
-            }
-          })
+    case roll_result do
+      {:error, text} ->
+        Api.create_interaction_response!(inter, %{
+          type: 4,
+          data: %{
+            content: text,
+            flags: 64
+          }
+        })
 
-        {:ok, roll} ->
-          Api.create_interaction_response(inter, %{
-            type: 4,
-            data: %{
-              content: roll
-            }
-          })
-      end
+      {:ok, roll} ->
+        Api.create_interaction_response!(inter, %{
+          type: 4,
+          data: %{
+            content: roll
+          }
+        })
+    end
 
     :ignore
   end

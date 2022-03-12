@@ -53,13 +53,12 @@ defmodule BnBBot.RoleBtn do
         "added"
       end
 
-    {:ok} =
-      Api.create_interaction_response(inter, %{
-        type: 4,
-        data: %{
-          content: "Role has been #{add_or_remove}",
-          flags: 64
-        }
-      })
+    Api.create_interaction_response!(inter, %{
+      type: 4,
+      data: %{
+        content: "Role has been #{add_or_remove}",
+        flags: 64
+      }
+    })
   end
 end

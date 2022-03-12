@@ -29,28 +29,26 @@ defmodule BnBBot.Webhook.Update do
     case btn_response do
       {btn_inter, "yes"} ->
         Task.start(fn ->
-          {:ok} =
-            Api.create_interaction_response(btn_inter, %{
-              type: 7,
-              data: %{
-                content: "Updating...",
-                components: []
-              }
-            })
+          Api.create_interaction_response!(btn_inter, %{
+            type: 7,
+            data: %{
+              content: "Updating...",
+              components: []
+            }
+          })
         end)
 
         true
 
       {btn_inter, "no"} ->
         Task.start(fn ->
-          {:ok} =
-            Api.create_interaction_response(btn_inter, %{
-              type: 7,
-              data: %{
-                content: "Not updating.",
-                components: []
-              }
-            })
+          Api.create_interaction_response!(btn_inter, %{
+            type: 7,
+            data: %{
+              content: "Not updating.",
+              components: []
+            }
+          })
         end)
 
         false
@@ -95,28 +93,26 @@ defmodule BnBBot.Webhook.Update do
     case btn_response do
       {btn_inter, "yes"} ->
         Task.start(fn ->
-          {:ok} =
-            Api.create_interaction_response(btn_inter, %{
-              type: 7,
-              data: %{
-                content: "Announcing...",
-                components: []
-              }
-            })
+          Api.create_interaction_response!(btn_inter, %{
+            type: 7,
+            data: %{
+              content: "Announcing...",
+              components: []
+            }
+          })
         end)
 
         true
 
       {btn_inter, "no"} ->
         Task.start(fn ->
-          {:ok} =
-            Api.create_interaction_response(btn_inter, %{
-              type: 7,
-              data: %{
-                content: "Not announcing",
-                components: []
-              }
-            })
+          Api.create_interaction_response!(btn_inter, %{
+            type: 7,
+            data: %{
+              content: "Not announcing",
+              components: []
+            }
+          })
         end)
 
         false

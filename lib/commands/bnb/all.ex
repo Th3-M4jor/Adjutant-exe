@@ -53,13 +53,12 @@ defmodule BnBBot.Commands.All do
         %{name: name, value: lower_name}
       end)
 
-    {:ok} =
-      Api.create_interaction_response(inter, %{
-        type: 8,
-        data: %{
-          choices: all_pos
-        }
-      })
+    Api.create_interaction_response!(inter, %{
+      type: 8,
+      data: %{
+        choices: all_pos
+      }
+    })
   end
 
   @impl true
@@ -136,14 +135,13 @@ defmodule BnBBot.Commands.All do
   def do_btn_response(%Nostrum.Struct.Interaction{} = inter, []) do
     Logger.debug("Nothing similar enough found")
 
-    {:ok} =
-      Api.create_interaction_response(inter, %{
-        type: 4,
-        data: %{
-          content: "I'm sorry, I couldn't find anything with a similar enough name",
-          flags: 64
-        }
-      })
+    Api.create_interaction_response!(inter, %{
+      type: 4,
+      data: %{
+        content: "I'm sorry, I couldn't find anything with a similar enough name",
+        flags: 64
+      }
+    })
 
     :ignore
   end
@@ -151,13 +149,12 @@ defmodule BnBBot.Commands.All do
   def do_btn_response(%Nostrum.Struct.Interaction{} = inter, [{_, opt}]) do
     Logger.debug("Found only one option that was similar enough")
 
-    {:ok} =
-      Api.create_interaction_response(inter, %{
-        type: 4,
-        data: %{
-          content: "#{opt}"
-        }
-      })
+    Api.create_interaction_response!(inter, %{
+      type: 4,
+      data: %{
+        content: "#{opt}"
+      }
+    })
 
     :ignore
   end
@@ -174,18 +171,17 @@ defmodule BnBBot.Commands.All do
 
     buttons = BnBBot.ButtonAwait.generate_msg_buttons_with_uuid(obj_list, uuid)
 
-    {:ok} =
-      Api.create_interaction_response(
-        inter,
-        %{
-          type: 4,
-          data: %{
-            content: "Did you mean:",
-            flags: 64,
-            components: buttons
-          }
+    Api.create_interaction_response!(
+      inter,
+      %{
+        type: 4,
+        data: %{
+          content: "Did you mean:",
+          flags: 64,
+          components: buttons
         }
-      )
+      }
+    )
 
     btn_response = BnBBot.ButtonAwait.await_btn_click(uuid, nil)
 
@@ -197,14 +193,13 @@ defmodule BnBBot.Commands.All do
 
         edit_task =
           Task.async(fn ->
-            {:ok} =
-              Api.create_interaction_response(btn_inter, %{
-                type: 7,
-                data: %{
-                  content: "You selected #{lib_obj.name}",
-                  components: []
-                }
-              })
+            Api.create_interaction_response!(btn_inter, %{
+              type: 7,
+              data: %{
+                content: "You selected #{lib_obj.name}",
+                components: []
+              }
+            })
           end)
 
         resp_task =

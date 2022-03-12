@@ -25,17 +25,16 @@ defmodule BnBBot.Commands.PHB do
         }
       end)
 
-    {:ok} =
-      Api.create_interaction_response(
-        inter,
-        %{
-          type: 4,
-          data: %{
-            content: "B&B Links:",
-            components: link_buttons
-          }
+    Api.create_interaction_response!(
+      inter,
+      %{
+        type: 4,
+        data: %{
+          content: "B&B Links:",
+          components: link_buttons
         }
-      )
+      }
+    )
 
     :ignore
   end

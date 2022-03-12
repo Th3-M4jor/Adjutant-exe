@@ -185,13 +185,12 @@ defmodule BnBBot.Commands.NCP do
         %{name: name, value: lower_name}
       end)
 
-    {:ok} =
-      Api.create_interaction_response(inter, %{
-        type: 8,
-        data: %{
-          choices: list
-        }
-      })
+    Api.create_interaction_response!(inter, %{
+      type: 8,
+      data: %{
+        choices: list
+      }
+    })
   end
 
   defp send_ncp_color(inter, color, ncps, cost \\ nil)
@@ -208,17 +207,16 @@ defmodule BnBBot.Commands.NCP do
         "There are no #{color_str} NCPs with a cost no greater than #{cost} EB"
       end
 
-    {:ok} =
-      Api.create_interaction_response(
-        inter,
-        %{
-          type: 4,
-          data: %{
-            content: content,
-            flags: 64
-          }
+    Api.create_interaction_response!(
+      inter,
+      %{
+        type: 4,
+        data: %{
+          content: content,
+          flags: 64
         }
-      )
+      }
+    )
   end
 
   defp send_ncp_color(inter, color, ncps, cost) do
@@ -233,17 +231,16 @@ defmodule BnBBot.Commands.NCP do
         "These are the #{color_str} NCPs with a cost no greater than #{cost} EB"
       end
 
-    {:ok} =
-      Api.create_interaction_response(
-        inter,
-        %{
-          type: 4,
-          data: %{
-            content: content,
-            components: buttons
-          }
+    Api.create_interaction_response!(
+      inter,
+      %{
+        type: 4,
+        data: %{
+          content: content,
+          components: buttons
         }
-      )
+      }
+    )
 
     # five minutes
     BnBBot.Util.wait_or_shutdown(300_000)
@@ -267,38 +264,35 @@ defmodule BnBBot.Commands.NCP do
 
     elem_str = to_string(element) |> String.capitalize(:ascii)
 
-    {:ok} =
-      Api.create_interaction_response(
-        inter,
-        %{
-          type: 4,
-          data: %{
-            content: "These are the starters for #{elem_str}:",
-            components: buttons
-          }
+    Api.create_interaction_response!(
+      inter,
+      %{
+        type: 4,
+        data: %{
+          content: "These are the starters for #{elem_str}:",
+          components: buttons
         }
-      )
+      }
+    )
 
     # five minutes
     BnBBot.Util.wait_or_shutdown(300_000)
 
     buttons = BnBBot.ButtonAwait.generate_persistent_buttons(starters, true)
 
-    {:ok, _message} =
-      Api.edit_interaction_response(inter, %{
-        content: "These are the starters for #{elem_str}:",
-        components: buttons
-      })
+    Api.edit_interaction_response!(inter, %{
+      content: "These are the starters for #{elem_str}:",
+      components: buttons
+    })
   end
 
   defp send_found_ncp(%Nostrum.Struct.Interaction{} = inter, %BnBBot.Library.NCP{} = ncp) do
-    {:ok} =
-      Api.create_interaction_response(inter, %{
-        type: 4,
-        data: %{
-          content: to_string(ncp)
-        }
-      })
+    Api.create_interaction_response!(inter, %{
+      type: 4,
+      data: %{
+        content: to_string(ncp)
+      }
+    })
   end
 
   defp handle_not_found_ncp(inter, opts) do

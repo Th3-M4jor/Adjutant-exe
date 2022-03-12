@@ -201,26 +201,24 @@ defmodule BnBBot.Commands.Chip do
         %{name: name, value: lower_name}
       end)
 
-    {:ok} =
-      Api.create_interaction_response(inter, %{
-        type: 8,
-        data: %{
-          choices: list
-        }
-      })
+    Api.create_interaction_response!(inter, %{
+      type: 8,
+      data: %{
+        choices: list
+      }
+    })
   end
 
   def send_found_chip(%Nostrum.Struct.Interaction{} = inter, %BnBBot.Library.Battlechip{} = chip) do
-    {:ok} =
-      Api.create_interaction_response(
-        inter,
-        %{
-          type: 4,
-          data: %{
-            content: to_string(chip)
-          }
+    Api.create_interaction_response!(
+      inter,
+      %{
+        type: 4,
+        data: %{
+          content: to_string(chip)
         }
-      )
+      }
+    )
   end
 
   def locate_drops(%Nostrum.Struct.Interaction{} = inter, name) do
@@ -239,30 +237,28 @@ defmodule BnBBot.Commands.Chip do
     drops = BnBBot.Library.Virus.locate_by_drop(chip)
 
     if Enum.empty?(drops) do
-      {:ok} =
-        Api.create_interaction_response(
-          inter,
-          %{
-            type: 4,
-            data: %{
-              content: "No viruses drop #{chip.name}."
-            }
+      Api.create_interaction_response!(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: "No viruses drop #{chip.name}."
           }
-        )
+        }
+      )
     else
       buttons = BnBBot.ButtonAwait.generate_persistent_buttons(drops)
 
-      {:ok} =
-        Api.create_interaction_response(
-          inter,
-          %{
-            type: 4,
-            data: %{
-              content: "The following viruses drop #{chip.name}:",
-              components: buttons
-            }
+      Api.create_interaction_response!(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: "The following viruses drop #{chip.name}:",
+            components: buttons
           }
-        )
+        }
+      )
 
       route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
@@ -317,14 +313,13 @@ defmodule BnBBot.Commands.Chip do
   end
 
   defp handle_chip_not_found(%Nostrum.Struct.Interaction{} = inter, []) do
-    {:ok} =
-      Api.create_interaction_response(inter, %{
-        type: 4,
-        data: %{
-          content: "I'm sorry, I couldn't find anything with a similar enough name",
-          flags: 64
-        }
-      })
+    Api.create_interaction_response!(inter, %{
+      type: 4,
+      data: %{
+        content: "I'm sorry, I couldn't find anything with a similar enough name",
+        flags: 64
+      }
+    })
 
     :ignore
   end
@@ -343,18 +338,17 @@ defmodule BnBBot.Commands.Chip do
 
     buttons = BnBBot.ButtonAwait.generate_msg_buttons_with_uuid(obj_list, uuid)
 
-    {:ok} =
-      Api.create_interaction_response(
-        inter,
-        %{
-          type: 4,
-          data: %{
-            content: "Did you mean:",
-            flags: 64,
-            components: buttons
-          }
+    Api.create_interaction_response!(
+      inter,
+      %{
+        type: 4,
+        data: %{
+          content: "Did you mean:",
+          flags: 64,
+          components: buttons
         }
-      )
+      }
+    )
 
     btn_response = BnBBot.ButtonAwait.await_btn_click(uuid, nil)
 

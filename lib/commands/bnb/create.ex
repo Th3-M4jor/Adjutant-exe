@@ -120,34 +120,32 @@ defmodule BnBBot.Commands.Create do
 
     Logger.debug(Kernel.inspect(description_input))
 
-    {:ok} =
-      Api.create_interaction_response(
-        inter,
-        %{
-          type: 9,
-          data: %{
-            custom_id: uuid_str,
-            title: "NCP Description",
-            components: [description_input]
-          }
+    Api.create_interaction_response!(
+      inter,
+      %{
+        type: 9,
+        data: %{
+          custom_id: uuid_str,
+          title: "NCP Description",
+          components: [description_input]
         }
-      )
+      }
+    )
 
     modal_response = BnBBot.ButtonAwait.await_modal_input(uuid)
 
     unless is_nil(modal_response) do
-      {:ok} =
-        Nostrum.Api.create_interaction_response(
-          modal_response,
-          %{
-            type: 4,
-            data: %{
-              content: "Success?",
-              # 64 is the flag for ephemeral messages
-              flags: 64
-            }
+      Nostrum.Api.create_interaction_response!(
+        modal_response,
+        %{
+          type: 4,
+          data: %{
+            content: "Success?",
+            # 64 is the flag for ephemeral messages
+            flags: 64
           }
-        )
+        }
+      )
     end
   end
 end

@@ -140,43 +140,40 @@ defmodule BnBBot.Commands.Virus do
         %{name: name, value: lower_name}
       end)
 
-    {:ok} =
-      Api.create_interaction_response(inter, %{
-        type: 8,
-        data: %{
-          choices: list
-        }
-      })
+    Api.create_interaction_response!(inter, %{
+      type: 8,
+      data: %{
+        choices: list
+      }
+    })
   end
 
   defp send_cr_list(inter, cr, []) do
-    {:ok} =
-      Api.create_interaction_response(
-        inter,
-        %{
-          type: 4,
-          data: %{
-            content: "There are no viruses in CR #{cr}",
-            flags: 64
-          }
+    Api.create_interaction_response!(
+      inter,
+      %{
+        type: 4,
+        data: %{
+          content: "There are no viruses in CR #{cr}",
+          flags: 64
         }
-      )
+      }
+    )
   end
 
   defp send_cr_list(inter, cr, cr_list) do
     buttons = BnBBot.ButtonAwait.generate_persistent_buttons(cr_list)
 
-    {:ok} =
-      Api.create_interaction_response(
-        inter,
-        %{
-          type: 4,
-          data: %{
-            content: "These viruses are in CR #{cr}:",
-            components: buttons
-          }
+    Api.create_interaction_response!(
+      inter,
+      %{
+        type: 4,
+        data: %{
+          content: "These viruses are in CR #{cr}:",
+          components: buttons
         }
-      )
+      }
+    )
 
     route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
@@ -198,18 +195,17 @@ defmodule BnBBot.Commands.Virus do
       " viruses. Cowardly refusing."
     ])
 
-    {:ok} =
-      Api.create_interaction_response(
-        inter,
-        %{
-          type: 4,
-          data: %{
-            content:
-              "Cowardly refusing to build an encounter with less than 1 or more than 25 viruses",
-            flags: 64
-          }
+    Api.create_interaction_response!(
+      inter,
+      %{
+        type: 4,
+        data: %{
+          content:
+            "Cowardly refusing to build an encounter with less than 1 or more than 25 viruses",
+          flags: 64
         }
-      )
+      }
+    )
   end
 
   defp build_encounter(inter, [%{value: count}, %{value: cr}]) do
@@ -248,17 +244,16 @@ defmodule BnBBot.Commands.Virus do
   end
 
   defp send_encounter(inter, []) do
-    {:ok} =
-      Api.create_interaction_response(
-        inter,
-        %{
-          type: 4,
-          data: %{
-            content: "I'm sorry, I couldn't find any viruses in the given CRs",
-            flags: 64
-          }
+    Api.create_interaction_response!(
+      inter,
+      %{
+        type: 4,
+        data: %{
+          content: "I'm sorry, I couldn't find any viruses in the given CRs",
+          flags: 64
         }
-      )
+      }
+    )
   end
 
   @spec send_encounter(Nostrum.Struct.Interaction.t(), [Virus.t()]) :: :ignore
@@ -273,17 +268,16 @@ defmodule BnBBot.Commands.Virus do
       |> Enum.dedup()
       |> BnBBot.ButtonAwait.generate_persistent_buttons()
 
-    {:ok} =
-      Api.create_interaction_response(
-        inter,
-        %{
-          type: 4,
-          data: %{
-            content: names,
-            components: buttons
-          }
+    Api.create_interaction_response!(
+      inter,
+      %{
+        type: 4,
+        data: %{
+          content: names,
+          components: buttons
         }
-      )
+      }
+    )
 
     # five minutes
     BnBBot.Util.wait_or_shutdown(300_000)
@@ -298,16 +292,15 @@ defmodule BnBBot.Commands.Virus do
   end
 
   def send_found_virus(%Nostrum.Struct.Interaction{} = inter, virus) do
-    {:ok} =
-      Api.create_interaction_response(
-        inter,
-        %{
-          type: 4,
-          data: %{
-            content: to_string(virus)
-          }
+    Api.create_interaction_response!(
+      inter,
+      %{
+        type: 4,
+        data: %{
+          content: to_string(virus)
         }
-      )
+      }
+    )
   end
 
   defp handle_not_found(inter, opts) do
