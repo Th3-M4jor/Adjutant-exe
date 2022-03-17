@@ -104,11 +104,23 @@ defmodule BnBBot.Commands.Reload do
 
     [ncp_len, chip_len, virus_len] = Task.await_many([ncp_task, chip_task, virus_task], :infinity)
 
-    validation_msg =
-      case Library.Virus.validate_virus_drops() do
-        {:ok} -> "All virus drops exist"
-        {:error, msg} -> ["missing chips:\n", msg]
-      end
+    virus_validation_task =
+      Task.async(fn ->
+        case Library.Virus.validate_virus_drops() do
+          {:ok} -> "All Virus drops exist\n"
+          {:error, msg} -> ["missing chips:\n", msg]
+        end
+      end)
+
+    ncp_validation_task =
+      Task.async(fn ->
+        case Library.NCP.validate_conflicts() do
+          {:ok} -> "All NCP conflicts exist"
+          {:error, msg} -> ["missing NCPs:\n", msg]
+        end
+      end)
+
+    validation_msg = Task.await_many([virus_validation_task, ncp_validation_task], :infinity)
 
     {"#{chip_len} Battlechips loaded\n#{virus_len} Viruses loaded\n#{ncp_len} NCPs loaded",
      validation_msg}

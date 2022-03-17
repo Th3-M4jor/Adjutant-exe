@@ -5,9 +5,9 @@ defmodule BnBBot.Library.NCP do
   """
   require Logger
 
-  @enforce_keys [:id, :name, :cost, :color, :description]
+  @enforce_keys [:id, :name, :cost, :color, :description, :conflicts]
   @derive [Inspect]
-  defstruct [:id, :name, :cost, :color, :description]
+  defstruct [:id, :name, :cost, :color, :description, :conflicts]
 
   @type colors :: :white | :pink | :yellow | :green | :blue | :red | :gray
 
@@ -16,6 +16,7 @@ defmodule BnBBot.Library.NCP do
           name: String.t(),
           cost: pos_integer(),
           color: colors(),
+          conflicts: [String.t()] | nil,
           description: String.t()
         }
 
@@ -64,6 +65,11 @@ defmodule BnBBot.Library.NCP do
   @spec get_ncp_ct() :: non_neg_integer()
   def get_ncp_ct do
     GenServer.call(:ncp_table, :len, :infinity)
+  end
+
+  @spec validate_conflicts() :: {:ok} | {:error, iodata()}
+  def validate_conflicts() do
+    GenServer.call(:ncp_table, :validate_conflicts, :infinity)
   end
 
   @spec ncp_color_to_string(BnBBot.Library.NCP.t()) :: String.t()
@@ -205,6 +211,13 @@ defimpl String.Chars, for: BnBBot.Library.NCP do
     # Same as but faster due to how Elixir works
     # "```\n#{ncp.name} - (#{ncp.cost} EB) - #{ncp.color}\n#{ncp.description}\n```"
 
+    conflicts = if is_nil(ncp.conflicts) do
+      []
+    else
+      conflict_list = ncp.conflicts |> Enum.intersperse(", ")
+      ["\nConflicts: ", conflict_list]
+    end
+
     io_list = [
       "```\n",
       ncp.name,
@@ -214,6 +227,7 @@ defimpl String.Chars, for: BnBBot.Library.NCP do
       BnBBot.Library.NCP.ncp_color_to_string(ncp),
       "\n",
       ncp.description,
+      conflicts,
       "\n```"
     ]
 
@@ -320,6 +334,28 @@ defmodule BnBBot.Library.NCPTable do
     {:reply, resp, state}
   end
 
+  @spec handle_call(:valiate_conflicts, GenServer.from(), map()) ::
+          {:reply, {:ok} | {:errror, iodata()}, map()}
+  def handle_call(:validate_conflicts, _from, state) do
+    ncps = Map.values(state) |> Stream.filter(fn ncp -> not is_nil(ncp.conflicts) end)
+
+    res =
+      for ncp <- ncps,
+          conflict <- ncp.conflicts,
+          not Map.has_key?(state, String.downcase(conflict, :ascii)) do
+        "NCP #{ncp.name} has conflict #{conflict} but it is not in the table"
+      end
+
+    to_ret =
+      if IO.iodata_length(res) == 0 do
+        {:ok}
+      else
+        {:error, res}
+      end
+
+    {:reply, to_ret, state}
+  end
+
   @spec handle_call(:reload, GenServer.from(), map()) ::
           {:reply, {:ok} | {:error, String.t()}, map()}
   def handle_call(:reload, _from, _state) do
@@ -358,9 +394,10 @@ defmodule BnBBot.Library.NCPTable do
 
     ncp_map =
       for ncp <- data_list, into: %{} do
-        color = String.to_atom(ncp[:color])
-        lower_name = String.downcase(ncp[:name], :ascii)
-        ncp_map = Map.put(ncp, :color, color)
+        %{color: color, name: name} = ncp
+        color = String.to_atom(color)
+        lower_name = String.downcase(name, :ascii)
+        ncp_map = %{ncp | color: color}
         {lower_name, struct(BnBBot.Library.NCP, ncp_map)}
       end
 
