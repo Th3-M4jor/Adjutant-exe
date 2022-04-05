@@ -120,13 +120,22 @@ defmodule BnBBot.Commands.Virus do
   defp search_virus(%Nostrum.Struct.Interaction{type: 2} = inter, name) do
     Logger.info(["Searching for the following virus: ", name])
 
-    case Virus.get_virus(name) do
-      {:found, virus} ->
+    case Virus.get(name) do
+      %Virus{} = virus ->
         Logger.debug(["Found the following virus: ", virus.name])
         send_found_virus(inter, virus)
 
-      {:not_found, possibilities} ->
-        handle_not_found(inter, possibilities)
+      nil ->
+        Api.create_interaction_response!(
+          inter,
+          %{
+            type: 4,
+            data: %{
+              content: "Virus not found",
+              flags: 64
+            }
+          }
+        )
     end
   end
 
@@ -135,9 +144,9 @@ defmodule BnBBot.Commands.Virus do
 
     list =
       Virus.get_autocomplete(name)
-      |> Enum.map(fn {_, name} ->
-        lower_name = String.downcase(name, :ascii)
-        %{name: name, value: lower_name}
+      |> Enum.map(fn name ->
+        # lower_name = String.downcase(name, :ascii)
+        %{name: name, value: name}
       end)
 
     Api.create_interaction_response!(inter, %{
@@ -301,11 +310,5 @@ defmodule BnBBot.Commands.Virus do
         }
       }
     )
-  end
-
-  defp handle_not_found(inter, opts) do
-    Logger.debug("No virus found, showing suggestions")
-
-    BnBBot.Commands.All.do_btn_response(inter, opts)
   end
 end

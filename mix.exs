@@ -35,9 +35,9 @@ defmodule ElixirBot.MixProject do
       # {:nostrum, git: "https://github.com/Kraigie/nostrum.git"},
       {:nostrum, path: "../nostrum/"},
       {:dotenv, "~> 3.1"},
-      {:httpoison, "~> 1.7"},
       {:jason, "~> 1.2"},
       {:ecto_sql, "~> 3.0"},
+      {:postgrex, ">= 0.15.10"},
       {:ecto_sqlite3, "~> 0.7.1"},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false}

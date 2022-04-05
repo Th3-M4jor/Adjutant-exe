@@ -9,6 +9,7 @@ defmodule BnBBot.Commands.Chip do
   `dropped-by` - Lists all viruses which drop that particular chip
   """
 
+  alias BnBBot.Library.Battlechip
   alias Nostrum.Api
   require Logger
 
@@ -181,13 +182,22 @@ defmodule BnBBot.Commands.Chip do
   def search_chip(%Nostrum.Struct.Interaction{type: 2} = inter, name) do
     Logger.info(["Searching for the following chip: ", name])
 
-    case BnBBot.Library.Battlechip.get_chip(name) do
-      {:found, chip} ->
+    case Battlechip.get(name) do
+      %Battlechip{} = chip ->
         Logger.debug(["Found the following chip: ", chip.name])
         send_found_chip(inter, chip)
 
-      {:not_found, possibilities} ->
-        handle_not_found(inter, possibilities)
+      nil ->
+        Api.create_interaction_response!(
+          inter,
+          %{
+            type: 4,
+            data: %{
+              content: "Chip not found",
+              flags: 64
+            }
+          }
+        )
     end
   end
 
@@ -195,10 +205,10 @@ defmodule BnBBot.Commands.Chip do
     Logger.debug(["Autocomplete Searching for the following chip: ", inspect(name)])
 
     list =
-      BnBBot.Library.Battlechip.get_autocomplete(name)
-      |> Enum.map(fn {_, name} ->
-        lower_name = String.downcase(name, :ascii)
-        %{name: name, value: lower_name}
+      Battlechip.get_autocomplete(name)
+      |> Enum.map(fn name ->
+        # lower_name = String.downcase(name, :ascii)
+        %{name: name, value: name}
       end)
 
     Api.create_interaction_response!(inter, %{
@@ -224,12 +234,21 @@ defmodule BnBBot.Commands.Chip do
   def locate_drops(%Nostrum.Struct.Interaction{} = inter, name) do
     Logger.info(["Locating drops for the following chip: ", name])
 
-    case BnBBot.Library.Battlechip.get_chip(name) do
-      {:found, chip} ->
+    case BnBBot.Library.Battlechip.get(name) do
+      %Battlechip{} = chip ->
         send_drops(inter, chip)
 
-      {:not_found, possibilities} ->
-        handle_chip_not_found(inter, possibilities)
+      nil ->
+        Api.create_interaction_response!(
+          inter,
+          %{
+            type: 4,
+            data: %{
+              content: "I'm sorry, that chip doesn't exist",
+              flags: 64
+            }
+          }
+        )
     end
   end
 
@@ -310,74 +329,6 @@ defmodule BnBBot.Commands.Chip do
         components: []
       })
     end
-  end
-
-  defp handle_chip_not_found(%Nostrum.Struct.Interaction{} = inter, []) do
-    Api.create_interaction_response!(inter, %{
-      type: 4,
-      data: %{
-        content: "I'm sorry, I couldn't find anything with a similar enough name",
-        flags: 64
-      }
-    })
-
-    :ignore
-  end
-
-  defp handle_chip_not_found(%Nostrum.Struct.Interaction{} = inter, [{_, chip}]) do
-    send_drops(inter, chip)
-  end
-
-  defp handle_chip_not_found(%Nostrum.Struct.Interaction{} = inter, possibilities) do
-    obj_list = Enum.map(possibilities, fn {_, opt} -> opt end)
-
-    uuid =
-      System.unique_integer([:positive])
-      # constrain to be between 0 and 0xFF_FF_FF
-      |> Bitwise.band(0xFF_FF_FF)
-
-    buttons = BnBBot.ButtonAwait.generate_msg_buttons_with_uuid(obj_list, uuid)
-
-    Api.create_interaction_response!(
-      inter,
-      %{
-        type: 4,
-        data: %{
-          content: "Did you mean:",
-          flags: 64,
-          components: buttons
-        }
-      }
-    )
-
-    btn_response = BnBBot.ButtonAwait.await_btn_click(uuid, nil)
-
-    route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
-
-    if is_nil(btn_response) do
-      Api.request(:patch, route, %{
-        content: "Timed out waiting for response",
-        components: []
-      })
-    else
-      {_, {?c, name}} = btn_response
-      chip = BnBBot.Library.Battlechip.get!(name)
-
-      Task.start(fn ->
-        Api.request(:patch, route, %{
-          content: "You selected #{chip.name}",
-          components: []
-        })
-      end)
-
-      send_drops_found(inter, chip)
-    end
-  end
-
-  defp handle_not_found(inter, opts) do
-    Logger.debug("No chip found, showing suggestions")
-
-    BnBBot.Commands.All.do_btn_response(inter, opts)
   end
 
   defp filter_chip_list(inter, []) do
@@ -465,11 +416,11 @@ defmodule BnBBot.Commands.Chip do
   defp filter_arg_to_tuple(arg) do
     case arg.name do
       "skill" ->
-        skill = BnBBot.Library.Shared.skill_to_atom(arg.value)
+        skill = arg.value |> String.upcase(:ascii)
         {:skill, skill}
 
       "element" ->
-        element = arg.value |> String.downcase(:ascii) |> String.to_existing_atom()
+        element = arg.value |> String.capitalize(:ascii)
         {:element, element}
 
       "cr" ->
@@ -486,7 +437,7 @@ defmodule BnBBot.Commands.Chip do
         {:max_cr, arg.value}
 
       "blight" ->
-        element = arg.value |> String.downcase(:ascii) |> String.to_existing_atom()
+        element = arg.value |> String.capitalize(:ascii)
         {:blight, element}
 
       "min_avg_dmg" ->

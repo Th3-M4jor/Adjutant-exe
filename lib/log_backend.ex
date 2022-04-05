@@ -41,7 +41,7 @@ defmodule BnBBot.LogBackend do
       ) do
     # just drop the message if repo is offline, but check each time
     state =
-      if Ecto.Repo.all_running() |> Enum.member?(BnBBot.Repo) do
+      if Ecto.Repo.all_running() |> Enum.member?(BnBBot.Repo.SQLite) do
         if right_log_level?(min_level, level) do
           msg = IO.chardata_to_string(message)
 
@@ -50,7 +50,7 @@ defmodule BnBBot.LogBackend do
             message: msg
           }
 
-          BnBBot.Repo.insert(line)
+          BnBBot.Repo.SQLite.insert(line)
         end
 
         Map.put(state, :online, true)
@@ -76,7 +76,7 @@ defmodule BnBBot.LogBackend do
         message: msg
       }
 
-      BnBBot.Repo.insert(line)
+      BnBBot.Repo.SQLite.insert(line)
     end
 
     {:ok, state}

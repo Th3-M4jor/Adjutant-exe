@@ -35,27 +35,6 @@ defmodule BnBBot.Supervisor do
 
     button_collector = Registry.child_spec(keys: :unique, name: :BUTTON_COLLECTOR)
 
-    ncp =
-      Supervisor.child_spec(
-        {BnBBot.Library.NCPTable, []},
-        id: {:bnb_bot, :ncp_table},
-        restart: :transient
-      )
-
-    chips =
-      Supervisor.child_spec(
-        {BnBBot.Library.BattlechipTable, []},
-        id: {:bnb_bot, :chip_table},
-        restart: :transient
-      )
-
-    viruses =
-      Supervisor.child_spec(
-        {BnBBot.Library.VirusTable, []},
-        id: {:bnb_bot, :virus_table},
-        restart: :transient
-      )
-
     bot_data =
       Supervisor.child_spec(
         {BnBBot.Util.KVP, []},
@@ -63,7 +42,7 @@ defmodule BnBBot.Supervisor do
         restart: :transient
       )
 
-    children = [ncp, chips, viruses, button_collector, shutdown_registry, bot_data | children]
+    children = [button_collector, shutdown_registry, bot_data | children]
     # children = [chips | children]
     # children = [viruses | children]
     Logger.debug(inspect(children, pretty: true))

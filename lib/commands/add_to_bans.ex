@@ -69,7 +69,7 @@ defmodule BnBBot.Commands.AddToBans do
     guild_id = inter.guild_id
 
     tasks =
-      BnBBot.Repo.all(__MODULE__)
+      BnBBot.Repo.SQLite.all(__MODULE__)
       |> Enum.map(fn row ->
         Task.async(Api, :create_guild_ban, [guild_id, row.to_ban, 0, "Salting the Earth"])
       end)
@@ -96,7 +96,7 @@ defmodule BnBBot.Commands.AddToBans do
   defp send_id_list(inter) do
     list =
       from(u in __MODULE__, select: u.to_ban)
-      |> BnBBot.Repo.all()
+      |> BnBBot.Repo.SQLite.all()
       |> Enum.map(fn to_ban ->
         "<@#{to_ban}>\n"
       end)
@@ -121,7 +121,7 @@ defmodule BnBBot.Commands.AddToBans do
     query = from(u in __MODULE__, where: u.to_ban == ^to_add)
 
     resp =
-      if BnBBot.Repo.exists?(query) do
+      if BnBBot.Repo.SQLite.exists?(query) do
         "That user is already on the list"
       else
         row = %__MODULE__{
@@ -129,7 +129,7 @@ defmodule BnBBot.Commands.AddToBans do
           added_by: author_id
         }
 
-        BnBBot.Repo.insert!(row)
+        BnBBot.Repo.SQLite.insert!(row)
 
         "Added <@#{to_add}> to the banlist"
       end

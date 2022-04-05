@@ -166,12 +166,21 @@ defmodule BnBBot.Commands.NCP do
   defp search_ncp(%Nostrum.Struct.Interaction{type: 2} = inter, name) do
     Logger.info(["Searching for the following NCP: ", name])
 
-    case NCP.get_ncp(name) do
-      {:found, ncp} ->
+    case NCP.get(name) do
+      %NCP{} = ncp ->
         send_found_ncp(inter, ncp)
 
-      {:not_found, possibilities} ->
-        handle_not_found_ncp(inter, possibilities)
+      nil ->
+        Api.create_interaction_response!(
+          inter,
+          %{
+            type: 4,
+            data: %{
+              content: "NCP not found",
+              flags: 64
+            }
+          }
+        )
     end
   end
 
@@ -180,9 +189,9 @@ defmodule BnBBot.Commands.NCP do
 
     list =
       NCP.get_autocomplete(name)
-      |> Enum.map(fn {_, name} ->
-        lower_name = String.downcase(name, :ascii)
-        %{name: name, value: lower_name}
+      |> Enum.map(fn name ->
+        # lower_name = String.downcase(name, :ascii)
+        %{name: name, value: name}
       end)
 
     Api.create_interaction_response!(inter, %{
@@ -293,11 +302,5 @@ defmodule BnBBot.Commands.NCP do
         content: to_string(ncp)
       }
     })
-  end
-
-  defp handle_not_found_ncp(inter, opts) do
-    Logger.debug("handling a not found ncp")
-
-    BnBBot.Commands.All.do_btn_response(inter, opts)
   end
 end

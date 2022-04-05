@@ -10,13 +10,56 @@ defmodule BnBBot.RepoSupervisor do
 
   @impl true
   def init(_init_arg) do
-    Supervisor.init([BnBBot.Repo], strategy: :one_for_one)
+    Supervisor.init([BnBBot.Repo.SQLite, BnBBot.Repo.Postgres], strategy: :one_for_one)
   end
 end
 
-defmodule BnBBot.Repo do
+defmodule BnBBot.Repo.SQLite do
   @moduledoc """
   The sqlite repo.
   """
   use Ecto.Repo, otp_app: :elixir_bot, adapter: Ecto.Adapters.SQLite3
+end
+
+defmodule BnBBot.Repo.Postgres do
+  @moduledoc """
+  The postgres repo.
+  """
+  use Ecto.Repo, otp_app: :elixir_bot, adapter: Ecto.Adapters.Postgres, read_only: true
+end
+
+defmodule BnBBot.CustomQuery do
+  @moduledoc """
+  Defines custom query methods, this is specific to postgres.
+  """
+
+  defmacro array_contains(array, value) do
+    quote do
+      fragment("? = ANY(?)", unquote(value), unquote(array))
+    end
+  end
+
+  defmacro word_similarity(column, word) do
+    quote do
+      fragment("word_similarity(?, ?)", unquote(column), unquote(word))
+    end
+  end
+
+  defmacro blight_elem_access(column) do
+    quote do
+      fragment("(?).elem", unquote(column))
+    end
+  end
+
+  defmacro dienum_access(column) do
+    quote do
+      fragment("(?).dienum", unquote(column))
+    end
+  end
+
+  defmacro dietype_access(column) do
+    quote do
+      fragment("(?).dietype", unquote(column))
+    end
+  end
 end

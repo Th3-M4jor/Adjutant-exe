@@ -31,10 +31,21 @@ config :logger,
     [module: Nostrum.Shard.Event, level_lower_than: :warn]
   ]
 
-config :elixir_bot, BnBBot.Repo, database: "./db/dev_db.db"
+config :elixir_bot, BnBBot.Repo.SQLite,
+  database: "./db/dev_db.db",
+  priv: "priv/sqlite"
+
+config :elixir_bot, BnBBot.Repo.Postgres,
+  username: "postgres",
+  password: "postgres",
+  database: "default",
+  hostname: "localhost",
+  show_sensitive_data_on_connection_error: true,
+  pool_size: 10,
+  priv: "priv/postgres"
 
 config :elixir_bot,
-  ecto_repos: [BnBBot.Repo],
+  ecto_repos: [BnBBot.Repo.SQLite, BnBBot.Repo.Postgres],
   ecto_shard_count: 1,
   prefix: "!",
   owner_id: 666,

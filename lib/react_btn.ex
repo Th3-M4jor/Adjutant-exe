@@ -203,9 +203,9 @@ defmodule BnBBot.ButtonAwait do
   def resp_to_persistent_btn(%Nostrum.Struct.Interaction{} = inter, kind, name) do
     res =
       case kind do
-        ?c -> Battlechip.get_or_nil(name)
-        ?n -> NCP.get_or_nil(name)
-        ?v -> Virus.get_or_nil(name)
+        ?c -> Battlechip.get(name)
+        ?n -> NCP.get(name)
+        ?v -> Virus.get(name)
       end
 
     resp =

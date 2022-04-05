@@ -5,9 +5,36 @@ defmodule BnBBot.Library.NCP do
   """
   require Logger
 
-  @enforce_keys [:id, :name, :cost, :color, :description, :conflicts]
+  #  @enforce_keys [:id, :name, :cost, :color, :description, :conflicts]
+  #  @derive [Inspect]
+  #  defstruct [:id, :name, :cost, :color, :description, :conflicts]
+
+  use Ecto.Schema
+  import Ecto.Query
+  import BnBBot.CustomQuery
+
   @derive [Inspect]
-  defstruct [:id, :name, :cost, :color, :description, :conflicts]
+  schema "NaviCust" do
+    field(:name, :string)
+    field(:description, :string)
+    field(:cost, :integer, source: :size)
+
+    field(:color, Ecto.Enum,
+      values: [
+        white: "White",
+        pink: "Pink",
+        yellow: "Yellow",
+        green: "Green",
+        blue: "Blue",
+        red: "Red",
+        gray: "Gray"
+      ]
+    )
+
+    field(:conflicts, {:array, :string})
+
+    field(:custom, :boolean, default: false)
+  end
 
   @type colors :: :white | :pink | :yellow | :green | :blue | :red | :gray
 
@@ -17,59 +44,96 @@ defmodule BnBBot.Library.NCP do
           cost: pos_integer(),
           color: colors(),
           conflicts: [String.t()] | nil,
-          description: String.t()
+          description: String.t(),
+          custom: boolean()
         }
 
   @spec load_ncps() :: {:ok} | {:error, String.t()}
   def load_ncps do
-    GenServer.call(:ncp_table, :reload, :infinity)
+    # GenServer.call(:ncp_table, :reload, :infinity)
+    {:ok}
   end
 
-  @spec get_ncp(String.t(), float()) ::
-          {:found, t()} | {:not_found, [{float(), t()}]}
-  def get_ncp(name, min_dist \\ 0.7) when min_dist >= 0.0 and min_dist <= 1.0 do
-    GenServer.call(:ncp_table, {:get, name, min_dist})
+  @spec get(String.t()) :: BnBBot.Library.NCP.t() | nil
+  def get(name) do
+    query = from(n in __MODULE__, where: n.name == ^name)
+    BnBBot.Repo.Postgres.one(query)
+
+    # GenServer.call(:ncp_table, {:get_or_nil, name})
   end
 
-  @spec get_or_nil(String.t()) :: BnBBot.Library.NCP.t() | nil
-  def get_or_nil(name) do
-    GenServer.call(:ncp_table, {:get_or_nil, name})
-  end
-
-  @spec get!(String.t()) :: BnBBot.Library.NCP.t()
+  @spec get!(String.t()) :: BnBBot.Library.NCP.t() | no_return()
   def get!(name) do
-    res = GenServer.call(:ncp_table, {:get_or_nil, name})
-
-    if is_nil(res) do
-      raise "NCP not found: #{name}"
-    else
-      res
-    end
+    query = from(n in __MODULE__, where: n.name == ^name)
+    BnBBot.Repo.Postgres.one!(query)
   end
 
-  @spec get_autocomplete(String.t(), float()) :: [{float(), String.t()}]
-  def get_autocomplete(name, min_dist \\ 0.7) when min_dist >= 0.0 and min_dist <= 1.0 do
-    GenServer.call(:ncp_table, {:autocomplete, name, min_dist})
+  @spec get_autocomplete(String.t(), float()) :: [String.t()]
+  def get_autocomplete(name, min_dist \\ 0.2) when min_dist >= 0.0 and min_dist <= 1.0 do
+    query =
+      from(n in __MODULE__,
+        where: word_similarity(n.name, ^name) >= ^min_dist,
+        limit: 10,
+        order_by: [
+          fragment("word_similarity(?, ?) DESC", n.name, ^name),
+          asc: n.name
+        ]
+      )
+
+    BnBBot.Repo.Postgres.all(query) |> Enum.map(fn ncp -> ncp.name end)
+
+    # GenServer.call(:ncp_table, {:autocomplete, name, min_dist})
   end
 
   @spec get_starters([colors()]) :: [t()]
   def get_starters(colors) do
-    GenServer.call(:ncp_table, {:starters, colors})
+    query = from(n in __MODULE__, where: n.cost <= 2)
+
+    BnBBot.Repo.Postgres.all(query)
+    |> Enum.filter(fn ncp -> ncp.color in colors end)
+
+    # GenServer.call(:ncp_table, {:starters, colors})
   end
 
   @spec get_ncps_by_color(colors()) :: [t()]
   def get_ncps_by_color(color) do
-    GenServer.call(:ncp_table, {:color, color})
+    query = from(n in __MODULE__, where: n.color == ^color)
+    BnBBot.Repo.Postgres.all(query)
+
+    # GenServer.call(:ncp_table, {:color, color})
   end
 
   @spec get_ncp_ct() :: non_neg_integer()
   def get_ncp_ct do
-    GenServer.call(:ncp_table, :len, :infinity)
+    BnBBot.Repo.Postgres.aggregate(__MODULE__, :count)
+    # GenServer.call(:ncp_table, :len, :infinity)
   end
 
   @spec validate_conflicts() :: {:ok} | {:error, iodata()}
-  def validate_conflicts() do
-    GenServer.call(:ncp_table, :validate_conflicts, :infinity)
+  def validate_conflicts do
+    query = """
+    WITH conflicts AS (
+    SELECT DISTINCT UNNEST(conflicts) AS conflict FROM "NaviCust"
+    )
+    SELECT conflict AS name FROM conflicts WHERE conflict NOT IN (SELECT name from "NaviCust")
+    """
+
+    result = BnBBot.Repo.Postgres.query!(query)
+
+    rows = Enum.map(result.rows, &BnBBot.Repo.Postgres.load(__MODULE__, {result.columns, &1}))
+
+    if Enum.empty?(rows) do
+      {:ok}
+    else
+      conflicts =
+        Enum.map(rows, fn %{name: name} ->
+          "NCP conflict #{name} does not exist"
+        end)
+
+      {:error, conflicts}
+    end
+
+    # GenServer.call(:ncp_table, :validate_conflicts, :infinity)
   end
 
   @spec ncp_color_to_string(BnBBot.Library.NCP.t()) :: String.t()
@@ -139,276 +203,109 @@ defmodule BnBBot.Library.NCP do
         [:white, :pink, :yellow, :green, :blue, :red, :gray]
     end
   end
-end
 
-defimpl BnBBot.Library.LibObj, for: BnBBot.Library.NCP do
-  alias Nostrum.Struct.Component.Button
+  @spec locate_by_conflict(String.t()) :: [__MODULE__.t()]
+  def locate_by_conflict(conflict) do
+    query =
+      from(n in __MODULE__,
+        where: array_contains(n.conflicts, ^conflict)
+      )
 
-  @white_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :white])
-  @pink_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :pink])
-  @yellow_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :yellow])
-  @green_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :green])
-  @blue_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :blue])
-  @red_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :red])
-  @gray_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :gray])
-
-  def type(_value), do: :ncp
-
-  @spec to_btn(BnBBot.Library.NCP.t(), boolean()) :: Button.t()
-  def to_btn(ncp, disabled \\ false) do
-    lower_name = "n_#{String.downcase(ncp.name, :ascii)}"
-    emoji = ncp_color_to_emoji(ncp.color)
-
-    Button.interaction_button(ncp.name, lower_name,
-      style: 3,
-      emoji: emoji,
-      disabled: disabled
-    )
+    BnBBot.Repo.Postgres.all(query)
   end
 
-  @spec to_btn_with_uuid(BnBBot.Library.NCP.t(), boolean(), 0..0xFF_FF_FF) ::
-          Button.t()
-  def to_btn_with_uuid(ncp, disabled \\ false, uuid) when uuid in 0..0xFF_FF_FF do
-    uuid_str = Integer.to_string(uuid, 16) |> String.pad_leading(6, "0")
-    lower_name = "#{uuid_str}_n_#{String.downcase(ncp.name, :ascii)}"
-    emoji = ncp_color_to_emoji(ncp.color)
+  defimpl BnBBot.Library.LibObj do
+    alias Nostrum.Struct.Component.Button
 
-    Button.interaction_button(ncp.name, lower_name,
-      style: 3,
-      emoji: emoji,
-      disabled: disabled
-    )
-  end
+    @white_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :white])
+    @pink_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :pink])
+    @yellow_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :yellow])
+    @green_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :green])
+    @blue_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :blue])
+    @red_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :red])
+    @gray_emoji :elixir_bot |> Application.compile_env!([:ncp_emoji, :gray])
 
-  @spec to_persistent_btn(BnBBot.Library.NCP.t(), boolean()) :: Button.t()
-  def to_persistent_btn(ncp, disabled \\ false) do
-    lower_name = "nr_#{String.downcase(ncp.name, :ascii)}"
-    emoji = ncp_color_to_emoji(ncp.color)
+    def type(_value), do: :ncp
 
-    Button.interaction_button(ncp.name, lower_name,
-      style: 3,
-      emoji: emoji,
-      disabled: disabled
-    )
-  end
+    @spec to_btn(BnBBot.Library.NCP.t(), boolean()) :: Button.t()
+    def to_btn(ncp, disabled \\ false) do
+      lower_name = "n_#{ncp.name}"
+      emoji = ncp_color_to_emoji(ncp.color)
 
-  @spec ncp_color_to_emoji(BnBBot.Library.NCP.colors()) :: map()
-  defp ncp_color_to_emoji(color) do
-    case color do
-      :white -> @white_emoji
-      :pink -> @pink_emoji
-      :yellow -> @yellow_emoji
-      :green -> @green_emoji
-      :blue -> @blue_emoji
-      :red -> @red_emoji
-      :gray -> @gray_emoji
-    end
-  end
-end
-
-defimpl String.Chars, for: BnBBot.Library.NCP do
-  def to_string(%BnBBot.Library.NCP{} = ncp) do
-    # Same as but faster due to how Elixir works
-    # "```\n#{ncp.name} - (#{ncp.cost} EB) - #{ncp.color}\n#{ncp.description}\n```"
-
-    conflicts = if is_nil(ncp.conflicts) do
-      []
-    else
-      conflict_list = ncp.conflicts |> Enum.intersperse(", ")
-      ["\nConflicts: ", conflict_list]
+      Button.interaction_button(ncp.name, lower_name,
+        style: 3,
+        emoji: emoji,
+        disabled: disabled
+      )
     end
 
-    io_list = [
-      "```\n",
-      ncp.name,
-      " - (",
-      Integer.to_string(ncp.cost),
-      " EB) - ",
-      BnBBot.Library.NCP.ncp_color_to_string(ncp),
-      "\n",
-      ncp.description,
-      conflicts,
-      "\n```"
-    ]
+    @spec to_btn_with_uuid(BnBBot.Library.NCP.t(), boolean(), 0..0xFF_FF_FF) ::
+            Button.t()
+    def to_btn_with_uuid(ncp, disabled \\ false, uuid) when uuid in 0..0xFF_FF_FF do
+      uuid_str = Integer.to_string(uuid, 16) |> String.pad_leading(6, "0")
+      lower_name = "#{uuid_str}_n_#{ncp.name}"
+      emoji = ncp_color_to_emoji(ncp.color)
 
-    IO.chardata_to_string(io_list)
-  end
-end
-
-defmodule BnBBot.Library.NCPTable do
-  @moduledoc """
-  NCPTable stores all the NCPs currently in the game.
-  """
-
-  require Logger
-  use GenServer
-  alias BnBBot.Library.NCP
-
-  @ncp_url :elixir_bot |> Application.compile_env!(:ncp_url)
-  def start_link(arg) do
-    GenServer.start_link(__MODULE__, arg, name: :ncp_table)
-  end
-
-  @impl true
-  def init(_) do
-    # make loading data be async
-    {:ok, %{}, {:continue, :reload}}
-  end
-
-  @impl true
-  def handle_continue(:reload, _state) do
-    case load_ncps() do
-      {:ok, ncps} ->
-        {:noreply, ncps, :hibernate}
-
-      {:error, reason} ->
-        Logger.warn("Failed to load NCPS: #{reason}")
-        {:noreply, %{}, :hibernate}
+      Button.interaction_button(ncp.name, lower_name,
+        style: 3,
+        emoji: emoji,
+        disabled: disabled
+      )
     end
-  end
 
-  @impl true
-  @spec handle_call({:get, String.t(), float()}, GenServer.from(), map()) ::
-          {:reply,
-           {:found, BnBBot.Library.NCP.t()} | {:not_found, [{float(), BnBBot.Library.NCP.t()}]},
-           map()}
-  def handle_call({:get, name, min_dist}, _from, state) do
-    lower_name = String.downcase(name, :ascii)
+    @spec to_persistent_btn(BnBBot.Library.NCP.t(), boolean()) :: Button.t()
+    def to_persistent_btn(ncp, disabled \\ false) do
+      lower_name = "nr_#{ncp.name}"
+      emoji = ncp_color_to_emoji(ncp.color)
 
-    resp =
-      case state[lower_name] do
-        nil ->
-          res = BnBBot.Library.Shared.gen_suggestions(state, name, min_dist)
+      Button.interaction_button(ncp.name, lower_name,
+        style: 3,
+        emoji: emoji,
+        disabled: disabled
+      )
+    end
 
-          {:not_found, res}
-
-        ncp ->
-          {:found, ncp}
+    @spec ncp_color_to_emoji(BnBBot.Library.NCP.colors()) :: map()
+    defp ncp_color_to_emoji(color) do
+      case color do
+        :white -> @white_emoji
+        :pink -> @pink_emoji
+        :yellow -> @yellow_emoji
+        :green -> @green_emoji
+        :blue -> @blue_emoji
+        :red -> @red_emoji
+        :gray -> @gray_emoji
       end
-
-    {:reply, resp, state}
-  end
-
-  @impl true
-  @spec handle_call({:get_or_nil, String.t()}, GenServer.from(), map()) ::
-          {:reply, BnBBot.Library.NCP.t() | nil, map()}
-  def handle_call({:get_or_nil, name}, _from, state) do
-    lower_name = String.downcase(name, :ascii)
-
-    {:reply, state[lower_name], state}
-  end
-
-  @spec handle_call({:autocomplete, String.t(), float()}, GenServer.from(), map()) ::
-          {:reply, [{float(), String.t()}], map()}
-  def handle_call({:autocomplete, name, min_dist}, from, state) do
-    vals =
-      Map.to_list(state)
-      |> Enum.map(fn {k, v} ->
-        {k, v.name}
-      end)
-
-    Task.start(BnBBot.Library.Shared, :return_autocomplete, [from, vals, name, min_dist])
-
-    {:noreply, state}
-  end
-
-  @spec handle_call({:color, String.t()}, GenServer.from(), map()) ::
-          {:reply, [BnBBot.Library.NCP.t()], map()}
-  def handle_call({:color, color}, _from, state) do
-    resp =
-      Map.values(state)
-      |> Stream.filter(fn ncp -> ncp.color == color end)
-      |> Enum.sort_by(fn ncp -> ncp.name end)
-
-    {:reply, resp, state}
-  end
-
-  @spec handle_call({:starters, [BnBBot.Library.NCP.colors()]}, GenServer.from(), map()) ::
-          {:reply, [NCP.t()], map()}
-  def handle_call({:starters, colors}, _from, state) do
-    resp =
-      Map.values(state)
-      |> Stream.filter(fn ncp -> Enum.member?(colors, ncp.color) and ncp.cost <= 2 end)
-      |> Enum.sort_by(fn ncp -> {NCP.ncp_color_to_sort_number(ncp), ncp.name} end)
-
-    {:reply, resp, state}
-  end
-
-  @spec handle_call(:valiate_conflicts, GenServer.from(), map()) ::
-          {:reply, {:ok} | {:errror, iodata()}, map()}
-  def handle_call(:validate_conflicts, _from, state) do
-    ncps = Map.values(state) |> Stream.filter(fn ncp -> not is_nil(ncp.conflicts) end)
-
-    res =
-      for ncp <- ncps,
-          conflict <- ncp.conflicts,
-          not Map.has_key?(state, String.downcase(conflict, :ascii)) do
-        "NCP #{ncp.name} has conflict #{conflict} but it is not in the table"
-      end
-
-    to_ret =
-      if IO.iodata_length(res) == 0 do
-        {:ok}
-      else
-        {:error, res}
-      end
-
-    {:reply, to_ret, state}
-  end
-
-  @spec handle_call(:reload, GenServer.from(), map()) ::
-          {:reply, {:ok} | {:error, String.t()}, map()}
-  def handle_call(:reload, _from, _state) do
-    case load_ncps() do
-      {:ok, ncps} ->
-        {:reply, {:ok}, ncps, :hibernate}
-
-      {:error, reason} ->
-        {:reply, {:error, reason}, Map.new(), :hibernate}
     end
   end
 
-  @spec handle_call(:len, GenServer.from(), map()) :: {:reply, non_neg_integer(), map()}
-  def handle_call(:len, _from, state) do
-    size = map_size(state)
-    {:reply, size, state}
-  end
+  defimpl String.Chars do
+    def to_string(%BnBBot.Library.NCP{} = ncp) do
+      # Same as but faster due to how Elixir works
+      # "```\n#{ncp.name} - (#{ncp.cost} EB) - #{ncp.color}\n#{ncp.description}\n```"
 
-  defp load_ncps do
-    Logger.info("(Re)loading NCPs")
-    resp = HTTPoison.get(@ncp_url)
+      conflicts =
+        if is_nil(ncp.conflicts) do
+          []
+        else
+          conflict_list = ncp.conflicts |> Enum.intersperse(", ")
+          ["\nConflicts: ", conflict_list]
+        end
 
-    case decode_ncp_resp(resp) do
-      {:http_err, reason} ->
-        {:error, reason}
+      io_list = [
+        "```\n",
+        ncp.name,
+        " - (",
+        Integer.to_string(ncp.cost),
+        " EB) - ",
+        BnBBot.Library.NCP.ncp_color_to_string(ncp),
+        "\n",
+        ncp.description,
+        conflicts,
+        "\n```"
+      ]
 
-      {:ok, ncps} ->
-        {:ok, ncps}
+      IO.chardata_to_string(io_list)
     end
-  end
-
-  @spec decode_ncp_resp({:ok, HTTPoison.Response.t()} | {:error, HTTPoison.Error.t()}) ::
-          {:ok, map()} | {:http_err, String.t()}
-  defp decode_ncp_resp({:ok, %HTTPoison.Response{} = resp}) when resp.status_code in 200..299 do
-    data_list = Jason.decode!(resp.body, keys: :atoms, strings: :copy)
-
-    ncp_map =
-      for ncp <- data_list, into: %{} do
-        %{color: color, name: name} = ncp
-        color = String.to_atom(color)
-        lower_name = String.downcase(name, :ascii)
-        ncp_map = %{ncp | color: color}
-        {lower_name, struct(BnBBot.Library.NCP, ncp_map)}
-      end
-
-    {:ok, ncp_map}
-  end
-
-  defp decode_ncp_resp({:ok, %HTTPoison.Response{} = resp}) do
-    {:http_err, "Got http status code #{resp.status_code}"}
-  end
-
-  defp decode_ncp_resp({:error, %HTTPoison.Error{} = err}) do
-    {:http_err, "Got http error #{err.reason}"}
   end
 end

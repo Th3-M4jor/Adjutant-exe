@@ -26,7 +26,7 @@ defmodule BnBBot.Commands.Audit do
 
     query = from(log in BnBBot.LogLine, where: log.id == ^id)
 
-    text = BnBBot.Repo.one(query) |> format_entry()
+    text = BnBBot.Repo.SQLite.one(query) |> format_entry()
     Nostrum.Api.create_message(msg, text)
   end
 
@@ -44,7 +44,7 @@ defmodule BnBBot.Commands.Audit do
     Task.start(fn -> Nostrum.Api.start_typing(msg.channel_id) end)
 
     # text =
-    #  BnBBot.Repo.all(BnBBot.LogLine) |> Enum.map(&format_entry/1) |> Enum.intersperse("\n\n")
+    #  BnBBot.Repo.SQLite.all(BnBBot.LogLine) |> Enum.map(&format_entry/1) |> Enum.intersperse("\n\n")
 
     dump_log()
 
@@ -61,25 +61,25 @@ defmodule BnBBot.Commands.Audit do
   end
 
   def last_one do
-    BnBBot.LogLine |> last |> BnBBot.Repo.one()
+    BnBBot.LogLine |> last |> BnBBot.Repo.SQLite.one()
   end
 
   @spec get_entries(non_neg_integer()) :: [BnBBot.LogLine.t()]
   def get_entries(count \\ 10) do
     query = from(log in BnBBot.LogLine, order_by: [desc: log.id], limit: ^count)
-    BnBBot.Repo.all(query) |> Enum.reverse()
+    BnBBot.Repo.SQLite.all(query) |> Enum.reverse()
   end
 
   def get_formatted(count \\ 10) do
     query = from(log in BnBBot.LogLine, order_by: [desc: log.id], limit: ^count)
-    BnBBot.Repo.all(query) |> Enum.reverse() |> Enum.map(&format_entry/1)
+    BnBBot.Repo.SQLite.all(query) |> Enum.reverse() |> Enum.map(&format_entry/1)
   end
 
   def dump_log do
     file_ptr = File.open!("log_dump.txt", [:write, :delayed_write, :utf8])
 
     line_stream =
-      BnBBot.Repo.stream(BnBBot.LogLine)
+      BnBBot.Repo.SQLite.stream(BnBBot.LogLine)
       |> Stream.map(&format_entry/1)
       |> Stream.intersperse("\n\n")
       |> Stream.each(fn x ->
@@ -88,7 +88,7 @@ defmodule BnBBot.Commands.Audit do
       end)
 
     # streams must happen in a transaction
-    BnBBot.Repo.transaction(fn ->
+    BnBBot.Repo.SQLite.transaction(fn ->
       Stream.run(line_stream)
     end)
 

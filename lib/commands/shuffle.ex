@@ -47,6 +47,8 @@ defmodule BnBBot.Commands.Shuffle do
           }
         )
     end
+
+    :ignore
   end
 
   @impl true

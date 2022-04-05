@@ -147,6 +147,11 @@ defmodule BnBBot.Util do
 end
 
 defmodule BnBBot.Util.KVP do
+  @moduledoc """
+  Module for handling internal global state.
+  Slower than using an ets table, but much more memory efficient
+  """
+
   require Logger
   use GenServer
 
