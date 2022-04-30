@@ -78,7 +78,8 @@ defmodule BnBBot.Commands.Reload do
       type: 1,
       name: "reload",
       description: "Reloads chips, ncps, viruses",
-      default_permission: false
+      dm_permission: false,
+      default_member_permission: "0",
     }
   end
 

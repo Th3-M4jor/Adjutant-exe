@@ -123,7 +123,8 @@ defmodule BnBBot.Commands.Hidden do
           required: false
         }
       ],
-      default_permission: false
+      dm_permission: false,
+      default_member_permission: "0",
     }
   end
 
