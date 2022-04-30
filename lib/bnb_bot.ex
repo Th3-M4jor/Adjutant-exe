@@ -128,6 +128,8 @@ defmodule BnBBot.Consumer do
 
         _ ->
           GenServer.cast(:bnb_bot_data, {:insert, :first_ready, false})
+          queue_name = :elixir_bot |> Application.fetch_env!(:remind_me_queue)
+          Oban.resume_queue(queue: queue_name)
 
           # ncp_task = Task.async(fn -> BnBBot.Library.NCP.load_ncps() end)
           # chips_task = Task.async(fn -> BnBBot.Library.Battlechip.load_chips() end)

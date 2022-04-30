@@ -163,7 +163,8 @@ defmodule BnBBot.SlashCommands do
     Commands.Reload,
     Commands.Groups,
     Commands.Hidden,
-    Commands.Create
+    Commands.Create,
+    Commands.RemindMe
   ]
 
   # Generate the command handlers at compile time.

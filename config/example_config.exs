@@ -31,10 +31,17 @@ config :logger,
     [module: Nostrum.Shard.Event, level_lower_than: :warn]
   ]
 
+config :elixir_bot, Oban,
+  prefix: "oban_jobs",
+  repo: BnBBot.Repo.Postgres,
+  queues: [dev_remind_me: [limit: 2, paused: true]]
+
+# uses sqlite for logging
 config :elixir_bot, BnBBot.Repo.SQLite,
   database: "./db/dev_db.db",
   priv: "priv/sqlite"
 
+# uses postgres for storing BnB data, and for Oban
 config :elixir_bot, BnBBot.Repo.Postgres,
   username: "postgres",
   password: "postgres",

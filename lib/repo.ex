@@ -10,7 +10,17 @@ defmodule BnBBot.RepoSupervisor do
 
   @impl true
   def init(_init_arg) do
-    Supervisor.init([BnBBot.Repo.SQLite, BnBBot.Repo.Postgres], strategy: :one_for_one)
+    children = [
+      BnBBot.Repo.SQLite,
+      BnBBot.Repo.Postgres,
+      {Oban, oban_config()}
+    ]
+
+    Supervisor.init(children, strategy: :one_for_one)
+  end
+
+  defp oban_config do
+    Application.fetch_env!(:elixir_bot, Oban)
   end
 end
 
@@ -25,7 +35,7 @@ defmodule BnBBot.Repo.Postgres do
   @moduledoc """
   The postgres repo.
   """
-  use Ecto.Repo, otp_app: :elixir_bot, adapter: Ecto.Adapters.Postgres, read_only: true
+  use Ecto.Repo, otp_app: :elixir_bot, adapter: Ecto.Adapters.Postgres
 end
 
 defmodule BnBBot.CustomQuery do
