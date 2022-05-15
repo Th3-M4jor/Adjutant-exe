@@ -53,3 +53,6 @@ log_dump.txt
 
 # ignore dialyzer files
 .elixir_ls/
+
+# ignore output of list members one-off
+members.csv
