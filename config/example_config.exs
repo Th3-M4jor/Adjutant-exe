@@ -34,7 +34,10 @@ config :logger,
 config :elixir_bot, Oban,
   prefix: "oban_jobs",
   repo: BnBBot.Repo.Postgres,
-  queues: [dev_remind_me: [limit: 2, paused: true]]
+  queues: [
+    dev_remind_me: [limit: 2, paused: true],
+    dev_edit_message: [limit: 2, paused: true]
+  ]
 
 # uses sqlite for logging
 config :elixir_bot, BnBBot.Repo.SQLite,
@@ -54,6 +57,8 @@ config :elixir_bot, BnBBot.Repo.Postgres,
 config :elixir_bot,
   ecto_repos: [BnBBot.Repo.SQLite, BnBBot.Repo.Postgres],
   ecto_shard_count: 1,
+  remind_me_queue: :dev_remind_me,
+  edit_message_queue: :dev_edit_message,
   prefix: "!",
   owner_id: 666,
   admins: [667, 668],
