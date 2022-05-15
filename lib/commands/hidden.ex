@@ -124,7 +124,7 @@ defmodule BnBBot.Commands.Hidden do
         }
       ],
       dm_permission: false,
-      default_member_permission: "0",
+      default_member_permission: "0"
     }
   end
 
@@ -139,7 +139,7 @@ defmodule BnBBot.Commands.Hidden do
       })
 
       # get all processes that are awaiting user input and tell them to stop
-      pid_list = Registry.select(:SHUTDOWN_REGISTRY, [{{:_, :"$1", :_}, [], [:"$1"]}])
+      pid_list = Registry.select(:BUTTON_COLLECTOR, [{{:_, :"$1", :_}, [], [:"$1"]}])
 
       process_ct = length(pid_list)
 

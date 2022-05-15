@@ -164,7 +164,8 @@ defmodule BnBBot.SlashCmdFn do
           required(:name) => String.t(),
           required(:description) => String.t(),
           optional(:type) => 1..3,
-          optional(:default_permission) => boolean(),
+          optional(:dm_permission) => boolean(),
+          optional(:default_member_permission) => String.t(),
           optional(:options) => [slash_opts(), ...]
         }
 
