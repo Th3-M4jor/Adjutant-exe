@@ -251,17 +251,18 @@ defmodule BnBBot.Commands.NCP do
       }
     )
 
-    # five minutes
-    BnBBot.Util.wait_or_shutdown(300_000)
-
     buttons = BnBBot.ButtonAwait.generate_persistent_buttons(ncps, true)
 
     route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
-    Api.request(:patch, route, %{
-      content: content,
-      components: buttons
-    })
+    {:ok, resp} = Api.request(:get, route)
+    original = Jason.decode!(resp)
+
+    %{"channel_id" => channel_id, "id" => message_id} = original
+
+    %{channel_id: channel_id, message_id: message_id, content: content, components: buttons}
+    |> BnBBot.Util.MessageEditWorker.new(schedule_in: {30, :minutes})
+    |> Oban.insert!()
   end
 
   defp send_starter_ncps(inter, element) do
@@ -284,15 +285,26 @@ defmodule BnBBot.Commands.NCP do
       }
     )
 
-    # five minutes
-    BnBBot.Util.wait_or_shutdown(300_000)
+    route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
     buttons = BnBBot.ButtonAwait.generate_persistent_buttons(starters, true)
 
-    Api.edit_interaction_response!(inter, %{
+    # have to get original message as it won't be in the interaction response
+    # because reasons
+
+    {:ok, resp} = Api.request(:get, route)
+    original = Jason.decode!(resp)
+
+    %{"channel_id" => channel_id, "id" => message_id} = original
+
+    %{
+      channel_id: channel_id,
+      message_id: message_id,
       content: "These are the starters for #{elem_str}:",
       components: buttons
-    })
+    }
+    |> BnBBot.Util.MessageEditWorker.new(schedule_in: {30, :minutes})
+    |> Oban.insert!()
   end
 
   defp send_found_ncp(%Nostrum.Struct.Interaction{} = inter, %BnBBot.Library.NCP{} = ncp) do

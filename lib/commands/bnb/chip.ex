@@ -283,51 +283,22 @@ defmodule BnBBot.Commands.Chip do
 
       buttons = BnBBot.ButtonAwait.generate_persistent_buttons(drops, true)
 
-      # five minutes
-      BnBBot.Util.wait_or_shutdown(300_000)
+      # have to get original message as it won't be in the interaction response
+      # because reasons
 
-      Api.request(:patch, route, %{
+      {:ok, resp} = Api.request(:get, route)
+      original = Jason.decode!(resp)
+
+      %{"channel_id" => channel_id, "id" => message_id} = original
+
+      %{
+        channel_id: channel_id,
+        message_id: message_id,
         content: "The following viruses drop #{chip.name}:",
         components: buttons
-      })
-    end
-  end
-
-  def send_drops_found(%Nostrum.Struct.Interaction{} = inter, %BnBBot.Library.Battlechip{} = chip) do
-    drops = BnBBot.Library.Virus.locate_by_drop(chip)
-
-    route = "/webhooks/#{inter.application_id}/#{inter.token}"
-
-    if Enum.empty?(drops) do
-      {:ok, _resp} =
-        Api.request(:post, route, %{
-          content: "No known viruses drop #{chip.name}."
-        })
-    else
-      buttons = BnBBot.ButtonAwait.generate_persistent_buttons(drops)
-
-      {:ok, resp} =
-        Api.request(:post, route, %{
-          content: "The following viruses drop #{chip.name}:",
-          components: buttons
-        })
-
-      resp = Jason.decode!(resp)
-
-      edit_route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/#{resp["id"]}"
-
-      names =
-        Enum.map_join(drops, ", ", fn virus ->
-          virus.name
-        end)
-
-      # five minutes
-      BnBBot.Util.wait_or_shutdown(300_000)
-
-      Api.request(:patch, edit_route, %{
-        content: "The following viruses drop #{chip.name}:\n#{names}",
-        components: []
-      })
+      }
+      |> BnBBot.Util.MessageEditWorker.new(schedule_in: {30, :minutes})
+      |> Oban.insert!()
     end
   end
 
@@ -363,17 +334,22 @@ defmodule BnBBot.Commands.Chip do
         }
       )
 
-      # five minutes
-      BnBBot.Util.wait_or_shutdown(300_000)
+      route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
+
+      {:ok, resp} = Api.request(:get, route)
+      original = Jason.decode!(resp)
+
+      %{"channel_id" => channel_id, "id" => message_id} = original
       buttons = BnBBot.ButtonAwait.generate_persistent_buttons(chips, true)
 
-      Api.edit_interaction_response!(
-        inter,
-        %{
-          content: "found these chips:",
-          components: buttons
-        }
-      )
+      %{
+        channel_id: channel_id,
+        message_id: message_id,
+        content: "Found these chips:",
+        components: buttons
+      }
+      |> BnBBot.Util.MessageEditWorker.new(schedule_in: {30, :minutes})
+      |> Oban.insert!()
     else
       [] ->
         Api.create_interaction_response!(

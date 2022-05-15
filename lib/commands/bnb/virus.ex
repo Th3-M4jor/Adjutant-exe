@@ -186,15 +186,21 @@ defmodule BnBBot.Commands.Virus do
 
     route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
-    # five minutes
-    BnBBot.Util.wait_or_shutdown(300_000)
-
     buttons = BnBBot.ButtonAwait.generate_persistent_buttons(cr_list, true)
 
-    Api.request(:patch, route, %{
+    {:ok, resp} = Api.request(:get, route)
+    original = Jason.decode!(resp)
+
+    %{"channel_id" => channel_id, "id" => message_id} = original
+
+    %{
+      channel_id: channel_id,
+      message_id: message_id,
       content: "These viruses are in CR #{cr}:",
       components: buttons
-    })
+    }
+    |> BnBBot.Util.MessageEditWorker.new(schedule_in: {30, :minutes})
+    |> Oban.insert!()
   end
 
   defp build_encounter(inter, [count | _rest]) when count.value > 25 or count.value < 1 do
@@ -288,14 +294,21 @@ defmodule BnBBot.Commands.Virus do
       }
     )
 
-    # five minutes
-    BnBBot.Util.wait_or_shutdown(300_000)
-
     route = "/webhooks/#{inter.application_id}/#{inter.token}/messages/@original"
 
-    Api.request(:patch, route, %{
+    {:ok, resp} = Api.request(:get, route)
+    original = Jason.decode!(resp)
+
+    %{"channel_id" => channel_id, "id" => message_id} = original
+
+    %{
+      channel_id: channel_id,
+      message_id: message_id,
+      content: names,
       components: []
-    })
+    }
+    |> BnBBot.Util.MessageEditWorker.new(schedule_in: {30, :minutes})
+    |> Oban.insert!()
 
     :ignore
   end

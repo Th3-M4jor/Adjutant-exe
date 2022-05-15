@@ -29,8 +29,6 @@ defmodule BnBBot.Supervisor do
         )
       end
 
-    shutdown_registry = Registry.child_spec(keys: :unique, name: :SHUTDOWN_REGISTRY)
-
     # Logger.debug(inspect(children))
 
     button_collector = Registry.child_spec(keys: :unique, name: :BUTTON_COLLECTOR)
@@ -42,7 +40,7 @@ defmodule BnBBot.Supervisor do
         restart: :transient
       )
 
-    children = [button_collector, shutdown_registry, bot_data | children]
+    children = [button_collector, bot_data | children]
     # children = [chips | children]
     # children = [viruses | children]
     Logger.debug(inspect(children, pretty: true))
@@ -128,15 +126,15 @@ defmodule BnBBot.Consumer do
 
         _ ->
           GenServer.cast(:bnb_bot_data, {:insert, :first_ready, false})
-          queue_name = :elixir_bot |> Application.fetch_env!(:remind_me_queue)
-          Oban.resume_queue(queue: queue_name)
+          reminder_queue_name = :elixir_bot |> Application.fetch_env!(:remind_me_queue)
+          Oban.resume_queue(queue: reminder_queue_name)
+          edit_queue_name = :elixir_bot |> Application.fetch_env!(:edit_message_queue)
+          Oban.resume_queue(queue: edit_queue_name)
 
-          # ncp_task = Task.async(fn -> BnBBot.Library.NCP.load_ncps() end)
-          # chips_task = Task.async(fn -> BnBBot.Library.Battlechip.load_chips() end)
           chip_ct = BnBBot.Library.Battlechip.get_chip_ct()
           ncp_ct = BnBBot.Library.NCP.get_ncp_ct()
           virus_ct = BnBBot.Library.Virus.get_virus_ct()
-          # [ok: ncp_ct, ok: chip_ct] = Task.await_many([ncp_task, chips_task], :infinity)
+
           Logger.debug(["Ready\n", inspect(ready_data, pretty: true)])
 
           {"Bot Ready\n#{chip_ct} chips loaded\n#{virus_ct} viruses loaded\n#{ncp_ct} ncps loaded",

@@ -10,7 +10,7 @@ defmodule BnBBot.Commands.Die do
 
     if BnBBot.Util.is_owner_msg?(msg) do
       # get all processes that are awaiting user input and tell them to stop
-      pid_list = Registry.select(:SHUTDOWN_REGISTRY, [{{:_, :"$1", :_}, [], [:"$1"]}])
+      pid_list = Registry.select(:BUTTON_COLLECTOR, [{{:_, :"$1", :_}, [], [:"$1"]}])
 
       process_ct = length(pid_list)
 
