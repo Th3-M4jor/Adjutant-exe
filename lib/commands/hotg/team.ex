@@ -7,7 +7,7 @@ defmodule BnBBot.Commands.Team do
   require Logger
 
   @impl true
-  def call_slash() do
+  def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     :random.seed(:erlang.now)
     Logger.info("Received a HOTG slash command")
 
