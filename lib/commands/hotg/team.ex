@@ -14,14 +14,33 @@ defmodule BnBBot.Commands.Team do
 
     file = File.read!("./commands/hotg/hotg_assets.json") |> Jason.decode!()
 
-    %{"rangers" => ranger_list, "minions" => minion_list, "monsters" => monster_list, "bosses" => boss_list} = file
+    %{
+      "rangers" => ranger_list,
+      "minions" => minion_list,
+      "monsters" => monster_list,
+      "bosses" => boss_list
+    } = file
 
     players = Enum.take_random(ranger_list, 6) |> Enum.intersperse(", ")
     minions = Enum.take_random(minion_list, 2) |> Enum.intersperse(", ")
     monsters = Enum.take_random(monster_list, 2) |> Enum.intersperse(", ")
     boss = Enum.random(boss_list)
 
-    resp_str = ["Rangers: ", players, "\n", "Minions: ", minions, "\n", "Monsters: ", monsters, "\n", "Boss: ", boss] |> IO.iodata_to_binary()
+    resp_str =
+      [
+        "Rangers: ",
+        players,
+        "\n",
+        "Minions: ",
+        minions,
+        "\n",
+        "Monsters: ",
+        monsters,
+        "\n",
+        "Boss: ",
+        boss
+      ]
+      |> IO.iodata_to_binary()
 
     Api.create_interaction_response!(
       inter,
@@ -32,7 +51,6 @@ defmodule BnBBot.Commands.Team do
         }
       }
     )
-
   end
 
   @impl true

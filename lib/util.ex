@@ -141,7 +141,6 @@ defmodule BnBBot.Util do
       {name, value}
     end
   end
-
 end
 
 defmodule BnBBot.Util.KVP do
