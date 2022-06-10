@@ -75,7 +75,8 @@ defmodule BnBBot.SlashCommands do
     Commands.Groups,
     Commands.Hidden,
     Commands.Create,
-    Commands.RemindMe
+    Commands.RemindMe,
+    Commands.Team
   ]
 
   # Generate the command handlers at compile time.
