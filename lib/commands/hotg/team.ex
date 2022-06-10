@@ -14,10 +14,7 @@ defmodule BnBBot.Commands.Team do
 
     file = File.read!("hotg_assets.json") |> Jason.decode!()
 
-    ranger_list = file["rangers"]
-    minion_list = file["minions"]
-    monster_list = file["monsters"]
-    boss_list = file["bosses"]
+    %{"rangers" => ranger_list, "minions" => minion_list, "monsters" => monster_list, "bosses" => boss_list} = file
 
     players = Enum.take_random(ranger_list, 6) |> Enum.intersperse(", ")
     minions = Enum.take_random(minion_list, 2) |> Enum.intersperse(", ")
