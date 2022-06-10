@@ -34,4 +34,13 @@ defmodule BnBBot.Commands.Team do
     )
 
   end
+
+  @impl true
+  def get_create_map do
+    %{
+      type: 1,
+      name: "morphin",
+      description: "Creates a random HOTG game for you."
+    }
+  end
 end
