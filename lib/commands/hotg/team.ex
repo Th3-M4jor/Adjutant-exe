@@ -12,7 +12,7 @@ defmodule BnBBot.Commands.Team do
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     Logger.info("Received a HOTG slash command")
 
-    file = File.read!("hotg_assets.json") |> Jason.decode!()
+    file = File.read!("./commands/hotg/hotg_assets.json") |> Jason.decode!()
 
     %{"rangers" => ranger_list, "minions" => minion_list, "monsters" => monster_list, "bosses" => boss_list} = file
 
