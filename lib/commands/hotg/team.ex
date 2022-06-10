@@ -14,10 +14,10 @@ defmodule BnBBot.Commands.Team do
 
     file = File.read!("hotg_assets.json") |> Jason.decode!()
 
-    ranger_list = Map.fetch!(file, "rangers")
-    minion_list = Map.fetch!(file, "minions")
-    monster_list = Map.fetch!(file, "monsters")
-    boss_list = Map.fetch!(file, "bosses")
+    ranger_list = file["rangers"]
+    minion_list = file["minions"]
+    monster_list = file["monsters"]
+    boss_list = file["bosses"]
 
     players = Enum.take_random(ranger_list, 6) |> Enum.intersperse(", ")
     minions = Enum.take_random(minion_list, 2) |> Enum.intersperse(", ")
