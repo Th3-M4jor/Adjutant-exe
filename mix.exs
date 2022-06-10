@@ -40,6 +40,7 @@ defmodule ElixirBot.MixProject do
       {:postgrex, ">= 0.15.10"},
       {:ecto_sqlite3, "~> 0.7.1"},
       {:oban, "~> 2.12"},
+      {:ex2ms, "~> 1.6"},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
       # {:dep_from_hexpm, "~> 0.3.0"},

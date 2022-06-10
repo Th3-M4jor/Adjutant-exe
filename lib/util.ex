@@ -130,6 +130,18 @@ defmodule BnBBot.Util do
         channel.id
     end
   end
+
+  def slash_args_to_map([%{type: 1, name: name, options: options}]) do
+    opts = slash_args_to_map(options)
+    {name, opts}
+  end
+
+  def slash_args_to_map(options) do
+    for %{name: name, value: value} <- options, into: %{} do
+      {name, value}
+    end
+  end
+
 end
 
 defmodule BnBBot.Util.KVP do

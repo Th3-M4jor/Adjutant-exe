@@ -8,9 +8,6 @@ defmodule BnBBot.SlashCommands do
 
   require Logger
 
-  @owner_id :elixir_bot |> Application.compile_env!(:owner_id)
-  @admins :elixir_bot |> Application.compile_env!(:admins)
-
   @doc """
   Create all non-privileged slash commands globally
   """
