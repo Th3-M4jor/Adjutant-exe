@@ -14,7 +14,7 @@ defmodule ElixirBot.MixProject do
           applications: [
             elixir_bot: :permanent
           ],
-          cookie: File.read!("COOKIE")
+          cookie: get_cookie()
         ]
       ]
     ]
@@ -32,17 +32,28 @@ defmodule ElixirBot.MixProject do
   defp deps do
     [
       # {:nostrum, "~> 0.6"},
-      # {:nostrum, git: "https://github.com/Kraigie/nostrum.git"},
-      {:nostrum, path: "../nostrum/"},
-      {:dotenv, "~> 3.1"},
+      {:nostrum, git: "https://github.com/Th3-M4jor/nostrum.git"},
+      #{:nostrum, path: "../nostrum/"},
       {:jason, "~> 1.2"},
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.15.10"},
       {:ecto_sqlite3, "~> 0.7.1"},
       {:oban, "~> 2.12"},
       {:ex2ms, "~> 1.6"},
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
     ]
+  end
+
+  defp get_cookie do
+    case File.read("COOKIE") do
+      {:ok, cookie} ->
+        cookie
+      {:error, _err} ->
+        unless Mix.env() == :test do
+          IO.warn("Could not read COOKIE file, using default cookie. Not recommended for production.")
+        end
+        "SOME_COOKIE"
+    end
   end
 end
