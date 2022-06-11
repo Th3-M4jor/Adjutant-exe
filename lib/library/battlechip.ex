@@ -185,17 +185,18 @@ defmodule BnBBot.Library.Battlechip do
     max_avg_dmg = args[:max_avg_dmg]
     blight = args[:blight]
 
-    query = skill_filter(true, skill)
-    |> element_filter(elem)
-    |> range_filter(range)
-    |> kind_filter(kind)
-    |> class_filter(class)
-    |> cr_filter(cr)
-    |> min_cr_filter(min_cr)
-    |> max_cr_filter(max_cr)
-    |> min_avg_damage_filter(min_avg_dmg)
-    |> max_avg_damage_filter(max_avg_dmg)
-    |> blight_filter(blight)
+    query =
+      skill_filter(true, skill)
+      |> element_filter(elem)
+      |> range_filter(range)
+      |> kind_filter(kind)
+      |> class_filter(class)
+      |> cr_filter(cr)
+      |> min_cr_filter(min_cr)
+      |> max_cr_filter(max_cr)
+      |> min_avg_damage_filter(min_avg_dmg)
+      |> max_avg_damage_filter(max_avg_dmg)
+      |> blight_filter(blight)
 
     query = from c in __MODULE__, where: ^query
     BnBBot.Repo.Postgres.all(query)
@@ -385,11 +386,25 @@ defmodule BnBBot.Library.Battlechip do
 
   defp blight_filter(acc, nil), do: acc
   defp blight_filter(acc, :null), do: dynamic([c], is_nil(c.blight) and ^acc)
-  defp blight_filter(acc, blight), do: dynamic([c], blight_elem_access(c.blight) == ^blight and ^acc)
+
+  defp blight_filter(acc, blight),
+    do: dynamic([c], blight_elem_access(c.blight) == ^blight and ^acc)
 
   defp min_avg_damage_filter(acc, nil), do: acc
-  defp min_avg_damage_filter(acc, dmg), do: dynamic([c],  dienum_access(c.damage) * (dietype_access(c.damage) / 2.0 + 0.5) >= ^dmg and ^acc)
+
+  defp min_avg_damage_filter(acc, dmg),
+    do:
+      dynamic(
+        [c],
+        dienum_access(c.damage) * (dietype_access(c.damage) / 2.0 + 0.5) >= ^dmg and ^acc
+      )
 
   defp max_avg_damage_filter(acc, nil), do: acc
-  defp max_avg_damage_filter(acc, dmg), do: dynamic([c],  dienum_access(c.damage) * (dietype_access(c.damage) / 2.0 + 0.5) <= ^dmg and ^acc)
+
+  defp max_avg_damage_filter(acc, dmg),
+    do:
+      dynamic(
+        [c],
+        dienum_access(c.damage) * (dietype_access(c.damage) / 2.0 + 0.5) <= ^dmg and ^acc
+      )
 end

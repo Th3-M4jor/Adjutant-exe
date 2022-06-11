@@ -33,7 +33,7 @@ defmodule ElixirBot.MixProject do
     [
       # {:nostrum, "~> 0.6"},
       {:nostrum, git: "https://github.com/Th3-M4jor/nostrum.git"},
-      #{:nostrum, path: "../nostrum/"},
+      # {:nostrum, path: "../nostrum/"},
       {:jason, "~> 1.2"},
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.15.10"},
@@ -49,10 +49,14 @@ defmodule ElixirBot.MixProject do
     case File.read("COOKIE") do
       {:ok, cookie} ->
         cookie
+
       {:error, _err} ->
         unless Mix.env() == :test do
-          IO.warn("Could not read COOKIE file, using default cookie. Not recommended for production.")
+          IO.warn(
+            "Could not read COOKIE file, using default cookie. Not recommended for production."
+          )
         end
+
         "SOME_COOKIE"
     end
   end

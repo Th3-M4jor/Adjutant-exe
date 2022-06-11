@@ -369,6 +369,7 @@ defmodule BnBBot.Library.Shared.Element do
 
   def convert(elem) when is_binary(elem) do
     elem = String.downcase(elem, :ascii)
+
     if elem in @element_strings do
       {:ok, String.to_existing_atom(elem)}
     else
