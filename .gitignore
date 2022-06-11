@@ -25,7 +25,6 @@ elixir_bot-*.tar
 # Temporary files, for example, from tests.
 /tmp/
 
-config/config.exs
 config/dev.exs
 config/prod.exs
 
