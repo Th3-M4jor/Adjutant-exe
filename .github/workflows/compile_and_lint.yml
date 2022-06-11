@@ -31,13 +31,13 @@ jobs:
       run: mix deps.get
 
     - name: compile
-      run: mix compile
+      run: "MIX_ENV=test mix compile"
 
     - name: lint (credo)
-      run: mix credo --strict
+      run: "MIX_ENV=test mix credo --strict"
 
     - name: lint (mix format)
       run: mix format --check-formatted
 
     - name: lint (dialyzer)
-      run: mix dialyzer
+      run: "MIX_ENV=test mix dialyzer"
