@@ -51,6 +51,8 @@ defmodule BnBBot.Commands.Team do
         }
       }
     )
+
+    :ignore
   end
 
   @impl true
