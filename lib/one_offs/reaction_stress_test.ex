@@ -1,4 +1,8 @@
 defmodule BnBBot.OneOffs.Reaction.Test do
+  @moduledoc """
+  One-off script to stress test ratelimiting of reactions
+  """
+
   alias Nostrum.Api
 
   def execute([{_, _} | _] = channel_messages, [_ | _] = emojis) do

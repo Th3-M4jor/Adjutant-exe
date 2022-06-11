@@ -155,6 +155,10 @@ defmodule BnBBot.Commands.RemindMe do
 end
 
 defmodule BnBBot.Commands.RemindMe.Worker do
+  @moduledoc """
+  Oban worker for handling scheduled reminders
+  """
+
   @queue_name :elixir_bot |> Application.compile_env!(:remind_me_queue)
 
   alias Nostrum.Api

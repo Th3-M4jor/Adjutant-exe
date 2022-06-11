@@ -1,4 +1,7 @@
 defmodule BnBBot.OneOffs.GuildMembers.CSV do
+  @moduledoc """
+  One-off script to export guild members to a CSV file
+  """
   alias Nostrum.{Api, Snowflake}
 
   def execute(guild_id, filename \\ "./members.csv") do

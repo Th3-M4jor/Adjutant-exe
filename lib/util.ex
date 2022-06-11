@@ -181,6 +181,9 @@ defmodule BnBBot.Util.KVP do
 end
 
 defmodule BnBBot.Util.MessageEditWorker do
+  @moduledoc """
+  Oban worker for handling scheduled message edits
+  """
   @queue_name :elixir_bot |> Application.compile_env!(:edit_message_queue)
 
   require Logger
