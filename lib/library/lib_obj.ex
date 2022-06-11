@@ -295,6 +295,21 @@ defmodule BnBBot.Library.Shared.Element do
     :null
   ]
 
+  @element_strings [
+    "fire",
+    "aqua",
+    "elec",
+    "wood",
+    "wind",
+    "sword",
+    "break",
+    "cursor",
+    "recov",
+    "invis",
+    "object",
+    "null"
+  ]
+
   def type, do: :element
 
   def cast(elem) when is_list(elem) do
@@ -353,20 +368,11 @@ defmodule BnBBot.Library.Shared.Element do
   end
 
   def convert(elem) when is_binary(elem) do
-    case String.downcase(elem, :ascii) do
-      "fire" -> {:ok, :fire}
-      "aqua" -> {:ok, :aqua}
-      "elec" -> {:ok, :elec}
-      "wood" -> {:ok, :wood}
-      "wind" -> {:ok, :wind}
-      "sword" -> {:ok, :sword}
-      "break" -> {:ok, :break}
-      "cursor" -> {:ok, :cursor}
-      "recov" -> {:ok, :recov}
-      "invis" -> {:ok, :invis}
-      "object" -> {:ok, :object}
-      "null" -> {:ok, :null}
-      _ -> :error
+    elem = String.downcase(elem, :ascii)
+    if elem in @element_strings do
+      {:ok, String.to_existing_atom(elem)}
+    else
+      :error
     end
   end
 

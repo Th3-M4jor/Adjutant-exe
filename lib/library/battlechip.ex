@@ -173,56 +173,29 @@ defmodule BnBBot.Library.Battlechip do
 
   @spec run_chip_filter(keyword()) :: [BnBBot.Library.Battlechip.t()]
   def run_chip_filter(args) do
-    query =
-      for {key, value} <- args, reduce: true do
-        acc ->
-          case {key, value} do
-            {:skill, :none} ->
-              dynamic([c], is_nil(c.skill) and ^acc)
+    skill = args[:skill]
+    elem = args[:element]
+    range = args[:range]
+    kind = args[:kind]
+    class = args[:class]
+    cr = args[:cr]
+    min_cr = args[:min_cr]
+    max_cr = args[:max_cr]
+    min_avg_dmg = args[:min_avg_dmg]
+    max_avg_dmg = args[:max_avg_dmg]
+    blight = args[:blight]
 
-            {:skill, skill} ->
-              dynamic([c], array_contains(c.skill, ^skill) and ^acc)
-
-            {:element, element} ->
-              dynamic([c], array_contains(c.elem, ^element) and ^acc)
-
-            {:range, range} ->
-              dynamic([c], c.range == ^range and ^acc)
-
-            {:kind, kind} ->
-              dynamic([c], c.kind == ^kind and ^acc)
-
-            {:class, class} ->
-              dynamic([c], c.class == ^class and ^acc)
-
-            {:cr, cr} ->
-              dynamic([c], c.cr == ^cr and ^acc)
-
-            {:min_cr, cr} ->
-              dynamic([c], c.cr >= ^cr and ^acc)
-
-            {:max_cr, cr} ->
-              dynamic([c], c.cr <= ^cr and ^acc)
-
-            {:blight, :null} ->
-              dynamic([c], is_nil(c.blight) and ^acc)
-
-            {:blight, blight} ->
-              dynamic([c], blight_elem_access(c.blight) == ^blight and ^acc)
-
-            {:min_avg_dmg, dmg} ->
-              dynamic(
-                [c],
-                dienum_access(c.damage) * (dietype_access(c.damage) / 2.0 + 0.5) >= ^dmg and ^acc
-              )
-
-            {:max_avg_dmg, dmg} ->
-              dynamic(
-                [c],
-                dienum_access(c.damage) * (dietype_access(c.damage) / 2.0 + 0.5) <= ^dmg and ^acc
-              )
-          end
-      end
+    query = skill_filter(true, skill)
+    |> element_filter(elem)
+    |> range_filter(range)
+    |> kind_filter(kind)
+    |> class_filter(class)
+    |> cr_filter(cr)
+    |> min_cr_filter(min_cr)
+    |> max_cr_filter(max_cr)
+    |> min_avg_damage_filter(min_avg_dmg)
+    |> max_avg_damage_filter(max_avg_dmg)
+    |> blight_filter(blight)
 
     query = from c in __MODULE__, where: ^query
     BnBBot.Repo.Postgres.all(query)
@@ -384,4 +357,39 @@ defmodule BnBBot.Library.Battlechip do
       [targets, " targets | "]
     end
   end
+
+  defp skill_filter(acc, nil), do: acc
+  defp skill_filter(acc, :none), do: dynamic([c], is_nil(c.skill) and ^acc)
+  defp skill_filter(acc, skill), do: dynamic([c], array_contains(c.skill, ^skill) and ^acc)
+
+  defp element_filter(acc, nil), do: acc
+  defp element_filter(acc, element), do: dynamic([c], array_contains(c.elem, ^element) and ^acc)
+
+  defp range_filter(acc, nil), do: acc
+  defp range_filter(acc, range), do: dynamic([c], c.range == ^range and ^acc)
+
+  defp kind_filter(acc, nil), do: acc
+  defp kind_filter(acc, kind), do: dynamic([c], c.kind == ^kind and ^acc)
+
+  defp class_filter(acc, nil), do: acc
+  defp class_filter(acc, class), do: dynamic([c], c.class == ^class and ^acc)
+
+  defp cr_filter(acc, nil), do: acc
+  defp cr_filter(acc, cr), do: dynamic([c], c.cr == ^cr and ^acc)
+
+  defp min_cr_filter(acc, nil), do: acc
+  defp min_cr_filter(acc, cr), do: dynamic([c], c.cr >= ^cr and ^acc)
+
+  defp max_cr_filter(acc, nil), do: acc
+  defp max_cr_filter(acc, cr), do: dynamic([c], c.cr <= ^cr and ^acc)
+
+  defp blight_filter(acc, nil), do: acc
+  defp blight_filter(acc, :null), do: dynamic([c], is_nil(c.blight) and ^acc)
+  defp blight_filter(acc, blight), do: dynamic([c], blight_elem_access(c.blight) == ^blight and ^acc)
+
+  defp min_avg_damage_filter(acc, nil), do: acc
+  defp min_avg_damage_filter(acc, dmg), do: dynamic([c],  dienum_access(c.damage) * (dietype_access(c.damage) / 2.0 + 0.5) >= ^dmg and ^acc)
+
+  defp max_avg_damage_filter(acc, nil), do: acc
+  defp max_avg_damage_filter(acc, dmg), do: dynamic([c],  dienum_access(c.damage) * (dietype_access(c.damage) / 2.0 + 0.5) <= ^dmg and ^acc)
 end
