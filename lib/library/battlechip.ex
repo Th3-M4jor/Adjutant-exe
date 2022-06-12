@@ -393,18 +393,10 @@ defmodule BnBBot.Library.Battlechip do
   defp min_avg_damage_filter(acc, nil), do: acc
 
   defp min_avg_damage_filter(acc, dmg),
-    do:
-      dynamic(
-        [c],
-        dienum_access(c.damage) * (dietype_access(c.damage) / 2.0 + 0.5) >= ^dmg and ^acc
-      )
+    do: dynamic([c], die_average(c.damage) >= ^dmg and ^acc)
 
   defp max_avg_damage_filter(acc, nil), do: acc
 
   defp max_avg_damage_filter(acc, dmg),
-    do:
-      dynamic(
-        [c],
-        dienum_access(c.damage) * (dietype_access(c.damage) / 2.0 + 0.5) <= ^dmg and ^acc
-      )
+    do: dynamic([c], die_average(c.damage) <= ^dmg and ^acc)
 end

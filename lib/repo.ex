@@ -72,4 +72,10 @@ defmodule BnBBot.CustomQuery do
       fragment("(?).dietype", unquote(column))
     end
   end
+
+  defmacro die_average(column) do
+    quote do
+      fragment("die_average(?)", unquote(column))
+    end
+  end
 end
