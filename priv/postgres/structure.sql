@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 12.10 (Ubuntu 12.10-0ubuntu0.20.04.1)
--- Dumped by pg_dump version 12.10 (Ubuntu 12.10-0ubuntu0.20.04.1)
+-- Dumped from database version 12.11 (Ubuntu 12.11-0ubuntu0.20.04.1)
+-- Dumped by pg_dump version 12.11 (Ubuntu 12.11-0ubuntu0.20.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -209,6 +209,19 @@ BEGIN
   END IF;
 
   RETURN NULL;
+END;
+$$;
+
+
+--
+-- Name: die_average(public."Dice"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.die_average(die public."Dice") RETURNS double precision
+    LANGUAGE plpgsql IMMUTABLE STRICT
+    AS $$
+BEGIN
+RETURN die.dienum * (die.dietype / 2.0 + 0.5);
 END;
 $$;
 

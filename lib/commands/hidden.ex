@@ -19,7 +19,11 @@ defmodule BnBBot.Commands.Hidden do
   alias Nostrum.Api
   alias Nostrum.Struct.ApplicationCommandInteractionDataOption, as: Option
 
-  use BnBBot.SlashCmdFn, permissions: [:owner, :admin]
+  @hidden_cmd_scope Application.compile_env!(:elixir_bot, :hidden_command_scope)
+
+  use BnBBot.SlashCmdFn,
+    permissions: [:owner, :admin],
+    scope: @hidden_cmd_scope
 
   @doc """
   Override the `call` method since this command works weirdly.
@@ -107,7 +111,7 @@ defmodule BnBBot.Commands.Hidden do
     %{
       type: 1,
       name: "hidden",
-      description: "hidden commands, since you can't have hidden slash commands yet",
+      description: "hidden owner/admin only commands",
       options: [
         %{
           type: 3,

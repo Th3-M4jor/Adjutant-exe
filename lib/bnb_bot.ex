@@ -136,6 +136,7 @@ defmodule BnBBot.Consumer do
           virus_ct = BnBBot.Library.Virus.get_virus_ct()
 
           Logger.debug(["Ready\n", inspect(ready_data, pretty: true)])
+          BnBBot.SlashCommands.setup_commands()
 
           {"Bot Ready\n#{chip_ct} chips loaded\n#{virus_ct} viruses loaded\n#{ncp_ct} ncps loaded",
            false}

@@ -32,7 +32,24 @@ defmodule BnBBot.SlashCmdFn do
 
   When `use`d, the macro expects a `:permissions` option, which defines who can use the command.
   This option expects either a single `:everyone`, `:admin`, or `:owner` value or a list of such values.
+
+  There is also an optional `:scope` argument that can be used to determine the scope of the command
+  when it is created.
+
+  Scope can be one of:
+  - `:global`: The command is created globally.
+  - `Nostrum.Snowflake.t()`: The command is created in only the guild with the given ID.
+  - [`Nostrum.Snowflake.t(), ...`]: The command is created in all guilds with the given IDs.
+
+  By default, the command follows the `:default_command_scope` config option.
+
+  this setting in config can either be `:global`, a guild_id or a list of guild_ids
+
+  Note about scope: If you are changing a command's scope from `:global` to a guild, or vice versa,
+  you must manually remove the command from the old scope.
   """
+
+  @default_command_scope Application.compile_env!(:elixir_bot, :default_command_scope)
 
   defp everyone_perms do
     quote do
@@ -89,20 +106,35 @@ defmodule BnBBot.SlashCmdFn do
     end
   end
 
-  defmacro __using__(opts) do
-    case opts[:permissions] do
-      :everyone ->
-        everyone_perms()
-
-      [first, second] = perms when first in [:admin, :owner] and second in [:admin, :owner] ->
-        list_perms(perms)
-
-      perms when perms in [:admin, :owner] ->
-        atom_perms(perms)
-
-      _ ->
-        raise "\":permissions\" option must be either :everyone, :admin, :owner or a list of [:admin, :owner]"
+  defp creation_state(creation_config) do
+    quote do
+      def get_creation_state do
+        cmd_map = get_create_map()
+        {unquote(creation_config), cmd_map}
+      end
     end
+  end
+
+  defmacro __using__(opts) do
+    perms_fn =
+      case opts[:permissions] do
+        :everyone ->
+          everyone_perms()
+
+        [first, second] = perms when first in [:admin, :owner] and second in [:admin, :owner] ->
+          list_perms(perms)
+
+        perms when perms in [:admin, :owner] ->
+          atom_perms(perms)
+
+        _ ->
+          raise "\":permissions\" option must be either :everyone, :admin, :owner or a list of [:admin, :owner]"
+      end
+
+    creation_fn_arg = opts[:scope] || @default_command_scope
+
+    creation_fn = creation_state(creation_fn_arg)
+    [perms_fn, creation_fn]
   end
 
   @typedoc """
@@ -169,7 +201,12 @@ defmodule BnBBot.SlashCmdFn do
           optional(:options) => [slash_opts(), ...]
         }
 
+  @type creation_state ::
+          {[Nostrum.Snowflake.t()] | Nostrum.Snowflake.t() | :global, slash_cmd_map()}
+
   @callback call_slash(Nostrum.Struct.Interaction.t()) :: :ignore
 
   @callback get_create_map() :: slash_cmd_map()
+
+  @callback get_creation_state() :: creation_state()
 end
