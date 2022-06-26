@@ -1,4 +1,4 @@
-defmodule BnBBot.Commands.Create do
+defmodule BnBBot.Command.Slash.BNB.Create do
   @moduledoc """
   This module contains commands for creating new Viruses, Chips, and NCPs.
 
@@ -9,7 +9,7 @@ defmodule BnBBot.Commands.Create do
   alias Nostrum.Struct.Component.{ActionRow, TextInput}
   require Logger
 
-  use BnBBot.SlashCmdFn, permissions: [:owner, :admin]
+  use BnBBot.Command.Slash, permissions: [:owner, :admin]
 
   @colors [
     "White",

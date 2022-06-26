@@ -36,8 +36,19 @@ The bot can then be run with `MIX_ENV` set to prod, however it is recommended to
 To add a new command to the bot, the following steps are required:
 - Create a new module for the command in the `lib/commands` directory
   - it is recommended to namespace the command's module name with `BnBBot.Commands`
-- This new module should `use` the `BnBBot.SlashCmdFn` module
-  - See the documentation for the `BnBBot.SlashCmdFn` module for more information
-  - Also, see [`BnBBot.Commands.PHB`](lib/commands/bnb/phb.ex) for a simple example
-- Add this new module to the `@commands` list in the [`BnBBot.SlashCommands`](lib/slash_cmds.ex) module
+- This new module should `use` the `BnBBot.Command.Slash` module
+  - See the documentation for the `BnBBot.Command.Slash` module for more information
+  - Also, see [`BnBBot.Command.Slash.BNB.PHB`](lib/command/slash/bnb/phb.ex) for a simple example
+- Add this new module to the `@commands` list in the [`BnBBot.Command`](lib/command.ex) module
 - The bot will take care of creating the command if it doesn't exist at startup
+
+# Deleting a command
+To delete a command, the following steps are required:
+- Remove the module from the `@commands` list in the [`BnBBot.Command`](lib/command.ex) module
+- Add the module to the `@deleted_commands` list in the [`BnBBot.Command`](lib/command.ex) module
+- The bot will take care of deleting the command if its recorded as existing at startup
+- Then on future rollouts you can delete the module
+
+# Renaming a command
+To rename a command, you must first delete the command and then add it again with the new name.
+An alternative option may be considered in the future if this happens often enough.

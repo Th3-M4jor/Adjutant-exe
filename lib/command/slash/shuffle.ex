@@ -1,4 +1,4 @@
-defmodule BnBBot.Commands.Shuffle do
+defmodule BnBBot.Command.Slash.Shuffle do
   @moduledoc """
   Command for suffling a range of numbers.
   """
@@ -6,7 +6,7 @@ defmodule BnBBot.Commands.Shuffle do
   alias Nostrum.Api
   require Logger
 
-  use BnBBot.SlashCmdFn, permissions: :everyone
+  use BnBBot.Command.Slash, permissions: :everyone
 
   @impl true
   @spec call_slash(Nostrum.Struct.Interaction.t()) :: :ignore

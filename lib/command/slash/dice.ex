@@ -1,4 +1,4 @@
-defmodule BnBBot.Commands.Dice do
+defmodule BnBBot.Command.Slash.Dice do
   @moduledoc """
   Die roll command
   """
@@ -7,7 +7,7 @@ defmodule BnBBot.Commands.Dice do
   alias Nostrum.Struct.ApplicationCommandInteractionDataOption, as: Option
   require Logger
 
-  use BnBBot.SlashCmdFn, permissions: :everyone
+  use BnBBot.Command.Slash, permissions: :everyone
 
   @impl true
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do

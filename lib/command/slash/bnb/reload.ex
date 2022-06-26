@@ -1,4 +1,4 @@
-defmodule BnBBot.Commands.Reload do
+defmodule BnBBot.Command.Slash.BNB.Reload do
   @moduledoc """
   Command for telling the bot to reload all chips/viruses/NCPs
   """
@@ -8,7 +8,7 @@ defmodule BnBBot.Commands.Reload do
 
   require Logger
 
-  use BnBBot.SlashCmdFn, permissions: [:owner, :admin]
+  use BnBBot.Command.Slash, permissions: [:owner, :admin]
 
   @impl true
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do

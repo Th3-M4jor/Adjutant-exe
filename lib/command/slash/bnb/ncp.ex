@@ -1,4 +1,4 @@
-defmodule BnBBot.Commands.NCP do
+defmodule BnBBot.Command.Slash.BNB.NCP do
   @moduledoc """
   Contains all NCP related commands.
 
@@ -16,7 +16,7 @@ defmodule BnBBot.Commands.NCP do
   alias BnBBot.Library.NCP
   alias Nostrum.Api
 
-  use BnBBot.SlashCmdFn, permissions: :everyone
+  use BnBBot.Command.Slash, permissions: :everyone
 
   @elements [
     "Fire",

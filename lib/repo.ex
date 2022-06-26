@@ -1,6 +1,6 @@
 defmodule BnBBot.RepoSupervisor do
   @moduledoc """
-  Supervises the sqlite repo.
+  Supervises the sqlite and postgres repo.
   """
   use Supervisor
 

@@ -1,4 +1,4 @@
-defmodule BnBBot.Commands.PHB do
+defmodule BnBBot.Command.Slash.BNB.PHB do
   @moduledoc """
   Command for getting a link to the PHB, and the chip manager.
   """
@@ -9,7 +9,7 @@ defmodule BnBBot.Commands.PHB do
 
   @phb_links :elixir_bot |> Application.compile_env!(:phb_links)
 
-  use BnBBot.SlashCmdFn, permissions: :everyone
+  use BnBBot.Command.Slash, permissions: :everyone
 
   @impl true
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do

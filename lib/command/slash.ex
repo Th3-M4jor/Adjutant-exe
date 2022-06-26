@@ -1,25 +1,4 @@
-defmodule BnBBot.CommandFn do
-  @moduledoc """
-  Defines the behaviour to be used by text based commands.
-  """
-
-  @typedoc """
-  Who can use the command?
-  """
-  @type command_perms :: :everyone | :admin | :owner
-
-  @typedoc """
-  The name of the command
-  """
-  @type command_name :: String.t()
-
-  @typedoc """
-  The description of the command
-  """
-  @type command_desc :: String.t()
-end
-
-defmodule BnBBot.SlashCmdFn do
+defmodule BnBBot.Command.Slash do
   @moduledoc """
   Describes what public functions each slash command module must define
 
@@ -27,7 +6,7 @@ defmodule BnBBot.SlashCmdFn do
   this module to define a `call` function that will be called when the command is executed.
 
   ```elixir
-  use BnBBot.SlashCmdFn, permissions: :everyone
+  use BnBBot.Command.Slash, permissions: :everyone
   ```
 
   When `use`d, the macro expects a `:permissions` option, which defines who can use the command.
@@ -53,7 +32,7 @@ defmodule BnBBot.SlashCmdFn do
 
   defp everyone_perms do
     quote do
-      @behaviour BnBBot.SlashCmdFn
+      @behaviour BnBBot.Command.Slash
       def call(inter), do: call_slash(inter)
 
       defoverridable call: 1
@@ -62,7 +41,7 @@ defmodule BnBBot.SlashCmdFn do
 
   defp list_perms(perms) when is_list(perms) do
     quote do
-      @behaviour BnBBot.SlashCmdFn
+      @behaviour BnBBot.Command.Slash
       def call(inter) do
         user_perms = BnBBot.Util.get_user_perms(inter)
 
@@ -85,7 +64,7 @@ defmodule BnBBot.SlashCmdFn do
 
   defp atom_perms(perm) when perm in [:owner, :admin] do
     quote do
-      @behaviour BnBBot.SlashCmdFn
+      @behaviour BnBBot.Command.Slash
       def call(inter) do
         user_perms = BnBBot.Util.get_user_perms(inter)
 
@@ -209,4 +188,78 @@ defmodule BnBBot.SlashCmdFn do
   @callback get_create_map() :: slash_cmd_map()
 
   @callback get_creation_state() :: creation_state()
+end
+
+defmodule BnBBot.Command.Slash.Id do
+  @moduledoc """
+  Module that defines how slash command Ids are stored and retrieved from the DB to handle
+  deletion.
+  """
+
+  use Ecto.Type
+  import Nostrum.Snowflake, only: [is_snowflake: 1]
+  alias Nostrum.Snowflake
+
+  def type, do: :binary
+
+  def cast({:global, id}) when is_snowflake(id) do
+    {:ok, {:global, id}}
+  end
+
+  def cast({:global, id}) when id != nil do
+    case Snowflake.cast(id) do
+      {:ok, id} ->
+        {:ok, {:global, id}}
+
+      :error ->
+        :error
+    end
+  end
+
+  def cast(id) when is_snowflake(id) do
+    # assume its a global id
+    IO.warn("Attempted to cast an untagged snowflake as a cmd_id, assuming it's a global id")
+    {:ok, {:global, id}}
+  end
+
+  def cast({:guild, guild_id, id}) when is_snowflake(id) and is_snowflake(guild_id) do
+    {:ok, {:guild, [{guild_id, id}]}}
+  end
+
+  def cast({:guild, ids}) when is_list(ids) do
+    ids =
+      for {guild_id, id} <- ids do
+        case {Snowflake.cast(guild_id), Snowflake.cast(id)} do
+          {{:ok, guild_id}, {:ok, id}} ->
+            {guild_id, id}
+
+          _ ->
+            :error
+        end
+      end
+
+    if Enum.any?(ids, fn id -> id == :error end) do
+      :error
+    else
+      {:ok, {:guild, ids}}
+    end
+  end
+
+  def load(id_data) when is_binary(id_data) do
+    case :erlang.binary_to_term(id_data) do
+      {:global, id} when is_snowflake(id) ->
+        {:ok, {:global, id}}
+
+      {:guild, ids} when is_list(ids) ->
+        {:ok, {:guild, ids}}
+    end
+  end
+
+  def dump({:guild, ids} = data) when is_list(ids) do
+    {:ok, :erlang.term_to_binary(data)}
+  end
+
+  def dump({:global, id} = data) when is_snowflake(id) do
+    {:ok, :erlang.term_to_binary(data)}
+  end
 end

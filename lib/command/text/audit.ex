@@ -1,4 +1,4 @@
-defmodule BnBBot.Commands.Audit do
+defmodule BnBBot.Command.Text.Audit do
   @moduledoc """
   Text based command for getting debug/error log information.
   """

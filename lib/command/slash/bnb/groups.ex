@@ -1,4 +1,4 @@
-defmodule BnBBot.Commands.Groups do
+defmodule BnBBot.Command.Slash.BNB.Groups do
   @moduledoc """
   This module contains commands for getting information about folder groups.
 
@@ -12,7 +12,7 @@ defmodule BnBBot.Commands.Groups do
   @backend_node_name :elixir_bot |> Application.compile_env!(:backend_node_name)
   @dm_log_id :elixir_bot |> Application.compile_env!(:dm_log_id)
 
-  use BnBBot.SlashCmdFn, permissions: :everyone
+  use BnBBot.Command.Slash, permissions: :everyone
 
   @impl true
   @spec call_slash(Nostrum.Struct.Interaction.t()) :: :ignore

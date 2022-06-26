@@ -84,7 +84,7 @@ defmodule BnBBot.Consumer do
       Task.start(fn -> BnBBot.DmLogger.log_dm(msg) end)
     end
 
-    BnBBot.Commands.cmd_check(msg)
+    BnBBot.Command.dispatch(msg)
   rescue
     e ->
       Logger.error(Exception.format(:error, e, __STACKTRACE__))
@@ -136,7 +136,7 @@ defmodule BnBBot.Consumer do
           virus_ct = BnBBot.Library.Virus.get_virus_ct()
 
           Logger.debug(["Ready\n", inspect(ready_data, pretty: true)])
-          BnBBot.SlashCommands.setup_commands()
+          BnBBot.Command.setup_commands()
 
           {"Bot Ready\n#{chip_ct} chips loaded\n#{virus_ct} viruses loaded\n#{ncp_ct} ncps loaded",
            false}
@@ -189,7 +189,7 @@ defmodule BnBBot.Consumer do
   # slash commands and context menu
   def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{type: 2} = inter, _ws_state}) do
     Logger.debug(["Got an interaction command\n", inspect(inter, pretty: true)])
-    BnBBot.SlashCommands.handle_command(inter)
+    BnBBot.Command.dispatch(inter)
   rescue
     e ->
       Logger.error(Exception.format(:error, e, __STACKTRACE__))
@@ -204,7 +204,7 @@ defmodule BnBBot.Consumer do
   def handle_event({:INTERACTION_CREATE, %Nostrum.Struct.Interaction{type: 4} = inter, _ws_state}) do
     Logger.debug(["Got an interaction autocomplete req\n", inspect(inter, pretty: true)])
 
-    BnBBot.SlashCommands.handle_command(inter)
+    BnBBot.Command.dispatch(inter)
   rescue
     e ->
       Logger.error(Exception.format(:error, e, __STACKTRACE__))

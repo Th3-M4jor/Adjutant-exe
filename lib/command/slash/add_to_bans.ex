@@ -1,4 +1,4 @@
-defmodule BnBBot.Commands.AddToBans do
+defmodule BnBBot.Command.Slash.AddToBans do
   @moduledoc """
   One of the "hidden" commands. Used to add a member to the list of who would be banned.
   """

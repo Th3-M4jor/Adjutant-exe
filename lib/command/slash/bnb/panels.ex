@@ -1,4 +1,4 @@
-defmodule BnBBot.Commands.Panels do
+defmodule BnBBot.Command.Slash.BNB.Panels do
   @moduledoc """
   Command for getting information about all panel types currently in the game.
   """
@@ -6,7 +6,7 @@ defmodule BnBBot.Commands.Panels do
   alias Nostrum.Api
   require Logger
 
-  use BnBBot.SlashCmdFn, permissions: :everyone
+  use BnBBot.Command.Slash, permissions: :everyone
 
   @panels [
     "Cracked",

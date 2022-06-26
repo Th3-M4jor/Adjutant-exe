@@ -1,13 +1,13 @@
-defmodule BnBBot.Commands.RemindMe do
+defmodule BnBBot.Command.Slash.RemindMe do
   @moduledoc """
   Command to set a reminder, uses `Oban` under the hood
   """
 
-  alias BnBBot.Commands.RemindMe.Worker, as: ReminderWorker
+  alias BnBBot.Command.Slash.RemindMe.Worker, as: ReminderWorker
   alias Nostrum.Api
   require Logger
 
-  use BnBBot.SlashCmdFn, permissions: :everyone
+  use BnBBot.Command.Slash, permissions: :everyone
 
   @impl true
   @spec call_slash(Nostrum.Struct.Interaction.t()) :: :ignore
@@ -265,7 +265,7 @@ defmodule BnBBot.Commands.RemindMe do
   end
 end
 
-defmodule BnBBot.Commands.RemindMe.Worker do
+defmodule BnBBot.Command.Slash.RemindMe.Worker do
   @moduledoc """
   Oban worker for handling scheduled reminders
   """
@@ -301,7 +301,7 @@ defmodule BnBBot.Commands.RemindMe.Worker do
     if args["repeat"] == true do
       [period, units] = args["interval"]
 
-      Task.start(BnBBot.Commands.RemindMe, :reschedule_reminder, [
+      Task.start(BnBBot.Command.Slash.RemindMe, :reschedule_reminder, [
         channel_id,
         msg,
         {period, units}

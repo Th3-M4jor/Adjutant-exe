@@ -1,4 +1,4 @@
-defmodule BnBBot.Commands.Debug do
+defmodule BnBBot.Command.Text.Debug do
   @moduledoc """
   This module contains commands for turning on and off debug mode.
   """

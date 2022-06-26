@@ -1,4 +1,4 @@
-defmodule BnBBot.Commands.ShutUp do
+defmodule BnBBot.Command.Text.ShutUp do
   @moduledoc """
   Text based command for telling the bot to stop DMing the owner.
   """

@@ -1,4 +1,4 @@
-defmodule BnBBot.Commands.Blight do
+defmodule BnBBot.Command.Slash.BNB.Blight do
   @moduledoc """
   Command for getting the effect of each blight element.
   """
@@ -6,7 +6,7 @@ defmodule BnBBot.Commands.Blight do
   alias Nostrum.Api
   require Logger
 
-  use BnBBot.SlashCmdFn, permissions: :everyone
+  use BnBBot.Command.Slash, permissions: :everyone
 
   @blight_elements [
     "Fire",

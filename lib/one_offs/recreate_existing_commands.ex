@@ -4,28 +4,27 @@ defmodule BnBBot.OneOffs.RecreateCommands do
   re-inserted and into the state database
   """
 
-  alias BnBBot.Commands
-  alias BnBBot.SlashCommands.CreationState
+  alias BnBBot.Command.State, as: CreationState
 
   alias Nostrum.Api
 
-  @commands [
-    Commands.Dice,
-    Commands.Ping,
-    Commands.Shuffle,
-    Commands.PHB,
-    Commands.NCP,
-    Commands.Chip,
-    Commands.Virus,
-    Commands.Statuses,
-    Commands.Blight,
-    Commands.Panels,
-    Commands.Reload,
-    Commands.Groups,
-    Commands.Hidden,
-    Commands.Create,
-    Commands.RemindMe,
-    Commands.Team
+  @slash_commands [
+    BnBBot.Command.Slash.Dice,
+    BnBBot.Command.Slash.Ping,
+    BnBBot.Command.Slash.Shuffle,
+    BnBBot.Command.Slash.BNB.PHB,
+    BnBBot.Command.Slash.BNB.NCP,
+    BnBBot.Command.Slash.BNB.Chip,
+    BnBBot.Command.Slash.BNB.Virus,
+    BnBBot.Command.Slash.BNB.Status,
+    BnBBot.Command.Slash.BNB.Blight,
+    BnBBot.Command.Slash.BNB.Panels,
+    BnBBot.Command.Slash.BNB.Reload,
+    BnBBot.Command.Slash.BNB.Groups,
+    BnBBot.Command.Slash.Hidden,
+    BnBBot.Command.Slash.BNB.Create,
+    BnBBot.Command.Slash.RemindMe,
+    BnBBot.Command.Slash.HOTG.Team
   ]
 
   def execute do
@@ -35,7 +34,7 @@ defmodule BnBBot.OneOffs.RecreateCommands do
     end)
   end
 
-  def insert_global_commands do
+  defp insert_global_commands do
     global_cmds = get_global_commands_list()
 
     unless Enum.empty?(global_cmds) do
@@ -44,19 +43,23 @@ defmodule BnBBot.OneOffs.RecreateCommands do
           cmd_map
         end)
 
-      Api.bulk_overwrite_global_application_commands(to_create)
+      {:ok, cmds} = Api.bulk_overwrite_global_application_commands(to_create)
+      cmds = Enum.sort_by(cmds, fn cmd -> cmd.name end)
+      global_cmds = Enum.sort_by(global_cmds, fn {_, cmd} -> cmd.name end)
 
-      Enum.each(global_cmds, fn {_, cmd_map} = to_ins ->
+      Enum.zip(cmds, global_cmds)
+      |> Enum.each(fn {%{id: id}, {_, cmd_map} = to_ins} ->
         name = cmd_map.name
         state = :erlang.term_to_binary(to_ins)
-        state = %CreationState{name: name, state: state}
-        BnBBot.Repo.SQLite.insert!(state)
+        id = Nostrum.Snowflake.cast!(id)
+        state = %CreationState{name: name, state: state, cmd_ids: {:global, id}}
+        BnBBot.Repo.SQLite.insert!(state, on_conflict: {:replace, [:state, :cmd_ids]})
       end)
     end
   end
 
-  def get_global_commands_list do
-    Enum.map(@commands, fn cmd ->
+  defp get_global_commands_list do
+    Enum.map(@slash_commands, fn cmd ->
       cmd.get_creation_state()
     end)
     |> Enum.filter(fn {scope, _cmd_map} ->
@@ -64,27 +67,47 @@ defmodule BnBBot.OneOffs.RecreateCommands do
     end)
   end
 
-  def insert_guild_commands do
+  defp insert_guild_commands do
     guild_commands = get_guild_commands_list()
 
     unless Enum.empty?(guild_commands) do
       cmd_map = guild_command_list_to_map(guild_commands)
 
-      Enum.each(cmd_map, fn {guild_id, cmd_list} ->
-        Api.bulk_overwrite_guild_application_commands(guild_id, cmd_list)
-      end)
+      name_id_list =
+        Enum.map(cmd_map, &bulk_insert_guild_commands/1)
+        |> :lists.append()
+
+      name_to_id_map =
+        :maps.groups_from_list(
+          fn {name, _guild_id, _id} ->
+            name
+          end,
+          fn {_name, guild_id, id} ->
+            {guild_id, id}
+          end,
+          name_id_list
+        )
 
       Enum.each(guild_commands, fn {_, cmd_map} = to_ins ->
         name = cmd_map.name
         state = :erlang.term_to_binary(to_ins)
-        state = %CreationState{name: name, state: state}
-        BnBBot.Repo.SQLite.insert!(state)
+        state = %CreationState{name: name, state: state, cmd_ids: {:guild, name_to_id_map[name]}}
+        BnBBot.Repo.SQLite.insert!(state, on_conflict: {:replace, [:state, :cmd_ids]})
       end)
     end
   end
 
-  def get_guild_commands_list do
-    Enum.map(@commands, fn cmd ->
+  defp bulk_insert_guild_commands({guild_id, cmd_list}) do
+    {:ok, cmds} = Api.bulk_overwrite_guild_application_commands(guild_id, cmd_list)
+
+    Enum.map(cmds, fn cmd ->
+      cmd_id = Nostrum.Snowflake.cast!(cmd.id)
+      {cmd.name, guild_id, cmd_id}
+    end)
+  end
+
+  defp get_guild_commands_list do
+    Enum.map(@slash_commands, fn cmd ->
       cmd.get_creation_state()
     end)
     |> Enum.reject(fn {scope, _cmd_map} ->
@@ -92,7 +115,7 @@ defmodule BnBBot.OneOffs.RecreateCommands do
     end)
   end
 
-  def guild_command_list_to_map(guild_commands) do
+  defp guild_command_list_to_map(guild_commands) do
     Enum.reduce(guild_commands, %{}, fn {scope, cmd_map}, map ->
       if is_list(scope) do
         Enum.reduce(scope, map, fn guild_id, acc ->

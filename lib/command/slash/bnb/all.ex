@@ -1,4 +1,4 @@
-defmodule BnBBot.Commands.All do
+defmodule BnBBot.Command.Slash.BNB.All do
   @moduledoc """
   Command for searching all BattleChips/Viruses/NPCs for a given name.
   """

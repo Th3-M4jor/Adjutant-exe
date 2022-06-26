@@ -1,4 +1,4 @@
-defmodule BnBBot.Commands.Statuses do
+defmodule BnBBot.Command.Slash.BNB.Status do
   @moduledoc """
   Command for getting all possible Navi/Virus status effects.
   """
@@ -6,7 +6,7 @@ defmodule BnBBot.Commands.Statuses do
   alias Nostrum.Api
   require Logger
 
-  use BnBBot.SlashCmdFn, permissions: :everyone
+  use BnBBot.Command.Slash, permissions: :everyone
 
   @status_names [
     "Angry",

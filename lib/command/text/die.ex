@@ -1,4 +1,4 @@
-defmodule BnBBot.Commands.Die do
+defmodule BnBBot.Command.Text.Die do
   @moduledoc """
   This module contains the text command for shutting down the bot.
   """

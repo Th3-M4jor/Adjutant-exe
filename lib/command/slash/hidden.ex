@@ -1,4 +1,4 @@
-defmodule BnBBot.Commands.Hidden do
+defmodule BnBBot.Command.Slash.Hidden do
   @moduledoc """
   Module that defines "hidden" commands.
 
@@ -19,9 +19,11 @@ defmodule BnBBot.Commands.Hidden do
   alias Nostrum.Api
   alias Nostrum.Struct.ApplicationCommandInteractionDataOption, as: Option
 
+  alias BnBBot.Command.Slash.AddToBans
+
   @hidden_cmd_scope Application.compile_env!(:elixir_bot, :hidden_command_scope)
 
-  use BnBBot.SlashCmdFn,
+  use BnBBot.Command.Slash,
     permissions: [:owner, :admin],
     scope: @hidden_cmd_scope
 
@@ -52,15 +54,15 @@ defmodule BnBBot.Commands.Hidden do
 
       [%Option{value: "add_to_bans"} | args] ->
         Logger.info("BnBBot.Commands.Hidden.call_slash: add_to_bans")
-        BnBBot.Commands.AddToBans.add_to_bans(inter, args)
+        AddToBans.add_to_bans(inter, args)
 
       [%Option{value: "salt_the_earth"} | _] ->
         Logger.info("BnBBot.Commands.Hidden.call_slash: salt_the_earth")
-        BnBBot.Commands.AddToBans.salt_the_earth(inter)
+        AddToBans.salt_the_earth(inter)
 
       [%Option{value: "list_bans"} | _] ->
         Logger.info("BnBBot.Commands.Hidden.call_slash: list_bans")
-        BnBBot.Commands.AddToBans.list_bans(inter)
+        AddToBans.list_bans(inter)
 
       _ ->
         Logger.info("BnBBot.Commands.Hidden.call_slash: unknown")
@@ -219,7 +221,7 @@ defmodule BnBBot.Commands.Hidden do
 
       # BnBBot.Commands.Audit.dump_log()
 
-      {lines1, lines2} = BnBBot.Commands.Audit.get_formatted(20) |> Enum.split(10)
+      {lines1, lines2} = BnBBot.Command.Text.Audit.get_formatted(20) |> Enum.split(10)
       lines1 = lines1 |> Enum.intersperse("\n\n")
       lines2 = lines2 |> Enum.intersperse("\n\n")
 

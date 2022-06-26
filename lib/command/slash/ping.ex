@@ -1,4 +1,4 @@
-defmodule BnBBot.Commands.Ping do
+defmodule BnBBot.Command.Slash.Ping do
   @moduledoc """
   Ping command.
 
@@ -12,7 +12,7 @@ defmodule BnBBot.Commands.Ping do
   @backend_node_name :elixir_bot |> Application.compile_env!(:backend_node_name)
   @webhook_node_name :elixir_bot |> Application.compile_env!(:webhook_node_name)
 
-  use BnBBot.SlashCmdFn, permissions: :everyone
+  use BnBBot.Command.Slash, permissions: :everyone
 
   @impl true
   @spec call_slash(Nostrum.Struct.Interaction.t()) :: :ignore

@@ -1,4 +1,4 @@
-defmodule BnBBot.Commands.Virus do
+defmodule BnBBot.Command.Slash.BNB.Virus do
   @moduledoc """
   Contains all virus related commands.
 
@@ -15,7 +15,7 @@ defmodule BnBBot.Commands.Virus do
   alias Nostrum.Api
   require Logger
 
-  use BnBBot.SlashCmdFn, permissions: :everyone
+  use BnBBot.Command.Slash, permissions: :everyone
 
   @impl true
   def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
