@@ -48,7 +48,7 @@ defmodule BnBBot.Webhook.Update do
       # constrain to be between 0 and 0xFF_FF_FF
       |> Bitwise.band(0xFF_FF_FF)
 
-    buttons = make_yes_no_buttons(uuid)
+    buttons = BnBBot.ButtonAwait.make_yes_no_buttons(uuid)
 
     dm_channel_id = BnBBot.Util.find_dm_channel_id(user_id)
 
@@ -93,36 +93,5 @@ defmodule BnBBot.Webhook.Update do
         }
       })
     end)
-  end
-
-  defp make_yes_no_buttons(uuid) when uuid in 0..0xFF_FF_FF do
-    uuid_str =
-      uuid
-      |> Integer.to_string(16)
-      |> String.pad_leading(6, "0")
-
-    yes = %{
-      type: 2,
-      style: 3,
-      label: "yes",
-      custom_id: "#{uuid_str}_yn_yes"
-    }
-
-    no = %{
-      type: 2,
-      style: 4,
-      label: "no",
-      custom_id: "#{uuid_str}_yn_no"
-    }
-
-    action_row = %{
-      type: 1,
-      components: [
-        yes,
-        no
-      ]
-    }
-
-    [action_row]
   end
 end

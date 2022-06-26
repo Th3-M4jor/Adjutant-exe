@@ -85,6 +85,37 @@ defmodule BnBBot.ButtonAwait do
     end)
   end
 
+  def make_yes_no_buttons(uuid) when uuid in 0..0xFF_FF_FF do
+    uuid_str =
+      uuid
+      |> Integer.to_string(16)
+      |> String.pad_leading(6, "0")
+
+    yes = %{
+      type: 2,
+      style: 3,
+      label: "yes",
+      custom_id: "#{uuid_str}_yn_yes"
+    }
+
+    no = %{
+      type: 2,
+      style: 4,
+      label: "no",
+      custom_id: "#{uuid_str}_yn_no"
+    }
+
+    action_row = %{
+      type: 1,
+      components: [
+        yes,
+        no
+      ]
+    }
+
+    [action_row]
+  end
+
   @spec get_confirmation?(Nostrum.Struct.Interaction.t(), String.t()) :: boolean()
   def get_confirmation?(inter, content) do
     uuid =
@@ -144,16 +175,20 @@ defmodule BnBBot.ButtonAwait do
   Awaits a button click on the given message from a user with the given ID (nil for any user)
   timeout is after 30 seconds
   """
-  @spec await_btn_click(pos_integer() | Nostrum.Snowflake.t(), Nostrum.Snowflake.t() | nil) ::
+  @spec await_btn_click(
+          pos_integer() | Nostrum.Snowflake.t(),
+          Nostrum.Snowflake.t() | nil,
+          pos_integer()
+        ) ::
           {Nostrum.Struct.Interaction.t(), any()}
           | Nostrum.Struct.Interaction.t()
           | nil
           | no_return()
-  def await_btn_click(uuid, user_id \\ nil) when uuid in 0..0xFF_FF_FF do
+  def await_btn_click(uuid, user_id \\ nil, timeout \\ 30_000) when uuid in 0..0xFF_FF_FF do
     Registry.register(:BUTTON_COLLECTOR, uuid, user_id)
     # Registry.register(:SHUTDOWN_REGISTRY, uuid, user_id)
     Logger.debug("Registering an await click on #{uuid} for #{user_id}")
-    btn = await_btn_click_inner()
+    btn = await_btn_click_inner(timeout)
     Logger.debug("Got a response to #{uuid} of #{inspect(btn, pretty: true)}")
     Registry.unregister(:BUTTON_COLLECTOR, uuid)
     # Registry.unregister(:SHUTDOWN_REGISTRY, uuid)
@@ -227,7 +262,7 @@ defmodule BnBBot.ButtonAwait do
   end
 
   # default timeout is 30 seconds
-  defp await_btn_click_inner(timeout \\ 30_000) do
+  defp await_btn_click_inner(timeout) do
     receive do
       :shutdown ->
         nil
