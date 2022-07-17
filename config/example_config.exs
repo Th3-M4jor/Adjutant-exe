@@ -70,21 +70,21 @@ config :elixir_bot,
   hidden_command_scope: 555,
   backend_node_name: :foo@bar,
   webhook_node_name: :baz@bar,
-  ncp_url: "https://jin-tengai.dev/bnb/backend/fetch/ncps",
-  chip_url: "https://jin-tengai.dev/bnb/backend/fetch/chips",
-  virus_url: "https://jin-tengai.dev/bnb/backend/fetch/viruses",
+  ncp_url: "https://bnb.api/jin-tengai.dev/fetch/ncps",
+  chip_url: "https://bnb.api/jin-tengai.dev/fetch/chips",
+  virus_url: "https://bnb.api/jin-tengai.dev/fetch/viruses",
   phb_links: [
     %{
       type: 2,
       style: 5,
       label: "B&B PHB",
-      url: "https://jin-tengai.dev/bnb/#!/home"
+      url: "https://phb.jin-tengai.dev/#!/home"
     },
     %{
       type: 2,
       style: 5,
       label: "Manager",
-      url: "https://jin-tengai.dev/manager"
+      url: "https://manager.jin-tengai.dev/"
     }
   ],
   ncp_emoji: %{
