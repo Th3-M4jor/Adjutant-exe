@@ -37,6 +37,15 @@ config :elixir_bot, Oban,
   queues: [
     dev_remind_me: [limit: 2, paused: true],
     dev_edit_message: [limit: 2, paused: true]
+  ],
+  plugins: [
+    {Oban.Plugins.Reindexer, schedule: "@weekly"},
+    {Oban.Plugins.Pruner, max_age: 50 * 60, interval: :timer.minutes(500)},
+    {Oban.Plugins.Lifeline, interval: :timer.minutes(60)},
+    {Oban.Plugins.Cron,
+     crontab: [
+       {"@weekly", BnBBot.Workers.LogCleaner}
+     ]}
   ]
 
 # uses sqlite for logging
@@ -59,6 +68,7 @@ config :elixir_bot,
   ecto_shard_count: 1,
   remind_me_queue: :dev_remind_me,
   edit_message_queue: :dev_edit_message,
+  log_cleaner_queue: :dev_log_cleaner,
   prefix: "!",
   owner_id: 666,
   admins: [667, 668],

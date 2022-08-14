@@ -297,7 +297,7 @@ defmodule BnBBot.Command.Slash.BNB.Chip do
         content: "The following viruses drop #{chip.name}:",
         components: buttons
       }
-      |> BnBBot.Util.MessageEditWorker.new(schedule_in: {30, :minutes})
+      |> BnBBot.Workers.MessageEdit.new(schedule_in: {30, :minutes})
       |> Oban.insert!()
     end
   end
@@ -348,7 +348,7 @@ defmodule BnBBot.Command.Slash.BNB.Chip do
         content: "Found these chips:",
         components: buttons
       }
-      |> BnBBot.Util.MessageEditWorker.new(schedule_in: {30, :minutes})
+      |> BnBBot.Workers.MessageEdit.new(schedule_in: {30, :minutes})
       |> Oban.insert!()
     else
       [] ->

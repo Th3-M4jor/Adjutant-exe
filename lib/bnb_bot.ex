@@ -84,6 +84,9 @@ defmodule BnBBot.Consumer do
       Task.start(fn -> BnBBot.DmLogger.log_dm(msg) end)
     end
 
+    BnBBot.PsychoEffects.maybe_resolve_random_effect(msg)
+    BnBBot.PsychoEffects.maybe_resolve_user_effect(msg)
+
     BnBBot.Command.dispatch(msg)
   rescue
     e ->

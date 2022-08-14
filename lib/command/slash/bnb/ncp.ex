@@ -261,7 +261,7 @@ defmodule BnBBot.Command.Slash.BNB.NCP do
     %{"channel_id" => channel_id, "id" => message_id} = original
 
     %{channel_id: channel_id, message_id: message_id, content: content, components: buttons}
-    |> BnBBot.Util.MessageEditWorker.new(schedule_in: {30, :minutes})
+    |> BnBBot.Workers.MessageEdit.new(schedule_in: {30, :minutes})
     |> Oban.insert!()
   end
 
@@ -303,7 +303,7 @@ defmodule BnBBot.Command.Slash.BNB.NCP do
       content: "These are the starters for #{elem_str}:",
       components: buttons
     }
-    |> BnBBot.Util.MessageEditWorker.new(schedule_in: {30, :minutes})
+    |> BnBBot.Workers.MessageEdit.new(schedule_in: {30, :minutes})
     |> Oban.insert!()
   end
 

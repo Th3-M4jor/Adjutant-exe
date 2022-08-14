@@ -4,6 +4,8 @@ defmodule BnBBot.Util do
   """
 
   alias Nostrum.Api
+  alias Nostrum.Struct.Interaction
+  alias Nostrum.Struct.Message
   import Nostrum.Snowflake, only: [is_snowflake: 1]
   require Logger
 
@@ -14,20 +16,20 @@ defmodule BnBBot.Util do
   React to a message with a given unicode emoji, if a boolean is given instead
   then it will react with thumbs up or down
   """
-  @spec react(Nostrum.Struct.Message.t(), boolean | String.t()) :: any()
+  @spec react(Message.t(), boolean | String.t()) :: any()
   def react(msg, emote \\ "\u{1F44D}")
 
-  def react(%Nostrum.Struct.Message{channel_id: channel_id, id: msg_id}, true) do
+  def react(%Message{channel_id: channel_id, id: msg_id}, true) do
     Logger.debug("Reacting with \u{2705}")
     Api.create_reaction(channel_id, msg_id, "\u{2705}")
   end
 
-  def react(%Nostrum.Struct.Message{channel_id: channel_id, id: msg_id}, false) do
+  def react(%Message{channel_id: channel_id, id: msg_id}, false) do
     Logger.debug("Reacting with \u{274E}")
     Api.create_reaction(channel_id, msg_id, "\u{274E}")
   end
 
-  def react(%Nostrum.Struct.Message{channel_id: channel_id, id: msg_id}, emote) do
+  def react(%Message{channel_id: channel_id, id: msg_id}, emote) do
     Logger.debug("Reacting with #{emote}")
     Api.create_reaction(channel_id, msg_id, emote)
   end
@@ -35,7 +37,7 @@ defmodule BnBBot.Util do
   @doc """
   Check if a message is from the owner or an admin
   """
-  @spec get_user_perms(Nostrum.Struct.Message.t() | Nostrum.Struct.Interaction.t()) ::
+  @spec get_user_perms(Message.t() | Interaction.t()) ::
           :admin | :everyone | :owner
   def get_user_perms(msg) do
     cond do
@@ -48,14 +50,14 @@ defmodule BnBBot.Util do
   @doc """
   Check if a message or interaction is from the owner
   """
-  @spec is_owner_msg?(Nostrum.Struct.Message.t() | Nostrum.Struct.Interaction.t()) :: boolean
-  def is_owner_msg?(%Nostrum.Struct.Message{} = msg) do
+  @spec is_owner_msg?(Message.t() | Interaction.t()) :: boolean
+  def is_owner_msg?(%Message{} = msg) do
     owner_id = Nostrum.Snowflake.cast!(@owner_id)
     msg_author_id = Nostrum.Snowflake.cast!(msg.author.id)
     owner_id == msg_author_id
   end
 
-  def is_owner_msg?(%Nostrum.Struct.Interaction{} = inter) do
+  def is_owner_msg?(%Interaction{} = inter) do
     owner_id = Nostrum.Snowflake.cast!(@owner_id)
 
     inter_author_id =
@@ -72,12 +74,12 @@ defmodule BnBBot.Util do
   @doc """
   Check if a message or interaction is from an admin
   """
-  @spec is_admin_msg?(Nostrum.Struct.Message.t() | Nostrum.Struct.Interaction.t()) :: boolean
-  def is_admin_msg?(%Nostrum.Struct.Message{} = msg) do
+  @spec is_admin_msg?(Message.t() | Interaction.t()) :: boolean
+  def is_admin_msg?(%Message{} = msg) do
     Enum.any?(@admins, fn id -> id == msg.author.id end)
   end
 
-  def is_admin_msg?(%Nostrum.Struct.Interaction{} = inter) do
+  def is_admin_msg?(%Interaction{} = inter) do
     inter_author_id =
       if is_nil(inter.member) do
         inter.user.id
@@ -93,7 +95,7 @@ defmodule BnBBot.Util do
   Send a DM to the owner, second argument is for if this should override a do not DM setting
   """
   @spec dm_owner(keyword() | map() | String.t(), boolean()) ::
-          {:ok, Nostrum.Struct.Message.t()} | :error | nil
+          {:ok, Message.t()} | :error | nil
   def dm_owner(to_say, override \\ false) do
     res =
       case GenServer.call(:bnb_bot_data, {:get, :dm_owner}) do
@@ -139,101 +141,6 @@ defmodule BnBBot.Util do
   def slash_args_to_map(options) do
     for %{name: name, value: value} <- options, into: %{} do
       {name, value}
-    end
-  end
-end
-
-defmodule BnBBot.Util.KVP do
-  @moduledoc """
-  Module for handling internal global state.
-  Slower than using an ets table, but much more memory efficient
-  """
-
-  require Logger
-  use GenServer
-
-  def start_link(arg) do
-    GenServer.start_link(__MODULE__, arg, name: :bnb_bot_data)
-  end
-
-  def init(initial_state) when is_map(initial_state) do
-    {:ok, initial_state}
-  end
-
-  def init(_initial_state) do
-    Logger.warn("Initial state is not a map, using empty map")
-    {:ok, %{}}
-  end
-
-  def handle_cast({:insert, key, value}, state) do
-    state = Map.put(state, key, value)
-    {:noreply, state}
-  end
-
-  def handle_cast({:delete, key}, state) do
-    state = Map.delete(state, key)
-    {:noreply, state}
-  end
-
-  def handle_call({:get, key}, _from, state) do
-    {:reply, Map.get(state, key), state}
-  end
-end
-
-defmodule BnBBot.Util.MessageEditWorker do
-  @moduledoc """
-  Oban worker for handling scheduled message edits
-  """
-  @queue_name :elixir_bot |> Application.compile_env!(:edit_message_queue)
-
-  require Logger
-
-  alias Nostrum.Api
-
-  use Oban.Worker, queue: @queue_name
-
-  @impl Oban.Worker
-  def perform(%Oban.Job{
-        args: %{
-          "channel_id" => channel_id,
-          "message_id" => message_id,
-          "content" => content,
-          "components" => components
-        }
-      }) do
-    channel_id = channel_id |> Nostrum.Snowflake.cast!()
-    message_id = message_id |> Nostrum.Snowflake.cast!()
-
-    Api.edit_message(channel_id, message_id, %{
-      content: content,
-      components: components
-    })
-    |> case do
-      {:ok, _} ->
-        :ok
-
-      {:error, err} ->
-        Logger.warn("Error editing message: #{err}")
-        {:error, err}
-    end
-  end
-
-  def perform(%Oban.Job{
-        args: %{"channel_id" => channel_id, "message_id" => message_id, "content" => content}
-      }) do
-    channel_id = channel_id |> Nostrum.Snowflake.cast!()
-    message_id = message_id |> Nostrum.Snowflake.cast!()
-
-    Api.edit_message(channel_id, message_id, %{
-      content: content
-    })
-    |> case do
-      {:ok, _} ->
-        :ok
-
-      {:error, err} ->
-        Logger.warn("Error editing message: #{err}")
-        {:error, err}
     end
   end
 end

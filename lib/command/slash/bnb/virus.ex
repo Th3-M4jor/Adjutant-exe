@@ -199,7 +199,7 @@ defmodule BnBBot.Command.Slash.BNB.Virus do
       content: "These viruses are in CR #{cr}:",
       components: buttons
     }
-    |> BnBBot.Util.MessageEditWorker.new(schedule_in: {30, :minutes})
+    |> BnBBot.Workers.MessageEdit.new(schedule_in: {30, :minutes})
     |> Oban.insert!()
   end
 
@@ -307,7 +307,7 @@ defmodule BnBBot.Command.Slash.BNB.Virus do
       content: names,
       components: []
     }
-    |> BnBBot.Util.MessageEditWorker.new(schedule_in: {30, :minutes})
+    |> BnBBot.Workers.MessageEdit.new(schedule_in: {30, :minutes})
     |> Oban.insert!()
 
     :ignore

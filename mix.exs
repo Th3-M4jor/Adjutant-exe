@@ -37,7 +37,7 @@ defmodule ElixirBot.MixProject do
       {:jason, "~> 1.2"},
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.15.10"},
-      {:ecto_sqlite3, "~> 0.7.1"},
+      {:ecto_sqlite3, "~> 0.8.0"},
       {:oban, "~> 2.12"},
       {:ex2ms, "~> 1.6"},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
