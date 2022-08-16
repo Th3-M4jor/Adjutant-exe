@@ -32,6 +32,7 @@ defmodule BnBBot.Command do
     BnBBot.Command.Slash.BNB.Reload,
     BnBBot.Command.Slash.BNB.Groups,
     BnBBot.Command.Slash.Hidden,
+    BnBBot.Command.Slash.Insults,
     BnBBot.Command.Slash.RemindMe,
     BnBBot.Command.Slash.HOTG.Team
   ]

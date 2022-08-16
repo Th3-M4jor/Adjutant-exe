@@ -22,13 +22,32 @@ defmodule BnBBot.PsychoEffects.Insults do
     |> BnBBot.Repo.SQLite.insert!()
   end
 
+  @spec get_by_id(integer()) :: __MODULE__.t() | nil
+  def get_by_id(id) do
+    BnBBot.Repo.SQLite.get(__MODULE__, id)
+  end
+
+  @spec delete(t()) :: {:ok, t()} | {:error, Ecto.Changeset.t()}
+  def delete(insult) do
+    BnBBot.Repo.SQLite.delete(insult)
+  end
+
+  def get_all do
+    BnBBot.Repo.SQLite.all(__MODULE__)
+  end
+
+  def update!(insult, new_text) do
+    Ecto.Changeset.cast(insult, %{insult: new_text}, [:insult])
+    |> BnBBot.Repo.SQLite.update!()
+  end
+
   @doc """
   Returns a random insult.
 
   Raises if the table is empty.
   """
   @spec get_random() :: __MODULE__.t() | no_return()
-  def get_random() do
+  def get_random do
     from(i in __MODULE__,
       limit: 1,
       order_by: fragment("RANDOM()")
