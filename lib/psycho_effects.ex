@@ -38,7 +38,7 @@ defmodule BnBBot.PsychoEffects do
   @spec should_resolve?(Message.t()) :: boolean()
   def should_resolve?(%Message{} = msg) do
     msg.channel_id == ranger_channel_id() and
-      :rand.uniform(100) == 1 and not resolved_effect_recently?()
+      :rand.uniform(100) == 1 and not resolved_effect_recently?(msg.author.id)
   end
 
   def maybe_resolve_user_effect(%Message{id: message_id, channel_id: channel_id} = msg) do
@@ -69,8 +69,8 @@ defmodule BnBBot.PsychoEffects do
 
     effect = Enum.random(@random_effects)
     Logger.info("Resolving random effect: #{effect} on #{msg.author.username}")
+    GenServer.cast(:bnb_bot_data, {:insert, :last_psycho, {DateTime.utc_now(), msg.author.id}})
     apply(__MODULE__, effect, [msg])
-    GenServer.cast(:bnb_bot_data, {:insert, :psycho, DateTime.utc_now()})
     :ok
   rescue
     e ->
@@ -190,12 +190,18 @@ defmodule BnBBot.PsychoEffects do
     Api.create_reaction(channel_id, message_id, Enum.random(@troll_emojis))
   end
 
-  defp resolved_effect_recently? do
-    last_psycho = GenServer.call(:bnb_bot_data, {:get, :psycho})
+  defp resolved_effect_recently?(msg_author_id) do
+    last_psycho = GenServer.call(:bnb_bot_data, {:get, :last_psycho})
 
     case last_psycho do
       nil -> false
-      %DateTime{} = last_psycho -> DateTime.diff(DateTime.utc_now(), last_psycho) < 20 * 60
+      {%DateTime{} = last_psycho, user_id} when user_id == msg_author_id ->
+        # If the user has been psycho'd in the last hour, don't psycho them again
+        DateTime.diff(DateTime.utc_now(), last_psycho) < 60 * 60 * 2
+
+      {%DateTime{} = last_psycho, _user_id} ->
+        # else different user, don't care, 20 minutes is long enough
+        DateTime.diff(DateTime.utc_now(), last_psycho) < 20 * 60
     end
   end
 

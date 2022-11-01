@@ -32,8 +32,8 @@ defmodule ElixirBot.MixProject do
   defp deps do
     [
       # {:nostrum, "~> 0.6"},
-      {:nostrum, git: "https://github.com/Th3-M4jor/nostrum.git"},
-      # {:nostrum, path: "../nostrum/"},
+      # {:nostrum, git: "https://github.com/Th3-M4jor/nostrum.git"},
+      {:nostrum, path: "../nostrum/"},
       {:jason, "~> 1.2"},
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.15.10"},
