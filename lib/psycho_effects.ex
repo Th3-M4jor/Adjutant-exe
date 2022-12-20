@@ -194,7 +194,9 @@ defmodule BnBBot.PsychoEffects do
     last_psycho = GenServer.call(:bnb_bot_data, {:get, :last_psycho})
 
     case last_psycho do
-      nil -> false
+      nil ->
+        false
+
       {%DateTime{} = last_psycho, user_id} when user_id == msg_author_id ->
         # If the user has been psycho'd in the last hour, don't psycho them again
         DateTime.diff(DateTime.utc_now(), last_psycho) < 60 * 60 * 2

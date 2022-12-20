@@ -193,7 +193,8 @@ defmodule BnBBot.Command.Slash.Insults do
     Api.create_interaction_response!(inter, %{
       type: 4,
       data: %{
-        content: "Are you sure you want to edit the insult:\n\n#{old_insult.insult}\n\nTo:\n\n#{insult}",
+        content:
+          "Are you sure you want to edit the insult:\n\n#{old_insult.insult}\n\nTo:\n\n#{insult}",
         components: buttons
       }
     })

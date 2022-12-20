@@ -67,6 +67,7 @@ defmodule BnBBot.Consumer do
   @primary_guild_role_channel_id :elixir_bot
                                  |> Application.compile_env!(:primary_guild_role_channel_id)
   @log_channel_id :elixir_bot |> Application.compile_env!(:dm_log_id)
+
   def start_link do
     Logger.debug("starting Consumer Link")
     # don't retry on events that raise an error
