@@ -11,18 +11,10 @@ defmodule BnBBot.PsychoEffects do
     :resolve_react_effect
   ]
 
-  @troll_emojis [
-    "👿",
-    "🍆",
-    "🤡",
-    "🔥",
-    "💀",
-    "🇹🇩",
-    "🗿"
-  ]
+  @troll_emojis :elixir_bot |> Application.compile_env!(:troll_emojis)
 
   alias Nostrum.Api
-  alias Nostrum.Struct.Message
+  alias Nostrum.Struct.{Emoji, Message}
 
   require Logger
 
@@ -187,7 +179,26 @@ defmodule BnBBot.PsychoEffects do
   end
 
   def react(channel_id, message_id) do
-    Api.create_reaction(channel_id, message_id, Enum.random(@troll_emojis))
+    emoji =
+      case Enum.random(@troll_emojis) do
+        {name, id} ->
+          %Emoji{
+            name: name,
+            id: id
+          }
+
+        {name, id, animated} ->
+          %Emoji{
+            name: name,
+            id: id,
+            animated: animated
+          }
+
+        emoji when is_binary(emoji) ->
+          emoji
+      end
+
+    Api.create_reaction(channel_id, message_id, emoji)
   end
 
   defp resolved_effect_recently?(msg_author_id) do
