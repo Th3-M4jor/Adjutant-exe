@@ -23,7 +23,7 @@ defmodule BnBBot.Command.Slash.AddToBans do
 
   def add_to_bans(inter, [%Option{value: to_add}]) do
     if BnBBot.Util.is_owner_msg?(inter) or BnBBot.Util.is_admin_msg?(inter) do
-      add_id_to_list(inter, inter.member.user.id, to_add)
+      add_id_to_list(inter, inter.member.user_id, to_add)
     else
       Api.create_interaction_response(inter, %{
         type: 4,

@@ -214,7 +214,7 @@ defmodule BnBBot.ButtonAwait do
       [{pid, user_id}]
       when is_nil(user_id)
       when inter.user.id == user_id
-      when inter.member.user.id == user_id ->
+      when inter.member.user_id == user_id ->
         send(pid, {:btn_click, inter, value})
 
       _ ->

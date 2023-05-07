@@ -64,7 +64,7 @@ defmodule BnBBot.Util do
       if is_nil(inter.member) do
         inter.user.id
       else
-        inter.member.user.id
+        inter.member.user_id
       end
       |> Nostrum.Snowflake.cast!()
 
@@ -84,7 +84,7 @@ defmodule BnBBot.Util do
       if is_nil(inter.member) do
         inter.user.id
       else
-        inter.member.user.id
+        inter.member.user_id
       end
       |> Nostrum.Snowflake.cast!()
 

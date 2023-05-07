@@ -172,7 +172,7 @@ defmodule BnBBot.Command.Slash.RemindMe do
     if is_nil(inter.guild_id) do
       inter.channel_id
     else
-      Api.create_dm!(inter.member.user.id).id
+      Api.create_dm!(inter.member.user_id).id
     end
   end
 

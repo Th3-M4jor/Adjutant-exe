@@ -32,16 +32,16 @@ defmodule ElixirBot.MixProject do
   defp deps do
     [
       # {:nostrum, "~> 0.6"},
-      # {:nostrum, git: "https://github.com/Th3-M4jor/nostrum.git"},
-      {:nostrum, path: "../nostrum/"},
+      {:nostrum, git: "https://github.com/Th3-M4jor/nostrum.git"},
+      # {:nostrum, path: "../nostrum/"},
       {:jason, "~> 1.2"},
       {:ecto_sql, "~> 3.0"},
-      {:postgrex, ">= 0.15.10"},
-      {:ecto_sqlite3, "~> 0.9.0"},
+      {:postgrex, "~> 0.15"},
+      {:ecto_sqlite3, "~> 0.10.0"},
       {:oban, "~> 2.12"},
       {:ex2ms, "~> 1.6"},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
 

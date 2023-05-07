@@ -10,7 +10,7 @@ defmodule BnBBot.OneOffs.GuildMembers.CSV do
     members =
       for member <- members do
         join_date = member.joined_at
-        id = member.user.id
+        id = member.user_id
         name = member.user.username
         created_at = Snowflake.creation_time(id) |> DateTime.to_iso8601()
         id = Snowflake.dump(id)

@@ -18,19 +18,6 @@ defmodule BnBBot.Supervisor do
   def init(_init_arg) do
     Logger.debug("Starting Supervisor")
 
-    # :ets.new(:bnb_bot_data, [:set, :public, :named_table, read_concurrency: true])
-    # recommended to spawn one per scheduler (default is number of cores)
-    children =
-      for n <- 1..System.schedulers_online() do
-        Supervisor.child_spec(
-          {BnBBot.Consumer, []},
-          id: {:bnb_bot, :consumer, n},
-          restart: :temporary
-        )
-      end
-
-    # Logger.debug(inspect(children))
-
     button_collector = Registry.child_spec(keys: :unique, name: :BUTTON_COLLECTOR)
 
     bot_data =
@@ -40,10 +27,7 @@ defmodule BnBBot.Supervisor do
         restart: :transient
       )
 
-    children = [button_collector, bot_data | children]
-    # children = [chips | children]
-    # children = [viruses | children]
-    Logger.debug(inspect(children, pretty: true))
+    children = [button_collector, bot_data, BnBBot.Consumer]
 
     res = Supervisor.init(children, strategy: :one_for_one)
     Logger.debug("Supervisor started")
@@ -67,12 +51,6 @@ defmodule BnBBot.Consumer do
   @primary_guild_role_channel_id :elixir_bot
                                  |> Application.compile_env!(:primary_guild_role_channel_id)
   @log_channel_id :elixir_bot |> Application.compile_env!(:dm_log_id)
-
-  def start_link do
-    Logger.debug("starting Consumer Link")
-    # don't retry on events that raise an error
-    Consumer.start_link(__MODULE__, max_restarts: 0)
-  end
 
   # ignore bots
   def handle_event({:MESSAGE_CREATE, %Nostrum.Struct.Message{} = msg, _ws_state})
@@ -106,7 +84,7 @@ defmodule BnBBot.Consumer do
       ) do
     if guild_id == @primary_guild_id do
       text =
-        "Welcome to the Busters & Battlechips Discord <@#{member.user.id}>. Assign yourself roles in <##{@primary_guild_role_channel_id}>"
+        "Welcome to the Busters & Battlechips Discord <@#{member.user_id}>. Assign yourself roles in <##{@primary_guild_role_channel_id}>"
 
       Api.create_message!(@primary_guild_channel_id, text)
     end
@@ -115,7 +93,7 @@ defmodule BnBBot.Consumer do
   def handle_event(
         {:GUILD_MEMBER_REMOVE, {guild_id, %Nostrum.Struct.Guild.Member{} = member}, _ws_state}
       ) do
-    text = "#{member.user.username} has left #{guild_id}"
+    text = "#{member.user_id} has left #{guild_id}"
     Api.create_message!(@log_channel_id, text)
   end
 
@@ -163,7 +141,6 @@ defmodule BnBBot.Consumer do
       inspect(inter, pretty: true)
     ])
 
-    # TODO: consider using a different encoding format, like etf |> base64
     case inter.data.custom_id do
       # format is 6 hex digits, underscore, kind, underscore, name
       <<id::binary-size(6), "_", kind::utf8, "_", name::binary>> when kind in [?c, ?n, ?v] ->

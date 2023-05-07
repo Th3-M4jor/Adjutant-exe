@@ -86,7 +86,7 @@ defmodule BnBBot.Command.Slash.BNB.All do
 
             resp_text =
               if is_nil(inter.user) do
-                "<@#{inter.member.user.id}> used `/#{name}`\n#{lib_obj}"
+                "<@#{inter.member.user_id}> used `/#{name}`\n#{lib_obj}"
               else
                 "<@#{inter.user.id}> used `/#{name}`\n#{lib_obj}"
               end

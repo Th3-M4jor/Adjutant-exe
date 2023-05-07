@@ -43,12 +43,12 @@ defmodule BnBBot.RoleBtn do
     add_or_remove =
       if Enum.member?(inter.member.roles, id) do
         {:ok} =
-          Api.remove_guild_member_role(inter.guild_id, inter.member.user.id, id, "Button Click")
+          Api.remove_guild_member_role(inter.guild_id, inter.member.user_id, id, "Button Click")
 
         "removed"
       else
         {:ok} =
-          Api.add_guild_member_role(inter.guild_id, inter.member.user.id, id, "Button Click")
+          Api.add_guild_member_role(inter.guild_id, inter.member.user_id, id, "Button Click")
 
         "added"
       end
