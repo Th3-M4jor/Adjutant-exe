@@ -32,8 +32,8 @@ config :logger,
   ]
 
 config :elixir_bot, Oban,
-  prefix: "oban_jobs",
-  repo: BnBBot.Repo.Postgres,
+  repo: BnBBot.Repo.SQLite,
+  engine: Oban.Engines.Lite,
   queues: [
     dev_remind_me: [limit: 2, paused: true],
     dev_edit_message: [limit: 2, paused: true]

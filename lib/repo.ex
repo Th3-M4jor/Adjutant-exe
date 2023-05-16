@@ -35,7 +35,7 @@ defmodule BnBBot.Repo.Postgres do
   @moduledoc """
   The postgres repo.
   """
-  use Ecto.Repo, otp_app: :elixir_bot, adapter: Ecto.Adapters.Postgres
+  use Ecto.Repo, otp_app: :elixir_bot, adapter: Ecto.Adapters.Postgres, read_only: true
 end
 
 defmodule BnBBot.CustomQuery do

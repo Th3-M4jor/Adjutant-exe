@@ -14,44 +14,105 @@ defmodule BnBBot.PsychoEffects do
   @troll_emojis :elixir_bot |> Application.compile_env!(:troll_emojis)
 
   alias Nostrum.Api
+  alias Nostrum.Snowflake
   alias Nostrum.Struct.{Emoji, Message}
 
   require Logger
 
-  @spec maybe_resolve_random_effect(Message.t()) :: :ignore
-  def maybe_resolve_random_effect(%Message{} = msg) do
-    if should_resolve?(msg) do
+  # Slot 1 holds the unix time in seconds
+  # of the last time a random effect was resolved
+  @last_psycho_effect_time_key 1
+
+  # Slot 2 holds the id of the user who got the effect
+  @last_user_afflicted_key 2
+
+  # Slot 3 holds the enum of the effect for the effected user
+  # if the effect is one that happens over time
+  @over_time_effect_key 3
+
+  @over_time_effect_none 0
+  @over_time_effect_shadowban 1
+  @over_time_effect_troll 2
+  @over_time_effect_react 3
+
+  @spec maybe_resolve_random_effect(Message.t(), :atomics.atomics_ref()) :: :ignore
+  def maybe_resolve_random_effect(%Message{} = msg, atomic_ref) do
+    if should_resolve?(msg, atomic_ref) do
       Task.start(__MODULE__, :resolve_random_effect, [msg])
     end
 
     :ignore
   end
 
-  @spec should_resolve?(Message.t()) :: boolean()
-  def should_resolve?(%Message{} = msg) do
-    msg.channel_id == ranger_channel_id() and
-      :rand.uniform(100) == 1 and not resolved_effect_recently?(msg.author.id)
+  @spec should_resolve?(Message.t(), :atomics.atomics_ref()) :: boolean()
+  def should_resolve?(%Message{channel_id: channel_id, author: %{id: user_id}}, ref) do
+    channel_id == ranger_channel_id() and not resolved_effect_recently?(user_id, ref) and
+      :rand.uniform(100) == 1
   end
 
-  def maybe_resolve_user_effect(%Message{id: message_id, channel_id: channel_id} = msg) do
-    case get_user_effect(msg.guild_id, msg.author.id) do
-      :shadowban ->
+  @spec maybe_resolve_user_effect(Message.t(), :atomics.atomics_ref()) :: any()
+  def maybe_resolve_user_effect(%Message{} = msg, ref) do
+    over_time_effect = :atomics.get(ref, @over_time_effect_key)
+
+    if over_time_effect == @over_time_effect_none, do: throw(:halt)
+
+    %{id: message_id, channel_id: channel_id, author: %{id: user_id}} = msg
+
+    last_user = :atomics.get(ref, @last_user_afflicted_key)
+
+    unless last_user == user_id, do: throw(:halt)
+
+    last_date_unix_seconds = :atomics.get(ref, @last_psycho_effect_time_key)
+    now = System.os_time(:second)
+
+    case over_time_effect do
+      @over_time_effect_shadowban when now - last_date_unix_seconds >= 5 * 60 ->
         Task.start(fn -> shadowban(channel_id, message_id) end)
 
-      :troll ->
+      @over_time_effect_troll when now - last_date_unix_seconds >= 10 * 60 ->
         Task.start(fn -> troll(channel_id, message_id) end)
 
-      :react ->
+      @over_time_effect_react when now - last_date_unix_seconds >= 15 * 60 ->
         Task.start(fn -> react(channel_id, message_id) end)
 
-      nil ->
-        # user has no effect do nothing
-        nil
+      _ ->
+        # shouldn't resolve anything
+        # attempt to set the effect to none to speed up the next check
+        :atomics.compare_exchange(
+          ref,
+          @over_time_effect_key,
+          over_time_effect,
+          @over_time_effect_none
+        )
     end
+  catch
+    :halt ->
+      :ok
   end
 
-  @spec resolve_random_effect(Message.t()) :: :ok
-  def resolve_random_effect(%Message{channel_id: channel_id, id: msg_id} = msg) do
+  @spec resolve_random_effect(Message.t(), :atomics.atomics_ref()) :: :ok
+  def resolve_random_effect(%Message{} = msg, ref) do
+    %{
+      channel_id: channel_id,
+      id: msg_id,
+      author: %{id: author_id, username: author_username}
+    } = msg
+
+    now = System.os_time(:second)
+    effect = Enum.random(@random_effects)
+
+    effect_enum_val =
+      case effect do
+        :resolve_shadowban_effect -> @over_time_effect_shadowban
+        :resolve_troll_effect -> @over_time_effect_troll
+        :resolve_react_effect -> @over_time_effect_react
+        _ -> @over_time_effect_none
+      end
+
+    :atomics.put(ref, @last_psycho_effect_time_key, now)
+    :atomics.put(ref, @last_user_afflicted_key, author_id)
+    :atomics.put(ref, @over_time_effect_key, effect_enum_val)
+
     Api.create_message!(channel_id, %{
       content: "Resolve all psycho effects!",
       message_reference: %{
@@ -59,10 +120,9 @@ defmodule BnBBot.PsychoEffects do
       }
     })
 
-    effect = Enum.random(@random_effects)
-    Logger.info("Resolving random effect: #{effect} on #{msg.author.username}")
-    GenServer.cast(:bnb_bot_data, {:insert, :last_psycho, {DateTime.utc_now(), msg.author.id}})
-    apply(__MODULE__, effect, [msg])
+    Logger.info("Resolving random effect: #{effect} on #{author_username}")
+
+    apply(__MODULE__, effect, [msg, ref])
     :ok
   rescue
     e ->
@@ -76,7 +136,7 @@ defmodule BnBBot.PsychoEffects do
       :ok
   end
 
-  def resolve_role_effect(%Message{} = msg) do
+  def resolve_role_effect(%Message{} = msg, _ref) do
     roles = Application.get_env(:elixir_bot, :roles)
     role_ids = Enum.map(roles, fn role -> role.id end)
 
@@ -90,7 +150,7 @@ defmodule BnBBot.PsychoEffects do
     end)
   end
 
-  def resolve_timeout_effect(%Message{} = msg) do
+  def resolve_timeout_effect(%Message{} = msg, ref) do
     guild_id = msg.guild_id
     user_id = msg.author.id
     muted_until = DateTime.utc_now() |> DateTime.add(10 * 60) |> DateTime.to_iso8601()
@@ -106,39 +166,27 @@ defmodule BnBBot.PsychoEffects do
         :ok
 
       {:error, reason} ->
+        :atomics.put(ref, @over_time_effect_key, @over_time_effect_shadowban)
         Logger.error("Failed to mute user: #{inspect(reason)}, shadow banning instead")
-        resolve_shadowban_effect(msg)
     end
   end
 
-  def resolve_shadowban_effect(%Message{} = msg) do
-    psycho_tuple = {:psycho, msg.guild_id, msg.author.id}
-    GenServer.cast(:bnb_bot_data, {:insert, psycho_tuple, :shadowban})
-
-    Process.sleep(:timer.seconds(5 * 60))
-
-    GenServer.cast(:bnb_bot_data, {:delete, psycho_tuple})
+  # This is a no-op since this is an async effect
+  def resolve_shadowban_effect(_msg, _ref) do
+    :ok
   end
 
-  def resolve_troll_effect(%Message{} = msg) do
-    psycho_tuple = {:psycho, msg.guild_id, msg.author.id}
-    GenServer.cast(:bnb_bot_data, {:insert, psycho_tuple, :troll})
-
-    Process.sleep(:timer.seconds(10 * 60))
-
-    GenServer.cast(:bnb_bot_data, {:delete, psycho_tuple})
+  # This is a no-op since this is an async effect
+  def resolve_troll_effect(_msg, _ref) do
+    :ok
   end
 
-  def resolve_react_effect(%Message{} = msg) do
-    psycho_tuple = {:psycho, msg.guild_id, msg.author.id}
-    GenServer.cast(:bnb_bot_data, {:insert, psycho_tuple, :react})
-
-    Process.sleep(:timer.seconds(10 * 60))
-
-    GenServer.cast(:bnb_bot_data, {:delete, psycho_tuple})
+  # This is a no-op since this is an async effect
+  def resolve_react_effect(_msg, _ref) do
+    :ok
   end
 
-  def resolve_disconnect_effect(%Message{} = msg) do
+  def resolve_disconnect_effect(%Message{} = msg, ref) do
     voice_states = Nostrum.Cache.GuildCache.get!(msg.guild_id).voice_states
 
     with true <-
@@ -153,12 +201,8 @@ defmodule BnBBot.PsychoEffects do
       :ok
     else
       _ ->
-        resolve_timeout_effect(msg)
+        resolve_timeout_effect(msg, ref)
     end
-  end
-
-  def get_user_effect(guild_id, user_id) do
-    GenServer.call(:bnb_bot_data, {:get, {:psycho, guild_id, user_id}})
   end
 
   def shadowban(channel_id, message_id) do
@@ -201,20 +245,21 @@ defmodule BnBBot.PsychoEffects do
     Api.create_reaction(channel_id, message_id, emoji)
   end
 
-  defp resolved_effect_recently?(msg_author_id) do
-    last_psycho = GenServer.call(:bnb_bot_data, {:get, :last_psycho})
+  @spec resolved_effect_recently?(Snowflake.t(), :atomics.atomics_ref()) :: boolean()
+  defp resolved_effect_recently?(author_id, ref) do
+    # last_psycho = GenServer.call(:bnb_bot_data, {:get, :last_psycho})
 
-    case last_psycho do
-      nil ->
-        false
+    last_date_unix_seconds = :atomics.get(ref, @last_psycho_effect_time_key)
+    last_user = :atomics.get(ref, @last_user_afflicted_key)
 
-      {%DateTime{} = last_psycho, user_id} when user_id == msg_author_id ->
-        # If the user has been psycho'd in the last hour, don't psycho them again
-        DateTime.diff(DateTime.utc_now(), last_psycho) < 60 * 60 * 2
+    now = System.os_time(:second)
 
-      {%DateTime{} = last_psycho, _user_id} ->
-        # else different user, don't care, 20 minutes is long enough
-        DateTime.diff(DateTime.utc_now(), last_psycho) < 20 * 60
+    if author_id == last_user do
+      # If the user has been psycho'd in the last hour, don't psycho them again
+      last_date_unix_seconds + 60 * 60 * 2 >= now
+    else
+      # else different user, don't care, 20 minutes is long enough
+      last_date_unix_seconds + 20 * 60 >= now
     end
   end
 
