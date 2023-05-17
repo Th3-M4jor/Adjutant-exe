@@ -38,6 +38,7 @@ defmodule BnBBot.PsychoEffects do
   @spec maybe_resolve_random_effect(Message.t(), :atomics.atomics_ref()) :: :ignore
   def maybe_resolve_random_effect(%Message{} = msg, atomic_ref) do
     if should_resolve?(msg, atomic_ref) do
+      Logger.info("Resolving random effect")
       Task.start(__MODULE__, :resolve_random_effect, [msg])
     end
 
@@ -45,9 +46,23 @@ defmodule BnBBot.PsychoEffects do
   end
 
   @spec should_resolve?(Message.t(), :atomics.atomics_ref()) :: boolean()
-  def should_resolve?(%Message{channel_id: channel_id, author: %{id: user_id}}, ref) do
-    channel_id == ranger_channel_id() and not resolved_effect_recently?(user_id, ref) and
-      :rand.uniform(100) == 1
+  def should_resolve?(%Message{} = msg, ref) do
+    Logger.debug("Checking if we should resolve a random effect")
+
+    %{
+      channel_id: channel_id,
+      author: %{id: user_id},
+      member: %{roles: roles}
+    } = msg
+
+    has_ranger_role = Enum.member?(roles, ranger_role_id())
+
+    Logger.debug("Has ranger role: #{inspect(has_ranger_role)}")
+
+    rand_chance = if channel_id == ranger_channel_id(), do: 100, else: 5_000
+
+    has_ranger_role and not resolved_effect_recently?(user_id, ref) and
+      :rand.uniform(rand_chance) == 1
   end
 
   @spec maybe_resolve_user_effect(Message.t(), :atomics.atomics_ref()) :: any()
@@ -92,6 +107,8 @@ defmodule BnBBot.PsychoEffects do
 
   @spec resolve_random_effect(Message.t(), :atomics.atomics_ref()) :: :ok
   def resolve_random_effect(%Message{} = msg, ref) do
+    Logger.debug("Selecting random effect")
+
     %{
       channel_id: channel_id,
       id: msg_id,
@@ -100,6 +117,8 @@ defmodule BnBBot.PsychoEffects do
 
     now = System.os_time(:second)
     effect = Enum.random(@random_effects)
+
+    Logger.debug("Selected effect: #{effect}")
 
     effect_enum_val =
       case effect do
@@ -112,6 +131,8 @@ defmodule BnBBot.PsychoEffects do
     :atomics.put(ref, @last_psycho_effect_time_key, now)
     :atomics.put(ref, @last_user_afflicted_key, author_id)
     :atomics.put(ref, @over_time_effect_key, effect_enum_val)
+
+    Logger.debug("Sending message about resolving effect")
 
     Api.create_message!(channel_id, %{
       content: "Resolve all psycho effects!",
@@ -249,21 +270,37 @@ defmodule BnBBot.PsychoEffects do
   defp resolved_effect_recently?(author_id, ref) do
     # last_psycho = GenServer.call(:bnb_bot_data, {:get, :last_psycho})
 
+    Logger.debug("Checking if #{author_id} has been psycho'd recently")
+
     last_date_unix_seconds = :atomics.get(ref, @last_psycho_effect_time_key)
+
+    Logger.debug("Last psycho effect time in unix seconds: #{last_date_unix_seconds}")
+
     last_user = :atomics.get(ref, @last_user_afflicted_key)
+
+    Logger.debug("Last user afflicted: #{last_user}")
 
     now = System.os_time(:second)
 
-    if author_id == last_user do
-      # If the user has been psycho'd in the last hour, don't psycho them again
-      last_date_unix_seconds + 60 * 60 * 2 >= now
-    else
-      # else different user, don't care, 20 minutes is long enough
-      last_date_unix_seconds + 20 * 60 >= now
-    end
+    recently =
+      if author_id == last_user do
+        # If the user has been psycho'd in the last hour, don't psycho them again
+        last_date_unix_seconds + 60 * 60 * 2 >= now
+      else
+        # else different user, 20 minutes is long enough
+        last_date_unix_seconds + 20 * 60 >= now
+      end
+
+    Logger.debug("Recently psycho'd: #{recently}")
+
+    recently
   end
 
   defp ranger_channel_id do
     Application.get_env(:elixir_bot, :ranger_channel_id)
+  end
+
+  defp ranger_role_id do
+    Application.get_env(:elixir_bot, :ranger_role_id)
   end
 end

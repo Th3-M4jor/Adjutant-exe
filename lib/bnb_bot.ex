@@ -73,13 +73,21 @@ defmodule BnBBot.Consumer do
 
   def handle_event({:MESSAGE_CREATE, %Message{} = msg, _ws_state}, ref) do
     if is_nil(msg.guild_id) do
+      # log dms unless in guild
       Task.start(fn -> BnBBot.DmLogger.log_dm(msg) end)
+    else
+      # else see if we need to resolve a psycho effect
+      Task.start(fn ->
+        try do
+          BnBBot.PsychoEffects.maybe_resolve_random_effect(msg, ref)
+          BnBBot.PsychoEffects.maybe_resolve_user_effect(msg, ref)
+        rescue
+          e ->
+            Logger.error(Exception.format(:error, e, __STACKTRACE__))
+            BnBBot.Util.dm_owner("An error has occurred", true)
+        end
+      end)
     end
-
-    Task.start(fn ->
-      BnBBot.PsychoEffects.maybe_resolve_random_effect(msg, ref)
-      BnBBot.PsychoEffects.maybe_resolve_user_effect(msg, ref)
-    end)
 
     BnBBot.Command.dispatch(msg)
   rescue
