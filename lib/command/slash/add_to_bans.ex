@@ -21,8 +21,9 @@ defmodule BnBBot.Command.Slash.AddToBans do
     timestamps(updated_at: false)
   end
 
+  @spec add_to_bans(Nostrum.Struct.Interaction.t(), [Option.t()]) :: any()
   def add_to_bans(inter, [%Option{value: to_add}]) do
-    if BnBBot.Util.is_owner_msg?(inter) or BnBBot.Util.is_admin_msg?(inter) do
+    if BnBBot.Util.owner_msg?(inter) or BnBBot.Util.admin_msg?(inter) do
       add_id_to_list(inter, inter.member.user_id, to_add)
     else
       Api.create_interaction_response(inter, %{
@@ -36,7 +37,7 @@ defmodule BnBBot.Command.Slash.AddToBans do
   end
 
   def list_bans(inter) do
-    if BnBBot.Util.is_owner_msg?(inter) or BnBBot.Util.is_admin_msg?(inter) do
+    if BnBBot.Util.owner_msg?(inter) or BnBBot.Util.admin_msg?(inter) do
       send_id_list(inter)
     else
       Api.create_interaction_response(inter, %{
@@ -50,7 +51,7 @@ defmodule BnBBot.Command.Slash.AddToBans do
   end
 
   def salt_the_earth(inter) do
-    if BnBBot.Util.is_owner_msg?(inter) or BnBBot.Util.is_admin_msg?(inter) do
+    if BnBBot.Util.owner_msg?(inter) or BnBBot.Util.admin_msg?(inter) do
       if BnBBot.ButtonAwait.get_confirmation?(inter, "Are you sure you want to salt the earth?") do
         salt_the_earth_inner(inter)
       end

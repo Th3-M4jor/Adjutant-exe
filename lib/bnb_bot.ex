@@ -5,13 +5,9 @@ defmodule BnBBot.Supervisor do
 
   require Logger
   use Supervisor
-  # use Logger
 
   def start_link(args) do
     Supervisor.start_link(__MODULE__, args, name: __MODULE__)
-
-    # Registry.start_link(keys: :unique, name: :REACTION_COLLECTOR)
-    # Registry.start_link(keys: :unique, name: :BUTTON_COLLECTOR)
   end
 
   @impl true
@@ -20,14 +16,7 @@ defmodule BnBBot.Supervisor do
 
     button_collector = Registry.child_spec(keys: :unique, name: :BUTTON_COLLECTOR)
 
-    bot_data =
-      Supervisor.child_spec(
-        {BnBBot.Util.KVP, []},
-        id: {:bnb_bot, :bnb_bot_data},
-        restart: :transient
-      )
-
-    children = [button_collector, bot_data, BnBBot.Consumer]
+    children = [button_collector, BnBBot.Consumer]
 
     res = Supervisor.init(children, strategy: :one_for_one)
     Logger.debug("Supervisor started")
@@ -42,8 +31,7 @@ defmodule BnBBot.Consumer do
   """
 
   require Logger
-  # use Nostrum.Consumer
-  use GenServer
+  use Nostrum.Consumer
 
   alias Nostrum.Api
   alias Nostrum.Struct.Event.Ready, as: ReadyEvent
@@ -55,23 +43,12 @@ defmodule BnBBot.Consumer do
                                  |> Application.compile_env!(:primary_guild_role_channel_id)
   @log_channel_id :elixir_bot |> Application.compile_env!(:dm_log_id)
 
-  # Note: erlang atomic arrays are 1-indexed based
-  #
-  # Slot 1 holds the unix time in seconds
-  # of the last time a random effect was resolved
-  #
-  # Slot 2 holds the id of the user who got the effect
-  #
-  # Slot 3 holds the enum of the effect for the effected user
-  # if the effect is one that happens over time
-  @atomic_slot_count 3
-
   # ignore bots
-  def handle_event({:MESSAGE_CREATE, %Message{author: %{bot: true}}, _ws_state}, _ref) do
+  def handle_event({:MESSAGE_CREATE, %Message{author: %{bot: true}}, _ws_state}) do
     :noop
   end
 
-  def handle_event({:MESSAGE_CREATE, %Message{} = msg, _ws_state}, ref) do
+  def handle_event({:MESSAGE_CREATE, %Message{} = msg, _ws_state}) do
     if is_nil(msg.guild_id) do
       # log dms unless in guild
       Task.start(fn -> BnBBot.DmLogger.log_dm(msg) end)
@@ -79,8 +56,8 @@ defmodule BnBBot.Consumer do
       # else see if we need to resolve a psycho effect
       Task.start(fn ->
         try do
-          BnBBot.PsychoEffects.maybe_resolve_random_effect(msg, ref)
-          BnBBot.PsychoEffects.maybe_resolve_user_effect(msg, ref)
+          BnBBot.PsychoEffects.maybe_resolve_random_effect(msg)
+          BnBBot.PsychoEffects.maybe_resolve_user_effect(msg)
         rescue
           e ->
             Logger.error(Exception.format(:error, e, __STACKTRACE__))
@@ -100,7 +77,7 @@ defmodule BnBBot.Consumer do
       )
   end
 
-  def handle_event({:GUILD_MEMBER_ADD, {guild_id, %Guild.Member{} = member}, _ws_state}, _ref) do
+  def handle_event({:GUILD_MEMBER_ADD, {guild_id, %Guild.Member{} = member}, _ws_state}) do
     if guild_id == @primary_guild_id do
       text = "Welcome to the Busters & Battlechips Discord <@#{member.user_id}>. \
         Assign yourself roles in <##{@primary_guild_role_channel_id}>"
@@ -109,28 +86,26 @@ defmodule BnBBot.Consumer do
     end
   end
 
-  def handle_event({:GUILD_MEMBER_REMOVE, {guild_id, %Guild.Member{} = member}, _ws_state}, _ref) do
+  def handle_event({:GUILD_MEMBER_REMOVE, {guild_id, %Guild.Member{} = member}, _ws_state}) do
     text = "#{member.user_id} has left #{guild_id}"
     Api.create_message!(@log_channel_id, text)
   end
 
-  def handle_event({:READY, %ReadyEvent{} = ready_data, _ws_state}, _ref) do
+  def handle_event({:READY, %ReadyEvent{} = ready_data, _ws_state}) do
     Logger.debug("Bot ready")
 
     Api.update_status(:online, "Now with Slash Commands")
 
     {dm_msg, override} =
-      case GenServer.call(:bnb_bot_data, {:get, :first_ready}) do
+      case :persistent_term.get({:bnb_bot_data, :first_ready}, nil) do
         false ->
           Logger.warn(["Ready re-emitted\n", inspect(ready_data, pretty: true)])
           {"ready re-emitted", true}
 
         _ ->
-          GenServer.cast(:bnb_bot_data, {:insert, :first_ready, false})
-          reminder_queue_name = :elixir_bot |> Application.fetch_env!(:remind_me_queue)
-          Oban.resume_queue(queue: reminder_queue_name)
-          edit_queue_name = :elixir_bot |> Application.fetch_env!(:edit_message_queue)
-          Oban.resume_queue(queue: edit_queue_name)
+          :persistent_term.put({:bnb_bot_data, :first_ready}, false)
+          Oban.resume_queue(queue: :remind_me)
+          Oban.resume_queue(queue: :edit_message)
 
           chip_ct = BnBBot.Library.Battlechip.get_chip_ct()
           ncp_ct = BnBBot.Library.NCP.get_ncp_ct()
@@ -146,13 +121,13 @@ defmodule BnBBot.Consumer do
     BnBBot.Util.dm_owner(dm_msg, override)
   end
 
-  def handle_event({:RESUMED, resume_data, _ws_state}, _ref) do
+  def handle_event({:RESUMED, resume_data, _ws_state}) do
     Logger.debug(["Bot resumed\n", inspect(resume_data, pretty: true)])
     BnBBot.Util.dm_owner("Bot Resumed")
   end
 
   # button clicks
-  def handle_event({:INTERACTION_CREATE, %Interaction{type: 3} = inter, _ws_state}, _ref) do
+  def handle_event({:INTERACTION_CREATE, %Interaction{type: 3} = inter, _ws_state}) do
     Logger.debug([
       "Got an interaction button click on #{inter.message.id}\n",
       inspect(inter, pretty: true)
@@ -180,14 +155,14 @@ defmodule BnBBot.Consumer do
   end
 
   # modals
-  def handle_event({:INTERACTION_CREATE, %Interaction{type: 5} = inter, _ws_state}, _ref) do
+  def handle_event({:INTERACTION_CREATE, %Interaction{type: 5} = inter, _ws_state}) do
     Logger.debug(["Got a Modal submit\n", inspect(inter, pretty: true)])
     id = String.to_integer(inter.data.custom_id, 16)
     BnBBot.ButtonAwait.resp_to_btn(inter, id)
   end
 
   # slash commands and context menu
-  def handle_event({:INTERACTION_CREATE, %Interaction{type: 2} = inter, _ws_state}, _ref) do
+  def handle_event({:INTERACTION_CREATE, %Interaction{type: 2} = inter, _ws_state}) do
     Logger.debug(["Got an interaction command\n", inspect(inter, pretty: true)])
     BnBBot.Command.dispatch(inter)
   rescue
@@ -201,7 +176,7 @@ defmodule BnBBot.Consumer do
   end
 
   # autocomplete, gonna leave it up to the individual commands to handle both types if they have both
-  def handle_event({:INTERACTION_CREATE, %Interaction{type: 4} = inter, _ws_state}, _ref) do
+  def handle_event({:INTERACTION_CREATE, %Interaction{type: 4} = inter, _ws_state}) do
     Logger.debug(["Got an interaction autocomplete req\n", inspect(inter, pretty: true)])
 
     BnBBot.Command.dispatch(inter)
@@ -217,48 +192,24 @@ defmodule BnBBot.Consumer do
 
   # Default event handler, if you don't include this, your consumer WILL crash if
   # you don't have a method definition for each event type.
-  def handle_event(_event, _ref) do
+  def handle_event(_event) do
     :noop
   end
 
-  # GenServer Callbacks
-  # using a custom Nostrum.Consumer impl
-  # since we want to inject custom state
-  # into the event handlers
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, [], opts)
-  end
-
-  def init([]) do
-    # create a new atomic array of size @atomic_slot_count
-    # all unsigned integers default to 0
-    atomics_ref = :atomics.new(@atomic_slot_count, signed: false)
-    {:ok, atomics_ref, {:continue, nil}}
-  end
-
-  def handle_continue(_args, state) do
-    Nostrum.ConsumerGroup.join(self())
-    {:noreply, state}
-  end
-
-  def child_spec(opts) do
-    %{
-      id: __MODULE__,
-      start: {__MODULE__, :start_link, [opts]},
-      type: :worker,
-      restart: :permanent,
-      max_restarts: 0,
-      shutdown: 500
-    }
-  end
-
+  # overriding the default handle_info to handle events
+  # so we can catch errors and log them
   def handle_info({:event, event}, state) do
     Task.start_link(fn ->
       try do
-        handle_event(event, state)
+        handle_event(event)
       rescue
         e ->
           Logger.error(Exception.format(:error, e, __STACKTRACE__))
+
+          BnBBot.Util.dm_owner(
+            "An error has occurred, inform Major\n#{Exception.message(e)}",
+            true
+          )
       end
     end)
 

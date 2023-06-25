@@ -3,11 +3,9 @@ defmodule BnBBot.Workers.Reminder do
   Oban worker for handling scheduled reminders
   """
 
-  @queue_name :elixir_bot |> Application.compile_env!(:remind_me_queue)
-
   alias Nostrum.Api
 
-  use Oban.Worker, queue: @queue_name
+  use Oban.Worker, queue: :remind_me
 
   @impl Oban.Worker
   def perform(%Oban.Job{
@@ -42,9 +40,5 @@ defmodule BnBBot.Workers.Reminder do
     end
 
     :ok
-  end
-
-  def queue_name do
-    @queue_name
   end
 end

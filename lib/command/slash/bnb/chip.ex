@@ -403,7 +403,11 @@ defmodule BnBBot.Command.Slash.BNB.Chip do
         {:cr, arg.value}
 
       "kind" ->
-        kind = arg.value |> String.downcase(:ascii) |> String.to_existing_atom()
+        kind =
+          arg.value
+          |> String.downcase(:ascii)
+          |> String.to_existing_atom()
+
         {:kind, kind}
 
       "min_cr" ->
@@ -413,7 +417,10 @@ defmodule BnBBot.Command.Slash.BNB.Chip do
         {:max_cr, arg.value}
 
       "blight" ->
-        element = arg.value |> String.capitalize(:ascii)
+        element =
+          arg.value
+          |> String.capitalize(:ascii)
+
         {:blight, element}
 
       "min_avg_dmg" ->

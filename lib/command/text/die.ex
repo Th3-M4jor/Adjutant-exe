@@ -8,7 +8,7 @@ defmodule BnBBot.Command.Text.Die do
   def call(%Nostrum.Struct.Message{} = msg, _args) do
     Logger.info("Recieved a die command")
 
-    if BnBBot.Util.is_owner_msg?(msg) do
+    if BnBBot.Util.owner_msg?(msg) do
       # get all processes that are awaiting user input and tell them to stop
       pid_list = Registry.select(:BUTTON_COLLECTOR, [{{:_, :"$1", :_}, [], [:"$1"]}])
 

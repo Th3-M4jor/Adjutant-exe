@@ -13,9 +13,15 @@ defmodule BnBBot.PsychoEffects do
 
   @troll_emojis :elixir_bot |> Application.compile_env!(:troll_emojis)
 
+  @primary_guild_id :elixir_bot |> Application.compile_env!(:primary_guild_id)
+
+  @atomic_ref_key {__MODULE__, :psycho_effects_ref}
+
   alias Nostrum.Api
   alias Nostrum.Snowflake
   alias Nostrum.Struct.{Emoji, Message}
+
+  import BnBBot.Util, only: [admin_msg?: 1, owner_msg?: 1]
 
   require Logger
 
@@ -23,23 +29,32 @@ defmodule BnBBot.PsychoEffects do
   # of the last time a random effect was resolved
   @last_psycho_effect_time_key 1
 
-  # Slot 2 holds the id of the user who got the effect
-  @last_user_afflicted_key 2
+  # Slot 2 holds a counter for the number of messages
+  # that have been sent since the last effect was resolved
+  @last_psycho_effect_counter_key 2
 
-  # Slot 3 holds the enum of the effect for the effected user
+  # Slot 3 holds the id of the user who got the effect
+  @last_user_afflicted_key 3
+
+  # Slot 4 holds the enum of the effect for the effected user
   # if the effect is one that happens over time
-  @over_time_effect_key 3
+  @over_time_effect_key 4
+
+  # How big the array needs to be
+  @atomic_slot_count 4
 
   @over_time_effect_none 0
   @over_time_effect_shadowban 1
   @over_time_effect_troll 2
   @over_time_effect_react 3
 
-  @spec maybe_resolve_random_effect(Message.t(), :atomics.atomics_ref()) :: :ignore
-  def maybe_resolve_random_effect(%Message{} = msg, atomic_ref) do
+  @spec maybe_resolve_random_effect(Message.t()) :: :ignore
+  def maybe_resolve_random_effect(%Message{} = msg) do
+    atomic_ref = get_atomic_ref()
+
     if should_resolve?(msg, atomic_ref) do
       Logger.info("Resolving random effect")
-      Task.start(__MODULE__, :resolve_random_effect, [msg])
+      resolve_random_effect(msg, atomic_ref)
     end
 
     :ignore
@@ -50,49 +65,82 @@ defmodule BnBBot.PsychoEffects do
     Logger.debug("Checking if we should resolve a random effect")
 
     %{
-      channel_id: channel_id,
+      guild_id: guild_id,
       author: %{id: user_id},
       member: %{roles: roles}
     } = msg
 
-    has_ranger_role = Enum.member?(roles, ranger_role_id())
+    # admins and owners can always be psychoed
+    can_be_psychoed =
+      guild_id == @primary_guild_id and
+        (Enum.member?(roles, ranger_role_id()) or admin_msg?(msg) or owner_msg?(msg))
 
-    Logger.debug("Has ranger role: #{inspect(has_ranger_role)}")
+    Logger.debug(["User is able to be psychoed: ", inspect(can_be_psychoed)])
 
-    rand_chance = if channel_id == ranger_channel_id(), do: 100, else: 5_000
+    res = can_be_psychoed and :rand.uniform(sliding_probability(user_id, ref)) == 1
 
-    has_ranger_role and not resolved_effect_recently?(user_id, ref) and
-      :rand.uniform(rand_chance) == 1
+    Logger.debug(["Should resolve random effect: ", to_string(res)])
+
+    if res do
+      # reset the counter
+      :atomics.put(ref, @last_psycho_effect_counter_key, 0)
+    end
+
+    res
+  rescue
+    e ->
+      Logger.error(["Error in should_resolve?(): ", Exception.format(:error, e, __STACKTRACE__)])
+      false
   end
 
-  @spec maybe_resolve_user_effect(Message.t(), :atomics.atomics_ref()) :: any()
-  def maybe_resolve_user_effect(%Message{} = msg, ref) do
+  @spec maybe_resolve_user_effect(Message.t()) :: any()
+  def maybe_resolve_user_effect(%Message{} = msg) do
+    ref = get_atomic_ref()
+
+    Logger.debug("Checking if we should resolve a user effect")
+
     over_time_effect = :atomics.get(ref, @over_time_effect_key)
 
-    if over_time_effect == @over_time_effect_none, do: throw(:halt)
+    if over_time_effect == @over_time_effect_none do
+      Logger.debug("No over time effect to resolve, halting")
+      throw(:halt)
+    end
+
+    Logger.debug("Over time effect key is #{over_time_effect}")
 
     %{id: message_id, channel_id: channel_id, author: %{id: user_id}} = msg
 
     last_user = :atomics.get(ref, @last_user_afflicted_key)
 
-    unless last_user == user_id, do: throw(:halt)
+    unless last_user == user_id do
+      Logger.debug("User is not the last user afflicted, halting")
+      throw(:halt)
+    end
 
     last_date_unix_seconds = :atomics.get(ref, @last_psycho_effect_time_key)
     now = System.os_time(:second)
 
     case over_time_effect do
-      @over_time_effect_shadowban when now - last_date_unix_seconds >= 5 * 60 ->
+      @over_time_effect_shadowban when now - last_date_unix_seconds <= 5 * 60 ->
+        Logger.debug("Attempting to resolve shadowban effect")
+
         Task.start(fn -> shadowban(channel_id, message_id) end)
 
-      @over_time_effect_troll when now - last_date_unix_seconds >= 10 * 60 ->
+      @over_time_effect_troll when now - last_date_unix_seconds <= 10 * 60 ->
+        Logger.debug("Attempting to resolve troll effect")
+
         Task.start(fn -> troll(channel_id, message_id) end)
 
-      @over_time_effect_react when now - last_date_unix_seconds >= 15 * 60 ->
+      @over_time_effect_react when now - last_date_unix_seconds <= 15 * 60 ->
+        Logger.debug("Attempting to resolve react effect")
+
         Task.start(fn -> react(channel_id, message_id) end)
 
       _ ->
         # shouldn't resolve anything
         # attempt to set the effect to none to speed up the next check
+        Logger.debug("Over time effect expired, attempting to set to none")
+
         :atomics.compare_exchange(
           ref,
           @over_time_effect_key,
@@ -174,7 +222,11 @@ defmodule BnBBot.PsychoEffects do
   def resolve_timeout_effect(%Message{} = msg, ref) do
     guild_id = msg.guild_id
     user_id = msg.author.id
-    muted_until = DateTime.utc_now() |> DateTime.add(10 * 60) |> DateTime.to_iso8601()
+
+    muted_until =
+      DateTime.utc_now()
+      |> DateTime.add(10 * 60)
+      |> DateTime.to_iso8601()
 
     Api.modify_guild_member(
       guild_id,
@@ -188,7 +240,7 @@ defmodule BnBBot.PsychoEffects do
 
       {:error, reason} ->
         :atomics.put(ref, @over_time_effect_key, @over_time_effect_shadowban)
-        Logger.error("Failed to mute user: #{inspect(reason)}, shadow banning instead")
+        Logger.info("Failed to mute user: #{inspect(reason)}, shadow banning instead")
     end
   end
 
@@ -244,13 +296,45 @@ defmodule BnBBot.PsychoEffects do
   end
 
   def react(channel_id, message_id) do
+    requests =
+      Enum.map(@troll_emojis, &map_emojis(channel_id, message_id, &1))
+      |> Enum.shuffle()
+      |> Enum.reduce(:gen_statem.reqids_new(), fn req_map, acc ->
+        req = :gen_statem.send_request(Nostrum.Api.Ratelimiter, {:queue, req_map})
+        :gen_statem.reqids_add(req, req_map.route, acc)
+      end)
+
+    await_react_responses(requests)
+  end
+
+  defp await_react_responses(request_list) do
+    :gen_statem.wait_response(request_list, :infinity, true)
+    |> case do
+      {{:reply, resp}, label, new_list} ->
+        Logger.info("Got response: #{inspect(resp)} for request: #{inspect(label)}")
+        await_react_responses(new_list)
+
+      {{:error, {reason, _s_ref}}, label, new_list} ->
+        Logger.error("Got error: #{inspect(reason)} for request: #{inspect(label)}")
+        await_react_responses(new_list)
+
+      :no_request ->
+        Logger.info("No more requests")
+        :ok
+    end
+  end
+
+  defp map_emojis(channel_id, message_id, emoji) do
+    # gonna abuse the fact that we know the inner workings of nostrum here
+
     emoji =
-      case Enum.random(@troll_emojis) do
+      case emoji do
         {name, id} ->
           %Emoji{
             name: name,
             id: id
           }
+          |> Emoji.api_name()
 
         {name, id, animated} ->
           %Emoji{
@@ -258,21 +342,42 @@ defmodule BnBBot.PsychoEffects do
             id: id,
             animated: animated
           }
+          |> Emoji.api_name()
 
         emoji when is_binary(emoji) ->
           emoji
       end
 
-    Api.create_reaction(channel_id, message_id, emoji)
+    route = Nostrum.Constants.channel_reaction_me(channel_id, message_id, emoji)
+
+    %{
+      method: :put,
+      route: route,
+      body: "",
+      params: [],
+      headers: [{"content-type", "application/json"}]
+    }
   end
 
-  @spec resolved_effect_recently?(Snowflake.t(), :atomics.atomics_ref()) :: boolean()
-  defp resolved_effect_recently?(author_id, ref) do
-    # last_psycho = GenServer.call(:bnb_bot_data, {:get, :last_psycho})
-
+  @spec sliding_probability(Snowflake.t(), :atomics.atomics_ref()) :: non_neg_integer()
+  defp sliding_probability(author_id, ref) do
     Logger.debug("Checking if #{author_id} has been psycho'd recently")
 
-    last_date_unix_seconds = :atomics.get(ref, @last_psycho_effect_time_key)
+    now = System.os_time(:second)
+
+    last_date_unix_seconds =
+      :atomics.get(ref, @last_psycho_effect_time_key)
+      |> case do
+        0 ->
+          Logger.debug("Last psycho effect time was 0, setting to an hour ago")
+
+          assumed_default = now - 60 * 60
+          :atomics.compare_exchange(ref, @last_psycho_effect_time_key, 0, assumed_default)
+          assumed_default
+
+        val ->
+          val
+      end
 
     Logger.debug("Last psycho effect time in unix seconds: #{last_date_unix_seconds}")
 
@@ -280,24 +385,44 @@ defmodule BnBBot.PsychoEffects do
 
     Logger.debug("Last user afflicted: #{last_user}")
 
-    now = System.os_time(:second)
+    counter = :atomics.add_get(ref, @last_psycho_effect_counter_key, 1)
 
-    recently =
-      if author_id == last_user do
-        # If the user has been psycho'd in the last hour, don't psycho them again
-        last_date_unix_seconds + 60 * 60 * 2 >= now
-      else
-        # else different user, 20 minutes is long enough
-        last_date_unix_seconds + 20 * 60 >= now
+    Logger.debug("Counter: #{counter}")
+
+    probability =
+      cond do
+        # author is the same as last user and it's been less than 2 hours
+        author_id == last_user and last_date_unix_seconds + 60 * 60 * 2 >= now ->
+          500_000 - counter + :rand.uniform(42)
+
+        # its been less than 20 minutes
+        last_date_unix_seconds + 60 * 20 >= now ->
+          300_000 - counter + :rand.uniform(42)
+
+        true ->
+          diff = now - last_date_unix_seconds
+          # number of seconds in three days less the difference
+          # since the last psycho effect
+          # minimum of 100 - random number between 1 and 42 + 1
+
+          max(60 * 60 * 24 * 3 - diff, 100 - :rand.uniform(42) + 1)
       end
 
-    Logger.debug("Recently psycho'd: #{recently}")
-
-    recently
+    Logger.debug("Determined probability: 1 in #{probability}")
+    probability
   end
 
-  defp ranger_channel_id do
-    Application.get_env(:elixir_bot, :ranger_channel_id)
+  defp get_atomic_ref do
+    case :persistent_term.get(@atomic_ref_key, nil) do
+      nil ->
+        Logger.debug("Creating new atomic ref")
+        ref = :atomics.new(@atomic_slot_count, signed: false)
+        :persistent_term.put(@atomic_ref_key, ref)
+        ref
+
+      ref ->
+        ref
+    end
   end
 
   defp ranger_role_id do

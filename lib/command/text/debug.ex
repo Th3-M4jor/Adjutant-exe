@@ -9,14 +9,14 @@ defmodule BnBBot.Command.Text.Debug do
   def call(%Nostrum.Struct.Message{} = msg, []) do
     Logger.info("Got a debug cmd with no args")
 
-    if BnBBot.Util.is_owner_msg?(msg) do
+    if BnBBot.Util.owner_msg?(msg) do
       Logger.configure(level: :debug)
       BnBBot.Util.react(msg, true)
     end
   end
 
   def call(%Nostrum.Struct.Message{} = msg, ["on"]) do
-    if BnBBot.Util.is_owner_msg?(msg) do
+    if BnBBot.Util.owner_msg?(msg) do
       Logger.info("Turning on debug")
       Logger.configure(level: :debug)
       BnBBot.Util.react(msg, true)
@@ -24,7 +24,7 @@ defmodule BnBBot.Command.Text.Debug do
   end
 
   def call(%Nostrum.Struct.Message{} = msg, ["off"]) do
-    if BnBBot.Util.is_owner_msg?(msg) do
+    if BnBBot.Util.owner_msg?(msg) do
       Logger.info("Turning off debug")
       Logger.configure(level: :warning)
       BnBBot.Util.react(msg, true)
@@ -32,7 +32,7 @@ defmodule BnBBot.Command.Text.Debug do
   end
 
   def call(%Nostrum.Struct.Message{} = msg, args) do
-    if BnBBot.Util.is_owner_msg?(msg) do
+    if BnBBot.Util.owner_msg?(msg) do
       Logger.info(["Got a debug cmd with bad args: " | Enum.intersperse(args, " ")])
 
       Api.create_message(

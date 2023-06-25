@@ -8,16 +8,16 @@ defmodule BnBBot.Command.Text.ShutUp do
   def call(%Nostrum.Struct.Message{} = msg, _args) do
     Logger.info("Recieved a shutup command")
 
-    if BnBBot.Util.is_owner_msg?(msg) do
+    if BnBBot.Util.owner_msg?(msg) do
       res =
-        case GenServer.call(:bnb_bot_data, {:get, :dm_owner}) do
+        case :persistent_term.get({:bnb_bot_data, :dm_owner}, nil) do
           nil -> true
           val when is_boolean(val) -> val
         end
 
       Logger.debug("Currently set to DM messages: #{res}")
       new_val = not res
-      GenServer.cast(:bnb_bot_data, {:insert, :dm_owner, new_val})
+      :persistent_term.put({:bnb_bot_data, :dm_owner}, new_val)
       BnBBot.Util.react(msg)
     end
   end

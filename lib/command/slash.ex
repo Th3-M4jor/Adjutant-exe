@@ -1,6 +1,6 @@
 defmodule BnBBot.Command.Slash do
   @moduledoc """
-  Describes what public functions each slash command module must define
+  Describes what public functions each slash command module must define.
 
   All slash commands must implement the callbacks defined here, and may optionally `use`
   this module to define a `call` function that will be called when the command is executed.
@@ -39,13 +39,13 @@ defmodule BnBBot.Command.Slash do
     end
   end
 
-  defp list_perms(perms) when is_list(perms) do
+  defp list_perms do
     quote do
       @behaviour BnBBot.Command.Slash
       def call(inter) do
         user_perms = BnBBot.Util.get_user_perms(inter)
 
-        if user_perms in unquote(perms) do
+        if user_perms in [:admin, :owner] do
           call_slash(inter)
         else
           Nostrum.Api.create_interaction_response(inter, %{
@@ -95,13 +95,22 @@ defmodule BnBBot.Command.Slash do
   end
 
   defmacro __using__(opts) do
+    perms_opts = Keyword.fetch!(opts, :permissions)
+
+    perms_ops =
+      if is_list(perms_opts) do
+        Enum.sort(perms_opts)
+      else
+        perms_opts
+      end
+
     perms_fn =
-      case opts[:permissions] do
+      case perms_ops do
         :everyone ->
           everyone_perms()
 
-        [first, second] = perms when first in [:admin, :owner] and second in [:admin, :owner] ->
-          list_perms(perms)
+        [:admin, :owner] ->
+          list_perms()
 
         perms when perms in [:admin, :owner] ->
           atom_perms(perms)
@@ -162,8 +171,8 @@ defmodule BnBBot.Command.Slash do
           required(:name) => String.t(),
           required(:description) => String.t(),
           optional(:required) => boolean(),
-          optional(:choices) => [slash_choices(), ...],
-          optional(:options) => [slash_opts(), ...],
+          optional(:choices) => [slash_choices()],
+          optional(:options) => [slash_opts()],
           optional(:autocomplete) => boolean()
         }
 
@@ -177,28 +186,52 @@ defmodule BnBBot.Command.Slash do
           optional(:type) => 1..3,
           optional(:dm_permission) => boolean(),
           optional(:default_member_permission) => String.t(),
-          optional(:options) => [slash_opts(), ...]
+          optional(:options) => [slash_opts()]
         }
 
+  @typedoc """
+  A two element tuple containing the scope of the command, followed by return value of `get_create_map/0`
+
+  The scope can be:
+  `:global` - The command is created globally
+  `Nostrum.Snowflake.t()` - The command is created in the guild with the given id
+  `[Nostrum.Snowflake.t()]` - The command is created in the guilds with the given ids
+  """
   @type creation_state ::
           {[Nostrum.Snowflake.t()] | Nostrum.Snowflake.t() | :global, slash_cmd_map()}
 
-  @callback call_slash(Nostrum.Struct.Interaction.t()) :: :ignore
+  @doc """
+  The function that is called when the command is used
+  recieves the interaction that triggered the command
+  as its only argument.
 
+  Return value is ignored.
+  """
+  @callback call_slash(Nostrum.Struct.Interaction.t()) :: any()
+
+  @doc """
+  The function that is called to get the map that creates the command for the module.
+  See the [Discord docs][1] for more info for the expected format of the map.
+
+  Note: This function should expect to be invoked at compile time, and as such should not
+  perform any side effects.
+
+  [1]: https://discord.com/developers/docs/interactions/application-commands
+  """
   @callback get_create_map() :: slash_cmd_map()
-
-  @callback get_creation_state() :: creation_state()
 end
 
 defmodule BnBBot.Command.Slash.Id do
   @moduledoc """
-  Module that defines how slash command Ids are stored and retrieved from the DB to handle
+  Defines how slash command Ids are stored and retrieved from the DB to handle
   deletion.
   """
 
   use Ecto.Type
   import Nostrum.Snowflake, only: [is_snowflake: 1]
   alias Nostrum.Snowflake
+
+  @type t :: {:global, Snowflake.t()} | {:guild, [{Snowflake.t(), Snowflake.t()}]}
 
   def type, do: :binary
 

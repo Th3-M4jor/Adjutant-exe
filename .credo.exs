@@ -158,7 +158,14 @@
           {Credo.Check.Warning.UnusedRegexOperation, []},
           {Credo.Check.Warning.UnusedStringOperation, []},
           {Credo.Check.Warning.UnusedTupleOperation, []},
-          {Credo.Check.Warning.UnsafeExec, []}
+          {Credo.Check.Warning.UnsafeExec, []},
+
+          # new checks
+          {Credo.Check.Readability.OneArityFunctionInPipe, []},
+          {Credo.Check.Readability.OnePipePerLine, []},
+          {Credo.Check.Refactor.FilterCount, []},
+          {Credo.Check.Refactor.PassAsyncInTestCases, []},
+          {Credo.Check.Warning.MissedMetadataKeyInLoggerConfig, []}
         ],
         disabled: [
           #

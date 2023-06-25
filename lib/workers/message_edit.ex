@@ -2,13 +2,12 @@ defmodule BnBBot.Workers.MessageEdit do
   @moduledoc """
   Oban worker for handling scheduled message edits
   """
-  @queue_name :elixir_bot |> Application.compile_env!(:edit_message_queue)
 
   require Logger
 
   alias Nostrum.Api
 
-  use Oban.Worker, queue: @queue_name
+  use Oban.Worker, queue: :edit_message
 
   @impl Oban.Worker
   def perform(%Oban.Job{

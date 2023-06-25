@@ -8,7 +8,7 @@ defmodule BnBBot.DmLogger do
   @dm_log_id :elixir_bot |> Application.compile_env!(:dm_log_id)
 
   def log_dm(%Nostrum.Struct.Message{} = msg) do
-    unless BnBBot.Util.is_owner_msg?(msg) do
+    unless BnBBot.Util.owner_msg?(msg) do
       handle_attachment(msg)
 
       embed = make_embed(msg)

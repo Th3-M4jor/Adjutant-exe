@@ -38,6 +38,7 @@ defmodule BnBBot.Command.Slash.Hidden do
   @admincmds ["die", "add_to_bans", "salt_the_earth", "list_bans"]
 
   @impl true
+  @spec call_slash(Nostrum.Struct.Interaction.t()) :: :ignore
   def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
     case inter.data.options do
       [%Option{value: "die"} | _] ->
@@ -85,10 +86,10 @@ defmodule BnBBot.Command.Slash.Hidden do
 
     list =
       cond do
-        BnBBot.Util.is_owner_msg?(inter) ->
+        BnBBot.Util.owner_msg?(inter) ->
           @ownercmds
 
-        BnBBot.Util.is_admin_msg?(inter) ->
+        BnBBot.Util.admin_msg?(inter) ->
           @admincmds
 
         true ->
@@ -135,7 +136,7 @@ defmodule BnBBot.Command.Slash.Hidden do
   end
 
   defp die(inter) do
-    if BnBBot.Util.is_owner_msg?(inter) or BnBBot.Util.is_admin_msg?(inter) do
+    if BnBBot.Util.owner_msg?(inter) or BnBBot.Util.admin_msg?(inter) do
       Api.create_interaction_response(inter, %{
         type: 4,
         data: %{
@@ -183,7 +184,7 @@ defmodule BnBBot.Command.Slash.Hidden do
   end
 
   defp debug(inter, []) do
-    if BnBBot.Util.is_owner_msg?(inter) do
+    if BnBBot.Util.owner_msg?(inter) do
       Logger.configure(level: :debug)
 
       Api.create_interaction_response(inter, %{
@@ -209,7 +210,7 @@ defmodule BnBBot.Command.Slash.Hidden do
   end
 
   defp debug(inter, [%Nostrum.Struct.ApplicationCommandInteractionDataOption{value: "dump"}]) do
-    if BnBBot.Util.is_owner_msg?(inter) do
+    if BnBBot.Util.owner_msg?(inter) do
       Logger.debug("Dumping the current state of the bot")
 
       Nostrum.Api.create_interaction_response!(inter, %{
@@ -241,7 +242,7 @@ defmodule BnBBot.Command.Slash.Hidden do
   end
 
   defp debug(inter, [%Nostrum.Struct.ApplicationCommandInteractionDataOption{value: "off"}]) do
-    if BnBBot.Util.is_owner_msg?(inter) do
+    if BnBBot.Util.owner_msg?(inter) do
       Logger.configure(level: :warning)
 
       Api.create_interaction_response(inter, %{
@@ -263,7 +264,7 @@ defmodule BnBBot.Command.Slash.Hidden do
   end
 
   defp debug(inter, _unknown) do
-    if BnBBot.Util.is_owner_msg?(inter) do
+    if BnBBot.Util.owner_msg?(inter) do
       Api.create_interaction_response(inter, %{
         type: 4,
         data: %{
@@ -283,16 +284,16 @@ defmodule BnBBot.Command.Slash.Hidden do
   end
 
   defp shut_up(inter) do
-    if BnBBot.Util.is_owner_msg?(inter) do
+    if BnBBot.Util.owner_msg?(inter) do
       res =
-        case GenServer.call(:bnb_bot_data, {:get, :dm_owner}) do
+        case :persistent_term.get({:bnb_bot_data, :dm_owner}, nil) do
           nil -> true
           val when is_boolean(val) -> val
         end
 
       Logger.debug("Currently set to DM messages: #{res}")
       new_val = not res
-      GenServer.cast(:bnb_bot_data, {:insert, :dm_owner, new_val})
+      :persistent_term.put({:bnb_bot_data, :dm_owner}, new_val)
 
       Api.create_interaction_response(inter, %{
         type: 4,

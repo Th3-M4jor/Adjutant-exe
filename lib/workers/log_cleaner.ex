@@ -2,11 +2,13 @@ defmodule BnBBot.Workers.LogCleaner do
   @moduledoc """
   Oban worker for cleaning up the log table periodically
   """
-  @queue_name :elixir_bot |> Application.compile_env!(:log_cleaner_queue)
 
   require Logger
-  use Oban.Worker, queue: @queue_name
+
+  use Oban.Worker, queue: :log_cleaner
+
   import Ecto.Query
+
   alias BnBBot.LogLine
 
   @impl Oban.Worker
@@ -15,12 +17,15 @@ defmodule BnBBot.Workers.LogCleaner do
 
     # Delete all log entries older than 1 month
 
-    one_month_ago =
-      NaiveDateTime.local_now()
-      |> NaiveDateTime.add(-30 * 24 * 60 * 60)
+    # now = NaiveDateTime.local_now()
+
+    # one_month_ago = NaiveDateTime.add(now, -30 * 24 * 60 * 60)
+
+    # one_week_ago = NaiveDateTime.add(now, -7 * 24 * 60 * 60)
 
     from(l in LogLine,
-      where: l.inserted_at < ^one_month_ago
+      where:
+        l.inserted_at < ago(1, "month") or (l.inserted_at < ago(1, "week") and l.level == :debug)
     )
     |> BnBBot.Repo.SQLite.delete_all()
 

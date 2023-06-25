@@ -14,6 +14,7 @@ config :nostrum,
     :guild_members,
     :guild_message_reactions,
     :guild_messages,
+    :guild_presences,
     :guilds
   ]
 
@@ -35,8 +36,9 @@ config :elixir_bot, Oban,
   repo: BnBBot.Repo.SQLite,
   engine: Oban.Engines.Lite,
   queues: [
-    dev_remind_me: [limit: 2, paused: true],
-    dev_edit_message: [limit: 2, paused: true]
+    remind_me: [limit: 2, paused: true],
+    edit_message: [limit: 2, paused: true],
+    log_cleaner: [limit: 1, paused: false]
   ],
   plugins: [
     {Oban.Plugins.Reindexer, schedule: "@weekly"},

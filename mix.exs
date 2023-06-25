@@ -5,7 +5,7 @@ defmodule ElixirBot.MixProject do
     [
       app: :elixir_bot,
       version: "0.1.4",
-      elixir: "~> 1.13",
+      elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       releases: [
@@ -24,7 +24,7 @@ defmodule ElixirBot.MixProject do
   def application do
     [
       mod: {BnBBot, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :mnesia]
     ]
   end
 
@@ -32,14 +32,13 @@ defmodule ElixirBot.MixProject do
   defp deps do
     [
       # {:nostrum, "~> 0.6"},
-      {:nostrum, git: "https://github.com/Th3-M4jor/nostrum.git"},
+      {:nostrum, git: "https://github.com/Th3-M4jor/nostrum.git", branch: "master"},
       # {:nostrum, path: "../nostrum/"},
       {:jason, "~> 1.2"},
       {:ecto_sql, "~> 3.0"},
       {:postgrex, "~> 0.15"},
       {:ecto_sqlite3, "~> 0.10.0"},
       {:oban, "~> 2.12"},
-      {:ex2ms, "~> 1.6"},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]

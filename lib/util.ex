@@ -41,8 +41,8 @@ defmodule BnBBot.Util do
           :admin | :everyone | :owner
   def get_user_perms(msg) do
     cond do
-      is_owner_msg?(msg) -> :owner
-      is_admin_msg?(msg) -> :admin
+      owner_msg?(msg) -> :owner
+      admin_msg?(msg) -> :admin
       true -> :everyone
     end
   end
@@ -50,14 +50,14 @@ defmodule BnBBot.Util do
   @doc """
   Check if a message or interaction is from the owner
   """
-  @spec is_owner_msg?(Message.t() | Interaction.t()) :: boolean
-  def is_owner_msg?(%Message{} = msg) do
+  @spec owner_msg?(Message.t() | Interaction.t()) :: boolean
+  def owner_msg?(%Message{} = msg) do
     owner_id = Nostrum.Snowflake.cast!(@owner_id)
     msg_author_id = Nostrum.Snowflake.cast!(msg.author.id)
     owner_id == msg_author_id
   end
 
-  def is_owner_msg?(%Interaction{} = inter) do
+  def owner_msg?(%Interaction{} = inter) do
     owner_id = Nostrum.Snowflake.cast!(@owner_id)
 
     inter_author_id =
@@ -74,12 +74,12 @@ defmodule BnBBot.Util do
   @doc """
   Check if a message or interaction is from an admin
   """
-  @spec is_admin_msg?(Message.t() | Interaction.t()) :: boolean
-  def is_admin_msg?(%Message{} = msg) do
+  @spec admin_msg?(Message.t() | Interaction.t()) :: boolean
+  def admin_msg?(%Message{} = msg) do
     Enum.any?(@admins, fn id -> id == msg.author.id end)
   end
 
-  def is_admin_msg?(%Interaction{} = inter) do
+  def admin_msg?(%Interaction{} = inter) do
     inter_author_id =
       if is_nil(inter.member) do
         inter.user.id
@@ -98,7 +98,7 @@ defmodule BnBBot.Util do
           {:ok, Message.t()} | :error | nil
   def dm_owner(to_say, override \\ false) do
     res =
-      case GenServer.call(:bnb_bot_data, {:get, :dm_owner}) do
+      case :persistent_term.get({:bnb_bot_data, :dm_owner}, nil) do
         nil -> true
         val when is_boolean(val) -> val
       end
