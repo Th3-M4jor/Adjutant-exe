@@ -67,13 +67,15 @@ defmodule BnBBot.PsychoEffects do
     %{
       guild_id: guild_id,
       author: %{id: user_id},
-      member: %{roles: roles}
+      member: %{roles: roles},
+      channel_id: channel_id
     } = msg
 
     # admins and owners can always be psychoed
     can_be_psychoed =
       guild_id == @primary_guild_id and
-        (Enum.member?(roles, ranger_role_id()) or admin_msg?(msg) or owner_msg?(msg))
+        (Enum.member?(roles, ranger_role_id()) or admin_msg?(msg) or owner_msg?(msg)) and
+        BnBBot.PsychoEffects.Channel.psychoable_channel?(channel_id)
 
     Logger.debug(["User is able to be psychoed: ", inspect(can_be_psychoed)])
 

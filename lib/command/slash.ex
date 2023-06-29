@@ -173,7 +173,8 @@ defmodule BnBBot.Command.Slash do
           optional(:required) => boolean(),
           optional(:choices) => [slash_choices()],
           optional(:options) => [slash_opts()],
-          optional(:autocomplete) => boolean()
+          optional(:autocomplete) => boolean(),
+          optional(:channel_types) => [1..6]
         }
 
   @typedoc """
@@ -185,7 +186,7 @@ defmodule BnBBot.Command.Slash do
           required(:description) => String.t(),
           optional(:type) => 1..3,
           optional(:dm_permission) => boolean(),
-          optional(:default_member_permission) => String.t(),
+          optional(:default_member_permissions) => String.t(),
           optional(:options) => [slash_opts()]
         }
 

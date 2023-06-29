@@ -131,7 +131,7 @@ defmodule BnBBot.Command.Slash.Hidden do
         }
       ],
       dm_permission: false,
-      default_member_permission: "0"
+      default_member_permissions: "0"
     }
   end
 
