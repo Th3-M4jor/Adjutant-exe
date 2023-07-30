@@ -42,7 +42,7 @@ defmodule BnBBot.Command.Slash.BNB.Panels do
           panel_to_str(arg.value)
 
         _ ->
-          Logger.warn(["Bad panel args given ", inspect(inter.data.options)])
+          Logger.warning(["Bad panel args given ", inspect(inter.data.options)])
           "An unknown error has occurred"
       end
 
@@ -119,7 +119,7 @@ defmodule BnBBot.Command.Slash.BNB.Panels do
         @sea
 
       _ ->
-        Logger.warn("Got an unknown panel: #{name}")
+        Logger.warning("Got an unknown panel: #{name}")
         "Unknown Panel"
     end
   end

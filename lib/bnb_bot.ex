@@ -99,7 +99,7 @@ defmodule BnBBot.Consumer do
     {dm_msg, override} =
       case :persistent_term.get({:bnb_bot_data, :first_ready}, nil) do
         false ->
-          Logger.warn(["Ready re-emitted\n", inspect(ready_data, pretty: true)])
+          Logger.warning(["Ready re-emitted\n", inspect(ready_data, pretty: true)])
           {"ready re-emitted", true}
 
         _ ->

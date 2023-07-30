@@ -11,6 +11,21 @@ defmodule BnBBot.PsychoEffects do
     :resolve_react_effect
   ]
 
+  # If the user isn't in a voice channel, disconnect doesn't make sense
+  # so don't include it in the list of possible random effects
+  @non_special_random_effects @random_effects -- [:resolve_disconnect_effect]
+
+  # If the user is the guild owner, don't include effects that would
+  # not work on them. Note: also removing disconnect effect because
+  # the ability to do that should be checked before if the user is
+  # the guild owner
+  @guild_owner_effects @random_effects --
+                         [
+                           :resolve_disconnect_effect,
+                           :resolve_timeout_effect,
+                           :resolve_role_effect
+                         ]
+
   @troll_emojis :elixir_bot |> Application.compile_env!(:troll_emojis)
 
   @primary_guild_id :elixir_bot |> Application.compile_env!(:primary_guild_id)
@@ -166,7 +181,7 @@ defmodule BnBBot.PsychoEffects do
     } = msg
 
     now = System.os_time(:second)
-    effect = Enum.random(@random_effects)
+    effect = select_random_effect(msg)
 
     Logger.debug("Selected effect: #{effect}")
 
@@ -205,6 +220,27 @@ defmodule BnBBot.PsychoEffects do
       )
 
       :ok
+  end
+
+  defp select_random_effect(msg) do
+    %{owner_id: owner_id, voice_states: voice_states} =
+      Nostrum.Cache.GuildCache.get!(msg.guild_id)
+
+    is_guild_owner = msg.author.id == owner_id
+
+    is_in_voice_channel =
+      Enum.any?(voice_states, fn %{user_id: user_id} -> user_id == msg.author.id end)
+
+    cond do
+      is_in_voice_channel ->
+        :resolve_disconnect_effect
+
+      is_guild_owner ->
+        Enum.random(@guild_owner_effects)
+
+      true ->
+        Enum.random(@non_special_random_effects)
+    end
   end
 
   def resolve_role_effect(%Message{} = msg, _ref) do
@@ -261,23 +297,27 @@ defmodule BnBBot.PsychoEffects do
     :ok
   end
 
-  def resolve_disconnect_effect(%Message{} = msg, ref) do
+  def resolve_disconnect_effect(%Message{} = msg, _ref) do
     voice_states = Nostrum.Cache.GuildCache.get!(msg.guild_id).voice_states
 
-    with true <-
-           Enum.any?(voice_states, fn voice_state -> voice_state.user_id == msg.author.id end),
-         {:ok, _} <-
-           Api.modify_guild_member(
-             msg.guild_id,
-             msg.author.id,
-             %{channel_id: nil},
-             "Resolve all psycho effects!"
-           ) do
-      :ok
-    else
-      _ ->
-        resolve_timeout_effect(msg, ref)
-    end
+    Enum.reduce(voice_states, :gen_statem.reqids_new(), fn %{user_id: user_id}, acc ->
+      req_map = %{
+        method: :patch,
+        route: Nostrum.Constants.guild_member(msg.guild_id, user_id),
+        body: %{
+          channel_id: nil
+        },
+        params: [],
+        headers: [
+          {"x-audit-log-reason", "Resolve all psycho effects!"},
+          {"content-type", "application/json"}
+        ]
+      }
+
+      req = :gen_statem.send_request(Nostrum.Api.Ratelimiter, {:queue, req_map})
+      :gen_statem.reqids_add(req, "Disconnect #{user_id}", acc)
+    end)
+    |> await_api_responses()
   end
 
   def shadowban(channel_id, message_id) do
@@ -306,19 +346,19 @@ defmodule BnBBot.PsychoEffects do
         :gen_statem.reqids_add(req, req_map.route, acc)
       end)
 
-    await_react_responses(requests)
+    await_api_responses(requests)
   end
 
-  defp await_react_responses(request_list) do
+  defp await_api_responses(request_list) do
     :gen_statem.wait_response(request_list, :infinity, true)
     |> case do
       {{:reply, resp}, label, new_list} ->
         Logger.info("Got response: #{inspect(resp)} for request: #{inspect(label)}")
-        await_react_responses(new_list)
+        await_api_responses(new_list)
 
       {{:error, {reason, _s_ref}}, label, new_list} ->
         Logger.error("Got error: #{inspect(reason)} for request: #{inspect(label)}")
-        await_react_responses(new_list)
+        await_api_responses(new_list)
 
       :no_request ->
         Logger.info("No more requests")

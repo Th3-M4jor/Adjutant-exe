@@ -44,7 +44,7 @@ defmodule BnBBot.Command.Slash.BNB.Blight do
           blight_to_str(arg.value)
 
         _ ->
-          Logger.warn(["Blight: bad argument given ", inspect(inter.data.options)])
+          Logger.warning(["Blight: bad argument given ", inspect(inter.data.options)])
           "An unknown error has occurred"
       end
 
@@ -124,7 +124,7 @@ defmodule BnBBot.Command.Slash.BNB.Blight do
         @object
 
       _ ->
-        Logger.warn("Got an unknown blight: #{name}")
+        Logger.warning("Got an unknown blight: #{name}")
         "Unknown Blight"
     end
   end

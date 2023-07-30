@@ -30,7 +30,7 @@ defmodule BnBBot.Workers.MessageEdit do
         :ok
 
       {:error, err} ->
-        Logger.warn("Error editing message: #{err}")
+        Logger.warning("Error editing message: #{err}")
         {:error, err}
     end
   end
@@ -49,7 +49,7 @@ defmodule BnBBot.Workers.MessageEdit do
         :ok
 
       {:error, err} ->
-        Logger.warn("Error editing message: #{err}")
+        Logger.warning("Error editing message: #{err}")
         {:error, err}
     end
   end

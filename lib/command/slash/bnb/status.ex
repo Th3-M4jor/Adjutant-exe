@@ -57,7 +57,7 @@ defmodule BnBBot.Command.Slash.BNB.Status do
           status_to_str(arg.value)
 
         _ ->
-          Logger.warn(["Status: bad argument given ", inspect(inter.data.options)])
+          Logger.warning(["Status: bad argument given ", inspect(inter.data.options)])
           "An unknown error has occurred"
       end
 
@@ -140,7 +140,7 @@ defmodule BnBBot.Command.Slash.BNB.Status do
         @stagger
 
       _ ->
-        Logger.warn("Got an unknown status: #{name}")
+        Logger.warning("Got an unknown status: #{name}")
         "Unknown Status"
     end
   end

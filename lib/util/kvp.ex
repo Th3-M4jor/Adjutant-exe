@@ -16,7 +16,7 @@ defmodule BnBBot.Util.KVP do
   end
 
   def init(_initial_state) do
-    Logger.warn("Initial state is not a map, using empty map")
+    Logger.warning("Initial state is not a map, using empty map")
     {:ok, %{}}
   end
 

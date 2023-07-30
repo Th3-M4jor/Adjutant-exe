@@ -36,11 +36,12 @@ defmodule BnBBot.PsychoEffects.Channel do
   end
 
   def psychoable_channel?(channel_id) do
-    exists = from(
-    c in __MODULE__,
-    where: c.id == ^channel_id
-    )
-    |> BnBBot.Repo.SQLite.exists?()
+    exists =
+      from(
+        c in __MODULE__,
+        where: c.id == ^channel_id
+      )
+      |> BnBBot.Repo.SQLite.exists?()
 
     # if it doesn't exist, it's psychoable
     not exists
