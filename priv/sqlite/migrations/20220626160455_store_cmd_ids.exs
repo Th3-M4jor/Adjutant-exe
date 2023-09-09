@@ -1,4 +1,4 @@
-defmodule BnBBot.Repo.SQLite.Migrations.StoreCmdIds do
+defmodule Adjutant.Repo.SQLite.Migrations.StoreCmdIds do
   use Ecto.Migration
 
   def change do

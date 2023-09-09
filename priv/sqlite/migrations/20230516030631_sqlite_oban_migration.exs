@@ -1,4 +1,4 @@
-defmodule BnBBot.Repo.SQLite.Migrations.SqliteObanMigration do
+defmodule Adjutant.Repo.SQLite.Migrations.SqliteObanMigration do
   use Ecto.Migration
 
   def up, do: Oban.Migration.up()

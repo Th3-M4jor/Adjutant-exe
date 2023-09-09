@@ -1,4 +1,4 @@
-Just another rewrite of BnBBot to learn Elixir
+Just another rewrite of Adjutant to learn Elixir
 
 Has some interop with https://github.com/Th3-M4jor/BnBBackend-EX and private github webook for auto-redeployment of two frontend-projects.
 
@@ -17,8 +17,8 @@ To run the bot the following extra things will be needed:
     - `"Battlechip"`
     - An `Oban` migration for the respective version of the library
 - A development sqlite DB for logging and storing state about slash commands
-  - This can be created by running `mix ecto.create -r BnBBot.Repo.SQLite`
-  - Said DB must then be migrated `mix ecto.migrate -r BnBBot.Repo.SQLite`
+  - This can be created by running `mix ecto.create -r Adjutant.Repo.SQLite`
+  - Said DB must then be migrated `mix ecto.migrate -r Adjutant.Repo.SQLite`
 - In `config/dev.exs` the `token:` config will need an actual bot token
 
 The bot should then be able to be successfully started by running:
@@ -35,17 +35,17 @@ The bot can then be run with `MIX_ENV` set to prod, however it is recommended to
 # Adding a command
 To add a new command to the bot, the following steps are required:
 - Create a new module for the command in the `lib/commands` directory
-  - it is recommended to namespace the command's module name with `BnBBot.Commands`
-- This new module should `use` the `BnBBot.Command.Slash` module
-  - See the documentation for the `BnBBot.Command.Slash` module for more information
-  - Also, see [`BnBBot.Command.Slash.BNB.PHB`](lib/command/slash/bnb/phb.ex) for a simple example
-- Add this new module to the `@commands` list in the [`BnBBot.Command`](lib/command.ex) module
+  - it is recommended to namespace the command's module name with `Adjutant.Commands`
+- This new module should `use` the `Adjutant.Command.Slash` module
+  - See the documentation for the `Adjutant.Command.Slash` module for more information
+  - Also, see [`Adjutant.Command.Slash.BNB.PHB`](lib/command/slash/bnb/phb.ex) for a simple example
+- Add this new module to the `@commands` list in the [`Adjutant.Command`](lib/command.ex) module
 - The bot will take care of creating the command if it doesn't exist at startup
 
 # Deleting a command
 To delete a command, the following steps are required:
-- Remove the module from the `@commands` list in the [`BnBBot.Command`](lib/command.ex) module
-- Add the module to the `@deleted_commands` list in the [`BnBBot.Command`](lib/command.ex) module
+- Remove the module from the `@commands` list in the [`Adjutant.Command`](lib/command.ex) module
+- Add the module to the `@deleted_commands` list in the [`Adjutant.Command`](lib/command.ex) module
 - The bot will take care of deleting the command if its recorded as existing at startup
 - Then on future rollouts you can delete the module
 

@@ -1,4 +1,4 @@
-defmodule BnBBot.Repo.SQLite.Migrations.AddRandomInsultsTable do
+defmodule Adjutant.Repo.SQLite.Migrations.AddRandomInsultsTable do
   use Ecto.Migration
 
   def change do

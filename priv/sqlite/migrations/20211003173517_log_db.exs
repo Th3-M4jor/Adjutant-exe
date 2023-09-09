@@ -1,4 +1,4 @@
-defmodule BnBBot.Repo.Migrations.LogDb do
+defmodule Adjutant.Repo.Migrations.LogDb do
   use Ecto.Migration
 
   def change do

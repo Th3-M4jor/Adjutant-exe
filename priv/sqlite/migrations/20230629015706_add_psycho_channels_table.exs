@@ -1,4 +1,4 @@
-defmodule BnBBot.Repo.SQLite.Migrations.AddPsychoChannelsTable do
+defmodule Adjutant.Repo.SQLite.Migrations.AddPsychoChannelsTable do
   use Ecto.Migration
 
   def change do

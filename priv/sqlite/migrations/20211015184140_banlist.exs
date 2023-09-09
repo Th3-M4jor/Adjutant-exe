@@ -1,4 +1,4 @@
-defmodule BnBBot.Repo.Migrations.Banlist do
+defmodule Adjutant.Repo.Migrations.Banlist do
   use Ecto.Migration
 
   def change do

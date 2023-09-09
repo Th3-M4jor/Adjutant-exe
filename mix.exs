@@ -3,16 +3,16 @@ defmodule ElixirBot.MixProject do
 
   def project do
     [
-      app: :elixir_bot,
+      app: :adjutant,
       version: "0.1.4",
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       releases: [
-        bnb_bot: [
-          version: "0.2.4",
+        adjutant: [
+          version: "0.3.0",
           applications: [
-            elixir_bot: :permanent
+            adjutant: :permanent
           ],
           cookie: get_cookie()
         ]
@@ -23,7 +23,7 @@ defmodule ElixirBot.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      mod: {BnBBot, []},
+      mod: {Adjutant.Application, []},
       extra_applications: [:logger, :runtime_tools, :mnesia]
     ]
   end

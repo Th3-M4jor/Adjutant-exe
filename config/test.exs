@@ -21,7 +21,7 @@ config :logger,
   level: :info,
   backends: [
     :console,
-    {BnBBot.LogBackend, :log_backend}
+    {Adjutant.LogBackend, :log_backend}
   ],
   compile_time_purge_matching: [
     [module: Nostrum, level_lower_than: :warn],
@@ -31,21 +31,21 @@ config :logger,
     [module: Nostrum.Shard.Event, level_lower_than: :warn]
   ]
 
-config :elixir_bot, Oban,
+config :adjutant, Oban,
   prefix: "oban_jobs",
-  repo: BnBBot.Repo.Postgres,
+  repo: Adjutant.Repo.Postgres,
   queues: [
     dev_remind_me: [limit: 2, paused: true],
     dev_edit_message: [limit: 2, paused: true]
   ]
 
 # uses sqlite for logging
-config :elixir_bot, BnBBot.Repo.SQLite,
+config :adjutant, Adjutant.Repo.SQLite,
   database: "./db/dev_db.db",
   priv: "priv/sqlite"
 
 # uses postgres for storing BnB data, and for Oban
-config :elixir_bot, BnBBot.Repo.Postgres,
+config :adjutant, Adjutant.Repo.Postgres,
   username: "postgres",
   password: "postgres",
   database: "default",
@@ -54,8 +54,8 @@ config :elixir_bot, BnBBot.Repo.Postgres,
   pool_size: 10,
   priv: "priv/postgres"
 
-config :elixir_bot,
-  ecto_repos: [BnBBot.Repo.SQLite, BnBBot.Repo.Postgres],
+config :adjutant,
+  ecto_repos: [Adjutant.Repo.SQLite, Adjutant.Repo.Postgres],
   ecto_shard_count: 1,
   remind_me_queue: :dev_remind_me,
   edit_message_queue: :dev_edit_message,

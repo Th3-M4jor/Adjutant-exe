@@ -1,4 +1,4 @@
-defmodule BnBBot.Repo.SQLite.Migrations.AddCommandCreationState do
+defmodule Adjutant.Repo.SQLite.Migrations.AddCommandCreationState do
   use Ecto.Migration
 
   def change do
