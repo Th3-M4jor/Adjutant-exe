@@ -81,13 +81,19 @@ defmodule Adjutant.Command.Slash.PsychoEffects do
   end
 
   defp allow(inter) do
-    {channel_id, _channel_data} = inter.data.resolved.channels |> Map.to_list() |> List.first()
+    {channel_id, _channel_data} =
+      inter.data.resolved.channels
+      |> Map.to_list()
+      |> List.first()
 
     Adjutant.PsychoEffects.Channel.allow_channel(channel_id)
   end
 
   def deny(inter) do
-    {channel_id, channel_data} = inter.data.resolved.channels |> Map.to_list() |> List.first()
+    {channel_id, channel_data} =
+      inter.data.resolved.channels
+      |> Map.to_list()
+      |> List.first()
 
     guild_id = channel_data.guild_id
     user_id = inter.member.user_id
