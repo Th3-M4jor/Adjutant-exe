@@ -15,7 +15,7 @@ defmodule BnBBot.Command.Slash.BNB.Virus do
   alias Nostrum.Api
   require Logger
 
-  use BnBBot.Command.Slash, permissions: :everyone
+  use BnBBot.Command.Slash, permissions: :everyone, deprecated: true
 
   @impl true
   def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do

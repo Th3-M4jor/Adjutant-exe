@@ -13,7 +13,8 @@ defmodule BnBBot.Command.Slash.BNB.Chip do
   alias Nostrum.Api
   require Logger
 
-  use BnBBot.Command.Slash, permissions: :everyone
+  use BnBBot.Command.Slash, permissions: :everyone, deprecated: true
+
   @skills ~w(PER INF TCH STR AGI END CHM VLR AFF None)
   @elements ~w(Fire Aqua Elec Wood Wind Sword Break Cursor Recov Invis Object Null)
   @chip_kinds ~w(Burst Construct Melee Projectile Wave Heal Summon Trap)

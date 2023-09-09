@@ -16,7 +16,7 @@ defmodule BnBBot.Command.Slash.BNB.NCP do
   alias BnBBot.Library.NCP
   alias Nostrum.Api
 
-  use BnBBot.Command.Slash, permissions: :everyone
+  use BnBBot.Command.Slash, permissions: :everyone, deprecated: true
 
   @elements [
     "Fire",

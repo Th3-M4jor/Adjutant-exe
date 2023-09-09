@@ -24,8 +24,8 @@ defmodule BnBBot.Workers.LogCleaner do
     # one_week_ago = NaiveDateTime.add(now, -7 * 24 * 60 * 60)
 
     from(l in LogLine,
-      where:
-        l.inserted_at < ago(1, "month") or (l.inserted_at < ago(1, "week") and l.level == :debug)
+      where: l.inserted_at < ago(1, "month"),
+      or_where: l.inserted_at < ago(1, "week") and l.level == :debug
     )
     |> BnBBot.Repo.SQLite.delete_all()
 

@@ -8,7 +8,7 @@ defmodule BnBBot.Command.Slash.BNB.Reload do
 
   require Logger
 
-  use BnBBot.Command.Slash, permissions: [:owner, :admin]
+  use BnBBot.Command.Slash, permissions: [:owner, :admin], deprecated: true
 
   @impl true
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do

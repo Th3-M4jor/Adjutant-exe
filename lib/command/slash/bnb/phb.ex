@@ -9,7 +9,7 @@ defmodule BnBBot.Command.Slash.BNB.PHB do
 
   @phb_links :elixir_bot |> Application.compile_env!(:phb_links)
 
-  use BnBBot.Command.Slash, permissions: :everyone
+  use BnBBot.Command.Slash, permissions: :everyone, deprecated: true
 
   @impl true
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do

@@ -107,15 +107,10 @@ defmodule BnBBot.Consumer do
           Oban.resume_queue(queue: :remind_me)
           Oban.resume_queue(queue: :edit_message)
 
-          chip_ct = BnBBot.Library.Battlechip.get_chip_ct()
-          ncp_ct = BnBBot.Library.NCP.get_ncp_ct()
-          virus_ct = BnBBot.Library.Virus.get_virus_ct()
-
           Logger.debug(["Ready\n", inspect(ready_data, pretty: true)])
           BnBBot.Command.setup_commands()
 
-          {"Bot Ready\n#{chip_ct} chips loaded\n#{virus_ct} viruses loaded\n#{ncp_ct} ncps loaded",
-           false}
+          {"Bot Ready", false}
       end
 
     BnBBot.Util.dm_owner(dm_msg, override)

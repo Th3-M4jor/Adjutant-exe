@@ -30,16 +30,41 @@ defmodule BnBBot.Command.Slash do
 
   @default_command_scope Application.compile_env!(:elixir_bot, :default_command_scope)
 
-  defp everyone_perms do
+  defp deprecated_call do
+    quote do
+      if inter.type == 2 do
+        Nostrum.Api.create_followup_message(inter.token, %{
+          content: "Note: This is a deprecated command, it may break in the future",
+          flags: 64
+        })
+      end
+    end
+  end
+
+  defp everyone_perms(deprecated) do
+    deprecated_code =
+      if deprecated do
+        deprecated_call()
+      end
+
     quote do
       @behaviour BnBBot.Command.Slash
-      def call(inter), do: call_slash(inter)
+      def call(inter) do
+        call_slash(inter)
+        unquote(deprecated_code)
+        :ignore
+      end
 
       defoverridable call: 1
     end
   end
 
-  defp list_perms do
+  defp list_perms(deprecated) do
+    deprecated_code =
+      if deprecated do
+        deprecated_call()
+      end
+
     quote do
       @behaviour BnBBot.Command.Slash
       def call(inter) do
@@ -47,6 +72,7 @@ defmodule BnBBot.Command.Slash do
 
         if user_perms in [:admin, :owner] do
           call_slash(inter)
+          unquote(deprecated_code)
         else
           Nostrum.Api.create_interaction_response(inter, %{
             type: 4,
@@ -62,7 +88,12 @@ defmodule BnBBot.Command.Slash do
     end
   end
 
-  defp atom_perms(perm) when perm in [:owner, :admin] do
+  defp atom_perms(perm, deprecated) when perm in [:owner, :admin] do
+    deprected_macro_code =
+      if deprecated do
+        deprecated_call()
+      end
+
     quote do
       @behaviour BnBBot.Command.Slash
       def call(inter) do
@@ -70,6 +101,7 @@ defmodule BnBBot.Command.Slash do
 
         if user_perms == unquote(perm) do
           call_slash(inter)
+          unquote(deprected_macro_code)
         else
           Nostrum.Api.create_interaction_response(inter, %{
             type: 4,
@@ -96,6 +128,7 @@ defmodule BnBBot.Command.Slash do
 
   defmacro __using__(opts) do
     perms_opts = Keyword.fetch!(opts, :permissions)
+    deprecated = Keyword.get(opts, :deprecated, false)
 
     perms_ops =
       if is_list(perms_opts) do
@@ -107,13 +140,13 @@ defmodule BnBBot.Command.Slash do
     perms_fn =
       case perms_ops do
         :everyone ->
-          everyone_perms()
+          everyone_perms(deprecated)
 
         [:admin, :owner] ->
-          list_perms()
+          list_perms(deprecated)
 
         perms when perms in [:admin, :owner] ->
-          atom_perms(perms)
+          atom_perms(perms, deprecated)
 
         _ ->
           raise "\":permissions\" option must be either :everyone, :admin, :owner or a list of [:admin, :owner]"

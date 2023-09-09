@@ -12,7 +12,7 @@ defmodule BnBBot.Command.Slash.BNB.Groups do
   @backend_node_name :elixir_bot |> Application.compile_env!(:backend_node_name)
   @dm_log_id :elixir_bot |> Application.compile_env!(:dm_log_id)
 
-  use BnBBot.Command.Slash, permissions: :everyone
+  use BnBBot.Command.Slash, permissions: :everyone, deprecated: true
 
   @impl true
   @spec call_slash(Nostrum.Struct.Interaction.t()) :: :ignore
