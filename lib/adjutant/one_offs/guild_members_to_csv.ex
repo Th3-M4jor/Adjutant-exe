@@ -12,7 +12,12 @@ defmodule Adjutant.OneOffs.GuildMembers.CSV do
         join_date = member.joined_at
         id = member.user_id
         name = member.user.username
-        created_at = Snowflake.creation_time(id) |> DateTime.to_iso8601()
+
+        created_at =
+          id
+          |> Snowflake.creation_time()
+          |> DateTime.to_iso8601()
+
         id = Snowflake.dump(id)
         [id, ",", name, ",", join_date, ",", created_at, "\r\n"]
       end

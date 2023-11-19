@@ -10,11 +10,19 @@ defmodule Adjutant.Consumer do
   alias Nostrum.Struct.Event.Ready, as: ReadyEvent
   alias Nostrum.Struct.{Guild, Interaction, Message}
 
-  @primary_guild_id :adjutant |> Application.compile_env!(:primary_guild_id)
-  @primary_guild_channel_id :adjutant |> Application.compile_env!(:primary_guild_channel_id)
-  @primary_guild_role_channel_id :adjutant
-                                 |> Application.compile_env!(:primary_guild_role_channel_id)
-  @log_channel_id :adjutant |> Application.compile_env!(:dm_log_id)
+  @primary_guild_id Application.compile_env!(:adjutant, :primary_guild_id)
+  @primary_guild_channel_id Application.compile_env!(:adjutant, :primary_guild_channel_id)
+  @primary_guild_role_channel_id Application.compile_env!(
+                                   :adjutant,
+                                   :primary_guild_role_channel_id
+                                 )
+  @log_channel_id Application.compile_env!(:adjutant, :dm_log_id)
+
+  # ignore webhooks
+  def handle_event({:MESSAGE_CREATE, %Message{webhook_id: webhook_id}, _ws_state})
+      when webhook_id != nil do
+    :noop
+  end
 
   # ignore bots
   def handle_event({:MESSAGE_CREATE, %Message{author: %{bot: true}}, _ws_state}) do
@@ -50,13 +58,11 @@ defmodule Adjutant.Consumer do
       )
   end
 
-  def handle_event({:GUILD_MEMBER_ADD, {guild_id, %Guild.Member{} = member}, _ws_state}) do
-    if guild_id == @primary_guild_id do
-      text = "Welcome to the Busters & Battlechips Discord <@#{member.user_id}>. \
+  def handle_event({:GUILD_MEMBER_ADD, {@primary_guild_id, %Guild.Member{} = member}, _ws_state}) do
+    text = "Welcome to the Busters & Battlechips Discord <@#{member.user_id}>. \
         Assign yourself roles in <##{@primary_guild_role_channel_id}>"
 
-      Api.create_message!(@primary_guild_channel_id, text)
-    end
+    Api.create_message!(@primary_guild_channel_id, text)
   end
 
   def handle_event({:GUILD_MEMBER_REMOVE, {guild_id, %Guild.Member{} = member}, _ws_state}) do

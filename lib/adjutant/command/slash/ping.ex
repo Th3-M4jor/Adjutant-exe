@@ -9,8 +9,8 @@ defmodule Adjutant.Command.Slash.Ping do
   alias Nostrum.Struct.Embed
   require Logger
 
-  @backend_node_name :adjutant |> Application.compile_env!(:backend_node_name)
-  @webhook_node_name :adjutant |> Application.compile_env!(:webhook_node_name)
+  @backend_node_name Application.compile_env!(:adjutant, :backend_node_name)
+  @webhook_node_name Application.compile_env!(:adjutant, :webhook_node_name)
 
   use Adjutant.Command.Slash, permissions: :everyone
 
@@ -21,7 +21,7 @@ defmodule Adjutant.Command.Slash.Ping do
 
     utilization_task =
       Task.async(fn ->
-        :scheduler.utilization(1) |> Enum.take(2)
+        Enum.take(:scheduler.utilization(1), 2)
       end)
 
     memory_usage_task =
@@ -79,7 +79,7 @@ defmodule Adjutant.Command.Slash.Ping do
         },
         %Embed.Field{
           name: "Active bot processes:",
-          value: Process.list() |> length()
+          value: length(Process.list())
         }
       ]
     }

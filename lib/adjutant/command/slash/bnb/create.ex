@@ -114,9 +114,7 @@ defmodule Adjutant.Command.Slash.BNB.Create do
 
     Logger.debug(Kernel.inspect(description_input))
 
-    description_input =
-      description_input
-      |> ActionRow.action_row()
+    description_input = ActionRow.action_row(description_input)
 
     Logger.debug(Kernel.inspect(description_input))
 

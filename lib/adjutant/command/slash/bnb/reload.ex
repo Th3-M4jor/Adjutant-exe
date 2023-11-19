@@ -32,41 +32,33 @@ defmodule Adjutant.Command.Slash.BNB.Reload do
     cond do
       lib_str_len + validation_msg_len <= 2000 ->
         # We can send the whole thing in one message
-        msg = [lib_str, "\n", validation_msg] |> IO.iodata_to_binary()
+        msg = IO.iodata_to_binary([lib_str, "\n", validation_msg])
 
-        :ok =
-          Api.create_followup_message(inter.application_id, inter.token, %{
-            content: msg,
-            flags: 64
-          })
-          |> elem(0)
+        Api.create_followup_message!(inter.application_id, inter.token, %{
+          content: msg,
+          flags: 64
+        })
 
       validation_msg_len > 2000 ->
         # The validation message is too long to send in one message, so just notify that it's too long
         msg = lib_str <> "\nToo many viruses have drops that don't exist"
 
-        :ok =
-          Api.create_followup_message(inter.application_id, inter.token, %{
-            content: msg,
-            flags: 64
-          })
-          |> elem(0)
+        Api.create_followup_message!(inter.application_id, inter.token, %{
+          content: msg,
+          flags: 64
+        })
 
       true ->
         # Both messages are too long to send in one message, so send them in two messages
-        :ok =
-          Api.create_followup_message(inter.application_id, inter.token, %{
-            content: lib_str,
-            flags: 64
-          })
-          |> elem(0)
+        Api.create_followup_message!(inter.application_id, inter.token, %{
+          content: lib_str,
+          flags: 64
+        })
 
-        :ok =
-          Api.create_followup_message(inter.application_id, inter.token, %{
-            content: IO.iodata_to_binary(validation_msg),
-            flags: 64
-          })
-          |> elem(0)
+        Api.create_followup_message!(inter.application_id, inter.token, %{
+          content: IO.iodata_to_binary(validation_msg),
+          flags: 64
+        })
     end
 
     :ignore
@@ -93,7 +85,7 @@ defmodule Adjutant.Command.Slash.BNB.Reload do
 
     chip_task =
       Task.async(fn ->
-        {:ok} = Library.Battlechip.load_chips()
+        :ok = Library.Battlechip.load_chips()
         Library.Battlechip.get_chip_ct()
       end)
 

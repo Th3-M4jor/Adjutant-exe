@@ -71,7 +71,7 @@
           #
           {Credo.Check.Consistency.ExceptionNames, []},
           {Credo.Check.Consistency.LineEndings, []},
-          {Credo.Check.Consistency.ParameterPatternMatching, []},
+          {Credo.Check.Consistency.ParameterPatternMatching, [force: :after]},
           {Credo.Check.Consistency.SpaceAroundOperators, []},
           {Credo.Check.Consistency.SpaceInParentheses, []},
           {Credo.Check.Consistency.TabsOrSpaces, []},
@@ -165,7 +165,7 @@
           {Credo.Check.Readability.OnePipePerLine, []},
           {Credo.Check.Refactor.FilterCount, []},
           {Credo.Check.Refactor.PassAsyncInTestCases, []},
-          {Credo.Check.Warning.MissedMetadataKeyInLoggerConfig, []}
+          {Credo.Check.Warning.MissedMetadataKeyInLoggerConfig, []},
         ],
         disabled: [
           #
@@ -177,7 +177,6 @@
           #
           {Credo.Check.Consistency.MultiAliasImportRequireUse, []},
           {Credo.Check.Consistency.UnusedVariableNames, []},
-
           {Credo.Check.Design.SkipTestWithoutComment, []},
           {Credo.Check.Readability.AliasAs, []},
           {Credo.Check.Readability.BlockPipe, []},
@@ -186,7 +185,6 @@
           {Credo.Check.Readability.NestedFunctionCalls, []},
           {Credo.Check.Readability.SeparateAliasRequire, []},
           {Credo.Check.Readability.SingleFunctionToBlockPipe, []},
-          {Credo.Check.Readability.SinglePipe, []},
           {Credo.Check.Readability.Specs, []},
           {Credo.Check.Readability.StrictModuleLayout, []},
           {Credo.Check.Readability.WithCustomTaggedTuple, []},
@@ -201,12 +199,11 @@
           {Credo.Check.Refactor.PipeChainStart, []},
           {Credo.Check.Refactor.RejectFilter, []},
           {Credo.Check.Refactor.VariableRebinding, []},
-          {Credo.Check.Warning.LazyLogging, []},
           {Credo.Check.Warning.LeakyEnvironment, []},
           {Credo.Check.Warning.MapGetUnsafePass, []},
           {Credo.Check.Warning.MixEnv, []},
-          {Credo.Check.Warning.UnsafeToAtom, []}
-
+          {Credo.Check.Warning.UnsafeToAtom, []},
+          {Credo.Check.Readability.SinglePipe, [allow_0_arity_functions: true]}
           # {Credo.Check.Refactor.MapInto, []},
 
           #

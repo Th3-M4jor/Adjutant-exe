@@ -216,13 +216,13 @@ defmodule Adjutant.Library.NCP do
   defimpl Adjutant.Library.LibObj do
     alias Nostrum.Struct.Component.Button
 
-    @white_emoji :adjutant |> Application.compile_env!([:ncp_emoji, :white])
-    @pink_emoji :adjutant |> Application.compile_env!([:ncp_emoji, :pink])
-    @yellow_emoji :adjutant |> Application.compile_env!([:ncp_emoji, :yellow])
-    @green_emoji :adjutant |> Application.compile_env!([:ncp_emoji, :green])
-    @blue_emoji :adjutant |> Application.compile_env!([:ncp_emoji, :blue])
-    @red_emoji :adjutant |> Application.compile_env!([:ncp_emoji, :red])
-    @gray_emoji :adjutant |> Application.compile_env!([:ncp_emoji, :gray])
+    @white_emoji Application.compile_env!(:adjutant, [:ncp_emoji, :white])
+    @pink_emoji Application.compile_env!(:adjutant, [:ncp_emoji, :pink])
+    @yellow_emoji Application.compile_env!(:adjutant, [:ncp_emoji, :yellow])
+    @green_emoji Application.compile_env!(:adjutant, [:ncp_emoji, :green])
+    @blue_emoji Application.compile_env!(:adjutant, [:ncp_emoji, :blue])
+    @red_emoji Application.compile_env!(:adjutant, [:ncp_emoji, :red])
+    @gray_emoji Application.compile_env!(:adjutant, [:ncp_emoji, :gray])
 
     def type(_value), do: :ncp
 

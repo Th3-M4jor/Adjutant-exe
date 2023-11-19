@@ -14,7 +14,9 @@ defmodule Adjutant.Command.Slash.BNB.NCP do
   require Logger
 
   alias Adjutant.Library.NCP
+
   alias Nostrum.Api
+  alias Nostrum.Struct.Interaction
 
   use Adjutant.Command.Slash, permissions: :everyone, deprecated: true
 
@@ -44,7 +46,7 @@ defmodule Adjutant.Command.Slash.BNB.NCP do
   ]
 
   @impl true
-  def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
+  def call_slash(%Interaction{type: 2} = inter) do
     [sub_cmd] = inter.data.options
 
     case {sub_cmd.name, sub_cmd.options} do
@@ -74,7 +76,7 @@ defmodule Adjutant.Command.Slash.BNB.NCP do
     :ignore
   end
 
-  def call_slash(%Nostrum.Struct.Interaction{type: 4} = inter) do
+  def call_slash(%Interaction{type: 4} = inter) do
     [sub_cmd] = inter.data.options
 
     case sub_cmd.name do
@@ -163,7 +165,7 @@ defmodule Adjutant.Command.Slash.BNB.NCP do
     }
   end
 
-  defp search_ncp(%Nostrum.Struct.Interaction{type: 2} = inter, name) do
+  defp search_ncp(%Interaction{type: 2} = inter, name) do
     Logger.info(["Searching for the following NCP: ", name])
 
     case NCP.get(name) do
@@ -184,7 +186,7 @@ defmodule Adjutant.Command.Slash.BNB.NCP do
     end
   end
 
-  defp search_ncp(%Nostrum.Struct.Interaction{type: 4} = inter, name) do
+  defp search_ncp(%Interaction{type: 4} = inter, name) do
     Logger.debug(["Autocomplete searching for the following NCP: ", inspect(name)])
 
     list =
@@ -307,7 +309,7 @@ defmodule Adjutant.Command.Slash.BNB.NCP do
     |> Oban.insert!()
   end
 
-  defp send_found_ncp(%Nostrum.Struct.Interaction{} = inter, %Adjutant.Library.NCP{} = ncp) do
+  defp send_found_ncp(%Interaction{} = inter, %Adjutant.Library.NCP{} = ncp) do
     Api.create_interaction_response!(inter, %{
       type: 4,
       data: %{

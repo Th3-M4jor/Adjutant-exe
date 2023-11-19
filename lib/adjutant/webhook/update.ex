@@ -43,10 +43,8 @@ defmodule Adjutant.Webhook.Update do
     negated = responses[:negated] || "`No` selected"
     timeout = responses[:timeout] || "Timed out waiting for response, assuming `No`"
 
-    uuid =
-      System.unique_integer([:positive])
-      # constrain to be between 0 and 0xFF_FF_FF
-      |> Bitwise.band(0xFF_FF_FF)
+    # constrain to be between 0 and 0xFF_FF_FF
+    uuid = Bitwise.band(System.unique_integer([:positive]), 0xFF_FF_FF)
 
     buttons = Adjutant.ButtonAwait.make_yes_no_buttons(uuid)
 

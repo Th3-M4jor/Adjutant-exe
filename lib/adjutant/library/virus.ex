@@ -262,7 +262,7 @@ defmodule Adjutant.Library.Virus do
   defimpl Adjutant.Library.LibObj do
     alias Nostrum.Struct.Component.Button
 
-    @virus_emoji :adjutant |> Application.compile_env!(:virus_emoji)
+    @virus_emoji Application.compile_env!(:adjutant, :virus_emoji)
 
     def type(_value), do: :virus
 

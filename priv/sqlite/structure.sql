@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS "oban_jobs" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, 
 CREATE TABLE sqlite_sequence(name,seq);
 CREATE INDEX "oban_jobs_state_queue_priority_scheduled_at_id_index" ON "oban_jobs" ("state", "queue", "priority", "scheduled_at", "id");
 CREATE TABLE IF NOT EXISTS "psycho_effect_channel" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "guild_id" INTEGER NOT NULL, "set_by" INTEGER NOT NULL, "inserted_at" TEXT NOT NULL, "updated_at" TEXT NOT NULL);
+CREATE INDEX "bot_log_inserted_at_index" ON "bot_log" ("inserted_at");
 INSERT INTO schema_migrations VALUES(20211003173517,'2021-10-03T18:33:03');
 INSERT INTO schema_migrations VALUES(20211015184140,'2021-10-15T19:41:05');
 INSERT INTO schema_migrations VALUES(20220612195711,'2022-06-12T20:07:30');
@@ -14,3 +15,4 @@ INSERT INTO schema_migrations VALUES(20220626160455,'2022-06-26T19:56:01');
 INSERT INTO schema_migrations VALUES(20220813171203,'2022-08-13T17:13:03');
 INSERT INTO schema_migrations VALUES(20230516030631,'2023-05-16T03:10:22');
 INSERT INTO schema_migrations VALUES(20230629015706,'2023-06-29T01:59:05');
+INSERT INTO schema_migrations VALUES(20231117044416,'2023-11-17T04:45:10');

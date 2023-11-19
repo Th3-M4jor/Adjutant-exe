@@ -9,8 +9,8 @@ defmodule Adjutant.Util do
   import Nostrum.Snowflake, only: [is_snowflake: 1]
   require Logger
 
-  @owner_id :adjutant |> Application.compile_env!(:owner_id)
-  @admins :adjutant |> Application.compile_env!(:admins)
+  @owner_id Application.compile_env!(:adjutant, :owner_id)
+  @admins Application.compile_env!(:adjutant, :admins)
 
   @doc """
   React to a message with a given unicode emoji, if a boolean is given instead

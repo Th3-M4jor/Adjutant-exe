@@ -32,7 +32,7 @@ defmodule Adjutant.PsychoEffects.Channel do
   def allow_channel(channel_id) do
     # channel_ids are unique, so we don't need to worry about guild_id
     from(c in __MODULE__, where: c.id == ^channel_id)
-    |> Adjutant.Repo.SQLite.delete_all([])
+    |> Adjutant.Repo.SQLite.delete_all()
   end
 
   def psychoable_channel?(channel_id) do

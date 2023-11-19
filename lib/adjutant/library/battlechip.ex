@@ -231,7 +231,7 @@ defmodule Adjutant.Library.Battlechip do
   defimpl Adjutant.Library.LibObj do
     alias Nostrum.Struct.Component.Button
 
-    @chip_emoji :adjutant |> Application.compile_env!(:chip_emoji)
+    @chip_emoji Application.compile_env!(:adjutant, :chip_emoji)
 
     def type(_value), do: :chip
 

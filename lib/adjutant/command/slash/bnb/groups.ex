@@ -7,16 +7,18 @@ defmodule Adjutant.Command.Slash.BNB.Groups do
 
   alias Nostrum.Api
   alias Nostrum.Struct.Embed
+  alias Nostrum.Struct.Interaction
+
   require Logger
 
-  @backend_node_name :adjutant |> Application.compile_env!(:backend_node_name)
-  @dm_log_id :adjutant |> Application.compile_env!(:dm_log_id)
+  @backend_node_name Application.compile_env!(:adjutant, :backend_node_name)
+  @dm_log_id Application.compile_env!(:adjutant, :dm_log_id)
 
   use Adjutant.Command.Slash, permissions: :everyone, deprecated: true
 
   @impl true
-  @spec call_slash(Nostrum.Struct.Interaction.t()) :: :ignore
-  def call_slash(%Nostrum.Struct.Interaction{} = inter) do
+  @spec call_slash(Interaction.t()) :: :ignore
+  def call_slash(%Interaction{} = inter) do
     Logger.info("Recieved a groups command")
 
     if Node.alive?() and Node.connect(@backend_node_name) do
@@ -45,8 +47,8 @@ defmodule Adjutant.Command.Slash.BNB.Groups do
     :ignore
   end
 
-  @spec fetch_and_send_groups(Nostrum.Struct.Interaction.t(), node()) :: :ignore
-  defp fetch_and_send_groups(%Nostrum.Struct.Interaction{} = inter, backend_name) do
+  @spec fetch_and_send_groups(Interaction.t(), node()) :: :ignore
+  defp fetch_and_send_groups(%Interaction{} = inter, backend_name) do
     embed =
       :erpc.call(backend_name, ElixirBackend.FolderGroups, :get_groups_and_ct, [])
       |> groups_to_embed()
@@ -90,8 +92,8 @@ defmodule Adjutant.Command.Slash.BNB.Groups do
     }
   end
 
-  @spec node_down(Nostrum.Struct.Interaction.t()) :: :ignore
-  defp node_down(%Nostrum.Struct.Interaction{} = inter) do
+  @spec node_down(Interaction.t()) :: :ignore
+  defp node_down(%Interaction{} = inter) do
     Api.create_interaction_response!(inter, %{
       type: 4,
       data: %{

@@ -5,7 +5,7 @@ defmodule Adjutant.RoleBtn do
   require Logger
   alias Nostrum.Api
 
-  @roles :adjutant |> Application.compile_env!(:roles)
+  @roles Application.compile_env!(:adjutant, :roles)
 
   def generate_role_btns do
     @roles

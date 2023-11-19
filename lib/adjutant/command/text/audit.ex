@@ -50,9 +50,10 @@ defmodule Adjutant.Command.Text.Audit do
     Nostrum.Api.create_message(msg, text)
   end
 
-  def call(%Message{} = msg, ["dump"]) do
+  def call(%Message{channel_id: channel_id} = msg, ["dump"]) do
     Logger.info("Got an audit cmd for \"dump\"")
-    Task.start(fn -> Nostrum.Api.start_typing(msg.channel_id) end)
+
+    typing_task = Task.async(fn -> Nostrum.Api.start_typing(channel_id) end)
 
     dump_log()
 
@@ -62,6 +63,12 @@ defmodule Adjutant.Command.Text.Audit do
       |> Bitwise.band(0xFF_FF_FF)
 
     buttons = Adjutant.ButtonAwait.make_yes_no_buttons(uuid)
+
+    # wait for the typing task to finish
+    # before sending the message
+    # otherwise sometimes the typing indicator
+    # is sent after the below message on rare occasions
+    Task.await(typing_task)
 
     bot_msg =
       Nostrum.Api.create_message!(msg, %{
@@ -136,6 +143,10 @@ defmodule Adjutant.Command.Text.Audit do
       |> Stream.map(&format_entry/1)
       |> Stream.intersperse("\n\n")
       |> Stream.each(fn x ->
+        # to_iovec's point over to_binary is that it cuts down on copying
+        # binaries that are off-heap between processes
+        # while not having to build an entirely new binary in memory
+        x = :erlang.iolist_to_iovec(x)
         :file.write(file_ptr, x)
       end)
 
@@ -147,13 +158,13 @@ defmodule Adjutant.Command.Text.Audit do
     :ok = :file.close(file_ptr)
   end
 
-  defp format_entry(%Adjutant.LogLine{} = line) do
+  defp format_entry(%Adjutant.LogLine{inserted_at: inserted_at, level: level, message: log_msg}) do
     [
-      NaiveDateTime.to_string(line.inserted_at),
+      NaiveDateTime.to_string(inserted_at),
       " [",
-      to_string(line.level),
+      to_string(level),
       "]: ",
-      line.message,
+      log_msg,
       "\n"
     ]
   end

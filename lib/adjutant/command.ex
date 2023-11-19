@@ -21,15 +21,6 @@ defmodule Adjutant.Command do
     Adjutant.Command.Slash.Dice,
     Adjutant.Command.Slash.Ping,
     Adjutant.Command.Slash.Shuffle,
-    Adjutant.Command.Slash.BNB.PHB,
-    Adjutant.Command.Slash.BNB.NCP,
-    Adjutant.Command.Slash.BNB.Chip,
-    Adjutant.Command.Slash.BNB.Virus,
-    Adjutant.Command.Slash.BNB.Status,
-    Adjutant.Command.Slash.BNB.Blight,
-    Adjutant.Command.Slash.BNB.Panels,
-    Adjutant.Command.Slash.BNB.Reload,
-    Adjutant.Command.Slash.BNB.Groups,
     Adjutant.Command.Slash.Hidden,
     Adjutant.Command.Slash.Insults,
     Adjutant.Command.Slash.PsychoEffects,
@@ -38,7 +29,16 @@ defmodule Adjutant.Command do
   ]
 
   @deleted_commands [
-    Adjutant.Command.Slash.BNB.Create
+    Adjutant.Command.Slash.BNB.Create,
+    Adjutant.Command.Slash.BNB.PHB,
+    Adjutant.Command.Slash.BNB.NCP,
+    Adjutant.Command.Slash.BNB.Chip,
+    Adjutant.Command.Slash.BNB.Virus,
+    Adjutant.Command.Slash.BNB.Status,
+    Adjutant.Command.Slash.BNB.Blight,
+    Adjutant.Command.Slash.BNB.Panels,
+    Adjutant.Command.Slash.BNB.Reload,
+    Adjutant.Command.Slash.BNB.Groups
   ]
 
   def setup_commands do

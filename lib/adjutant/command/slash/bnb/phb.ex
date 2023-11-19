@@ -7,7 +7,7 @@ defmodule Adjutant.Command.Slash.BNB.PHB do
 
   alias Nostrum.Api
 
-  @phb_links :adjutant |> Application.compile_env!(:phb_links)
+  @phb_links Application.compile_env!(:adjutant, :phb_links)
 
   use Adjutant.Command.Slash, permissions: :everyone, deprecated: true
 

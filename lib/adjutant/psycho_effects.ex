@@ -26,9 +26,9 @@ defmodule Adjutant.PsychoEffects do
                            :resolve_role_effect
                          ]
 
-  @troll_emojis :adjutant |> Application.compile_env!(:troll_emojis)
+  @troll_emojis Application.compile_env!(:adjutant, :troll_emojis)
 
-  @primary_guild_id :adjutant |> Application.compile_env!(:primary_guild_id)
+  @primary_guild_id Application.compile_env!(:adjutant, :primary_guild_id)
 
   @atomic_ref_key {__MODULE__, :psycho_effects_ref}
 
@@ -372,19 +372,17 @@ defmodule Adjutant.PsychoEffects do
     emoji =
       case emoji do
         {name, id} ->
-          %Emoji{
+          Emoji.api_name(%Emoji{
             name: name,
             id: id
-          }
-          |> Emoji.api_name()
+          })
 
         {name, id, animated} ->
-          %Emoji{
+          Emoji.api_name(%Emoji{
             name: name,
             id: id,
             animated: animated
-          }
-          |> Emoji.api_name()
+          })
 
         emoji when is_binary(emoji) ->
           emoji

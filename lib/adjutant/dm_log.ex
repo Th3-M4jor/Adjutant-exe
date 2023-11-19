@@ -5,7 +5,7 @@ defmodule Adjutant.DmLogger do
 
   require Logger
 
-  @dm_log_id :adjutant |> Application.compile_env!(:dm_log_id)
+  @dm_log_id Application.compile_env!(:adjutant, :dm_log_id)
 
   def log_dm(%Nostrum.Struct.Message{} = msg) do
     unless Adjutant.Util.owner_msg?(msg) do
@@ -13,9 +13,7 @@ defmodule Adjutant.DmLogger do
 
       embed = make_embed(msg)
 
-      dm_channel_id = @dm_log_id |> Nostrum.Snowflake.cast!()
-
-      Nostrum.Api.create_message(dm_channel_id, embeds: [embed])
+      Nostrum.Api.create_message(@dm_log_id, embeds: [embed])
     end
   end
 
@@ -54,14 +52,19 @@ defmodule Adjutant.DmLogger do
         content_len > 1000 ->
           {part_1, part_2} = String.split_at(msg.content, 1000)
 
-          Nostrum.Struct.Embed.put_field(base_embed, "Content 1/2", part_1)
+          base_embed
+          |> Nostrum.Struct.Embed.put_field("Content 1/2", part_1)
           |> Nostrum.Struct.Embed.put_field("Content 2/2", part_2)
 
         true ->
           Nostrum.Struct.Embed.put_field(base_embed, "Content", msg.content)
       end
 
-    timestamp = Nostrum.Snowflake.creation_time(msg.id) |> DateTime.to_unix()
+    timestamp =
+      msg.id
+      |> Nostrum.Snowflake.creation_time()
+      |> DateTime.to_unix()
+
     embed = Nostrum.Struct.Embed.put_field(embed, "Time", "<t:#{timestamp}>")
 
     Enum.reduce(msg.attachments, embed, fn atch, embed ->

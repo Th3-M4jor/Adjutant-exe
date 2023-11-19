@@ -19,7 +19,10 @@ defmodule Adjutant.Command.Slash.PsychoEffects do
 
   @impl true
   def get_create_map do
-    perms_string = Nostrum.Permission.to_bit(:manage_channels) |> to_string()
+    perms_string =
+      :manage_channels
+      |> Nostrum.Permission.to_bit()
+      |> to_string()
 
     %{
       type: 1,

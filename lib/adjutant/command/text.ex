@@ -21,7 +21,7 @@ defmodule Adjutant.Command.Text do
   """
   @type command_desc :: String.t()
 
-  @prefix :adjutant |> Application.compile_env!(:prefix)
+  @prefix Application.compile_env!(:adjutant, :prefix)
 
   @spec dispatch(Message.t()) :: :ignore
   def dispatch(%Message{content: <<@prefix, rest::binary>>} = msg) do

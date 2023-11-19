@@ -8,11 +8,16 @@ defmodule Adjutant.Command.Slash.HOTG.Team do
 
   use Adjutant.Command.Slash, permissions: :everyone
 
+  @asset_path "./lib/command/slash/hotg/hotg_assets.json"
+
   @impl true
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
     Logger.info("Received a HOTG slash command")
 
-    file = File.read!("./lib/command/slash/hotg/hotg_assets.json") |> Jason.decode!()
+    file =
+      @asset_path
+      |> File.read!()
+      |> Jason.decode!()
 
     %{
       "rangers" => ranger_list,
@@ -21,9 +26,21 @@ defmodule Adjutant.Command.Slash.HOTG.Team do
       "bosses" => boss_list
     } = file
 
-    players = Enum.take_random(ranger_list, 6) |> Enum.intersperse(", ")
-    minions = Enum.take_random(minion_list, 2) |> Enum.intersperse(", ")
-    monsters = Enum.take_random(monster_list, 2) |> Enum.intersperse(", ")
+    players =
+      ranger_list
+      |> Enum.take_random(6)
+      |> Enum.intersperse(", ")
+
+    minions =
+      minion_list
+      |> Enum.take_random(2)
+      |> Enum.intersperse(", ")
+
+    monsters =
+      monster_list
+      |> Enum.take_random(2)
+      |> Enum.intersperse(", ")
+
     boss = Enum.random(boss_list)
 
     resp_str =
@@ -40,14 +57,13 @@ defmodule Adjutant.Command.Slash.HOTG.Team do
         "Boss: ",
         boss
       ]
-      |> IO.iodata_to_binary()
 
     Api.create_interaction_response!(
       inter,
       %{
         type: 4,
         data: %{
-          content: resp_str
+          content: IO.iodata_to_binary(resp_str)
         }
       }
     )

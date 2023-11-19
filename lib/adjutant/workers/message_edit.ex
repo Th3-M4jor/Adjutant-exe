@@ -18,14 +18,13 @@ defmodule Adjutant.Workers.MessageEdit do
           "components" => components
         }
       }) do
-    channel_id = channel_id |> Nostrum.Snowflake.cast!()
-    message_id = message_id |> Nostrum.Snowflake.cast!()
+    res =
+      Api.edit_message(channel_id, message_id, %{
+        content: content,
+        components: components
+      })
 
-    Api.edit_message(channel_id, message_id, %{
-      content: content,
-      components: components
-    })
-    |> case do
+    case res do
       {:ok, _} ->
         :ok
 
@@ -38,9 +37,6 @@ defmodule Adjutant.Workers.MessageEdit do
   def perform(%Oban.Job{
         args: %{"channel_id" => channel_id, "message_id" => message_id, "content" => content}
       }) do
-    channel_id = channel_id |> Nostrum.Snowflake.cast!()
-    message_id = message_id |> Nostrum.Snowflake.cast!()
-
     Api.edit_message(channel_id, message_id, %{
       content: content
     })

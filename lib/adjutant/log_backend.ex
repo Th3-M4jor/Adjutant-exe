@@ -88,7 +88,8 @@ defmodule Adjutant.LogBackend do
   defp configure(name, []) do
     base_level = Application.get_env(:logger, :level, :debug)
 
-    Application.get_env(:logger, name, [])
+    :logger
+    |> Application.get_env(name, [])
     |> Enum.into(%{name: name, level: base_level, online: false})
   end
 
