@@ -29,33 +29,25 @@ defmodule Adjutant.Consumer do
     :noop
   end
 
-  def handle_event({:MESSAGE_CREATE, %Message{} = msg, _ws_state}) do
-    if is_nil(msg.guild_id) do
-      # log dms unless in guild
-      Task.start(fn -> Adjutant.DmLogger.log_dm(msg) end)
-    else
-      # else see if we need to resolve a psycho effect
-      Task.start(fn ->
-        try do
-          Adjutant.PsychoEffects.maybe_resolve_random_effect(msg)
-          Adjutant.PsychoEffects.maybe_resolve_user_effect(msg)
-        rescue
-          e ->
-            Logger.error(Exception.format(:error, e, __STACKTRACE__))
-            Adjutant.Util.dm_owner("An error has occurred", true)
-        end
-      end)
-    end
+  def handle_event({:MESSAGE_CREATE, %Message{guild_id: nil} = msg, _ws_state}) do
+    Task.start(fn -> Adjutant.DmLogger.log_dm(msg) end)
 
     Adjutant.Command.dispatch(msg)
-  rescue
-    e ->
-      Logger.error(Exception.format(:error, e, __STACKTRACE__))
+  end
 
-      Api.create_message(
-        msg.channel_id,
-        "An error has occurred, inform Major\n#{Exception.message(e)}"
-      )
+  def handle_event({:MESSAGE_CREATE, %Message{} = msg, _ws_state}) do
+    Task.start(fn ->
+      try do
+        Adjutant.PsychoEffects.maybe_resolve_random_effect(msg)
+        Adjutant.PsychoEffects.maybe_resolve_user_effect(msg)
+      rescue
+        e ->
+          Logger.error(Exception.format(:error, e, __STACKTRACE__))
+          Adjutant.Util.dm_owner("An error has occurred", true)
+      end
+    end)
+
+    Adjutant.Command.dispatch(msg)
   end
 
   def handle_event({:GUILD_MEMBER_ADD, {@primary_guild_id, %Guild.Member{} = member}, _ws_state}) do

@@ -32,8 +32,8 @@ config :logger,
   ]
 
 config :adjutant, Oban,
-  prefix: "oban_jobs",
-  repo: Adjutant.Repo.Postgres,
+  repo: Adjutant.Repo.SQLite,
+  engine: Oban.Engines.Lite,
   queues: [
     dev_remind_me: [limit: 2, paused: true],
     dev_edit_message: [limit: 2, paused: true]
@@ -44,18 +44,8 @@ config :adjutant, Adjutant.Repo.SQLite,
   database: "./db/dev_db.db",
   priv: "priv/sqlite"
 
-# uses postgres for storing BnB data, and for Oban
-config :adjutant, Adjutant.Repo.Postgres,
-  username: "postgres",
-  password: "postgres",
-  database: "default",
-  hostname: "localhost",
-  show_sensitive_data_on_connection_error: true,
-  pool_size: 10,
-  priv: "priv/postgres"
-
 config :adjutant,
-  ecto_repos: [Adjutant.Repo.SQLite, Adjutant.Repo.Postgres],
+  ecto_repos: [Adjutant.Repo.SQLite],
   ecto_shard_count: 1,
   remind_me_queue: :dev_remind_me,
   edit_message_queue: :dev_edit_message,

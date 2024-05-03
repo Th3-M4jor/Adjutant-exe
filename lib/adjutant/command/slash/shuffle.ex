@@ -11,7 +11,7 @@ defmodule Adjutant.Command.Slash.Shuffle do
   @impl true
   @spec call_slash(Nostrum.Struct.Interaction.t()) :: :ignore
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
-    Logger.info("Recieved a shuffle command")
+    Logger.debug("Recieved a shuffle command")
     [sub_cmd] = inter.data.options
 
     res =

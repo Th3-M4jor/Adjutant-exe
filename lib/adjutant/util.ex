@@ -116,21 +116,8 @@ defmodule Adjutant.Util do
   """
   @spec find_dm_channel_id(Nostrum.Snowflake.t()) :: Nostrum.Snowflake.t()
   def find_dm_channel_id(user_id) when is_snowflake(user_id) do
-    # get the channel_id where it's first recipient's.id == user_id
-    dm_channel_list =
-      :ets.select(
-        :nostrum_channels,
-        [{{:"$1", %{recipients: [%{id: :"$2"}]}}, [{:==, :"$2", user_id}], [:"$1"]}]
-      )
-
-    case dm_channel_list do
-      [id | _] ->
-        id
-
-      _ ->
-        channel = Api.create_dm!(user_id)
-        channel.id
-    end
+    channel = Api.create_dm!(user_id)
+    channel.id
   end
 
   def slash_args_to_map([%{type: 1, name: name, options: options}]) do

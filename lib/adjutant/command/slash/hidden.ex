@@ -42,31 +42,31 @@ defmodule Adjutant.Command.Slash.Hidden do
   def call_slash(%Nostrum.Struct.Interaction{type: 2} = inter) do
     case inter.data.options do
       [%Option{value: "die"} | _] ->
-        Logger.info("Adjutant.Commands.Hidden.call_slash: die")
+        Logger.debug("Adjutant.Commands.Hidden.call_slash: die")
         die(inter)
 
       [%Option{value: "debug"} | args] ->
-        Logger.info(["Adjutant.Commands.Hidden.call_slash: debug ", inspect(args)])
+        Logger.debug(["Adjutant.Commands.Hidden.call_slash: debug ", inspect(args)])
         debug(inter, args)
 
       [%Option{value: "shut_up"} | _] ->
-        Logger.info("Adjutant.Commands.Hidden.call_slash: shut_up")
+        Logger.debug("Adjutant.Commands.Hidden.call_slash: shut_up")
         shut_up(inter)
 
       [%Option{value: "add_to_bans"} | args] ->
-        Logger.info("Adjutant.Commands.Hidden.call_slash: add_to_bans")
+        Logger.debug("Adjutant.Commands.Hidden.call_slash: add_to_bans")
         AddToBans.add_to_bans(inter, args)
 
       [%Option{value: "salt_the_earth"} | _] ->
-        Logger.info("Adjutant.Commands.Hidden.call_slash: salt_the_earth")
+        Logger.debug("Adjutant.Commands.Hidden.call_slash: salt_the_earth")
         AddToBans.salt_the_earth(inter)
 
       [%Option{value: "list_bans"} | _] ->
-        Logger.info("Adjutant.Commands.Hidden.call_slash: list_bans")
+        Logger.debug("Adjutant.Commands.Hidden.call_slash: list_bans")
         AddToBans.list_bans(inter)
 
       _ ->
-        Logger.info("Adjutant.Commands.Hidden.call_slash: unknown")
+        Logger.debug("Adjutant.Commands.Hidden.call_slash: unknown")
 
         Api.create_interaction_response(inter, %{
           type: 4,

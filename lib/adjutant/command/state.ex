@@ -40,7 +40,7 @@ defmodule Adjutant.Command.State do
         end
 
       if should_insert do
-        Logger.info("inserting command #{name}")
+        Logger.notice("inserting command #{name}")
         ids = create_command(cmd_state)
 
         SQLite.insert!(
@@ -59,7 +59,7 @@ defmodule Adjutant.Command.State do
       cmd_data = SQLite.get(__MODULE__, name)
 
       unless is_nil(cmd_data) do
-        Logger.info("deleting command #{name}")
+        Logger.notice("deleting command #{name}")
 
         delete_command(cmd_data.cmd_ids)
 

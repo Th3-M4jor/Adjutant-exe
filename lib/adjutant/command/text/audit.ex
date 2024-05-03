@@ -120,7 +120,15 @@ defmodule Adjutant.Command.Text.Audit do
 
   @spec get_entries(non_neg_integer()) :: [Adjutant.LogLine.t()]
   def get_entries(count \\ 10) do
-    query = from(log in Adjutant.LogLine, order_by: [desc: log.id], limit: ^count)
+    query =
+      from(
+        log in Adjutant.LogLine,
+        # don't include debug logs in the normal response
+        where: log.level != :debug,
+        order_by: [desc: log.id],
+        limit: ^count
+      )
+
     Adjutant.Repo.SQLite.all(query) |> Enum.reverse()
   end
 

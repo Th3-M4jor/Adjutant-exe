@@ -12,7 +12,7 @@ defmodule Adjutant.Command.Slash.RemindMe do
   @impl true
   @spec call_slash(Nostrum.Struct.Interaction.t()) :: :ignore
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
-    Logger.info("Recieved a remind me command")
+    Logger.debug("Recieved a remind me command")
 
     {amt, unit, message, repeat} =
       case inter.data.options do
@@ -29,7 +29,10 @@ defmodule Adjutant.Command.Slash.RemindMe do
 
     cond do
       repeat == true and repeatable == :not_repeatable ->
-        Logger.debug("Received a repeatable remind me command with a non-repeatable schedule")
+        Logger.info(
+          "Received a repeatable remind me command with a non-repeatable schedule of #{inspect(schedule_in)}"
+        )
+
         too_short_interval_response(inter)
 
       send_response(inter, schedule_in, message) == :ok ->

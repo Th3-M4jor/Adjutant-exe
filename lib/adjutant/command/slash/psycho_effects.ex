@@ -64,7 +64,7 @@ defmodule Adjutant.Command.Slash.PsychoEffects do
 
   @impl true
   def call_slash(%Interaction{type: 2} = inter) do
-    Logger.info("Psycho effects command called, #{inspect(inter)}")
+    Logger.debug("Psycho effects command called, #{inspect(inter)}")
 
     case inter.data.options do
       [%Option{name: "allow"} | _] ->
@@ -72,15 +72,16 @@ defmodule Adjutant.Command.Slash.PsychoEffects do
 
       [%Option{name: "deny"} | _] ->
         deny(inter)
-    end
 
-    Api.create_interaction_response(inter, %{
-      type: 4,
-      data: %{
-        content: "This command is not meant to be used directly. Please use the subcommands.",
-        flags: 64
-      }
-    })
+      _ ->
+        Api.create_interaction_response(inter, %{
+          type: 4,
+          data: %{
+            content: "This command is not meant to be used directly. Please use the subcommands.",
+            flags: 64
+          }
+        })
+    end
   end
 
   defp allow(inter) do
@@ -90,6 +91,14 @@ defmodule Adjutant.Command.Slash.PsychoEffects do
       |> List.first()
 
     Adjutant.PsychoEffects.Channel.allow_channel(channel_id)
+
+    Api.create_interaction_response(inter, %{
+      type: 4,
+      data: %{
+        content: "Psycho effects allowed in channel <##{channel_id}>.",
+        flags: 64
+      }
+    })
   end
 
   def deny(inter) do

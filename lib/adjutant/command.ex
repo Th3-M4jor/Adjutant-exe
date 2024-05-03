@@ -28,18 +28,7 @@ defmodule Adjutant.Command do
     Adjutant.Command.Slash.HOTG.Team
   ]
 
-  @deleted_commands [
-    Adjutant.Command.Slash.BNB.Create,
-    Adjutant.Command.Slash.BNB.PHB,
-    Adjutant.Command.Slash.BNB.NCP,
-    Adjutant.Command.Slash.BNB.Chip,
-    Adjutant.Command.Slash.BNB.Virus,
-    Adjutant.Command.Slash.BNB.Status,
-    Adjutant.Command.Slash.BNB.Blight,
-    Adjutant.Command.Slash.BNB.Panels,
-    Adjutant.Command.Slash.BNB.Reload,
-    Adjutant.Command.Slash.BNB.Groups
-  ]
+  @deleted_commands []
 
   def setup_commands do
     Adjutant.Command.State.delete_commands(@deleted_commands)

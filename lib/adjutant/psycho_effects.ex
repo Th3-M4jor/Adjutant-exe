@@ -183,7 +183,7 @@ defmodule Adjutant.PsychoEffects do
     now = System.os_time(:second)
     effect = select_random_effect(msg)
 
-    Logger.debug("Selected effect: #{effect}")
+    Logger.debug("Selected psycho effect: #{effect}")
 
     effect_enum_val =
       case effect do
@@ -206,7 +206,7 @@ defmodule Adjutant.PsychoEffects do
       }
     })
 
-    Logger.info("Resolving random effect: #{effect} on #{author_username}")
+    Logger.notice("Resolving random effect: #{effect} on #{author_username}")
 
     apply(__MODULE__, effect, [msg, ref])
     :ok
@@ -300,6 +300,7 @@ defmodule Adjutant.PsychoEffects do
   def resolve_disconnect_effect(%Message{} = msg, _ref) do
     voice_states = Nostrum.Cache.GuildCache.get!(msg.guild_id).voice_states
 
+    # abuse the fact that we know the inner workings of nostrum here
     Enum.reduce(voice_states, :gen_statem.reqids_new(), fn %{user_id: user_id}, acc ->
       req_map = %{
         method: :patch,
@@ -353,7 +354,7 @@ defmodule Adjutant.PsychoEffects do
     :gen_statem.wait_response(request_list, :infinity, true)
     |> case do
       {{:reply, resp}, label, new_list} ->
-        Logger.info("Got response: #{inspect(resp)} for request: #{inspect(label)}")
+        Logger.debug("Got response: #{inspect(resp)} for request: #{inspect(label)}")
         await_api_responses(new_list)
 
       {{:error, {reason, _s_ref}}, label, new_list} ->
@@ -367,7 +368,7 @@ defmodule Adjutant.PsychoEffects do
   end
 
   defp map_emojis(channel_id, message_id, emoji) do
-    # gonna abuse the fact that we know the inner workings of nostrum here
+    # gonna abuse the fact that we know the inner workings of nostrum here too
 
     emoji =
       case emoji do
