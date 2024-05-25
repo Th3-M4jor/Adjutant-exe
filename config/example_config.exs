@@ -18,6 +18,9 @@ config :nostrum,
     :guilds
   ]
 
+config :mnesia,
+  dir: ~c'./mnesia/dev'
+
 config :logger,
   level: :info,
   backends: [
@@ -143,16 +146,4 @@ config :adjutant,
       },
       style: 1
     }
-  ],
-  # these can be strings for unicode emojis, or tupules with {name, id} or {name, id, animated}
-  # where name is the name of the emoji, id is the id of the emoji, and animated is a boolean
-  # for using custom emojis
-  troll_emojis: [
-    "👿",
-    "🍆",
-    "🤡",
-    "🔥",
-    "💀",
-    "🇹🇩",
-    "🗿"
   ]

@@ -3,87 +3,9 @@ defmodule Adjutant.ButtonAwait do
   Module for creating buttons that wait for a response from the user.
   """
 
-  alias Adjutant.Library.{Battlechip, NCP, Virus}
   alias Nostrum.Struct.Component.{ActionRow, Button}
 
   require Logger
-  # alias Nostrum.Api
-
-  @doc """
-  Creates a list of ActionRows on the input by calling `Adjutant.Library.LibObj.to_btn/2`
-  on each list item.
-
-  Raises if there are more than 25 buttons or if the list is empty
-  """
-  @spec generate_msg_buttons([struct()], boolean()) :: [ActionRow.t()] | no_return()
-  def generate_msg_buttons(buttons, disabled \\ false)
-
-  def generate_msg_buttons([], _disabled) do
-    raise "Empty List"
-  end
-
-  def generate_msg_buttons(content, _disabled) when length(content) > 25 do
-    raise "Too many buttons"
-  end
-
-  def generate_msg_buttons(content, disabled) do
-    row_chunks = Enum.chunk_every(content, 5)
-
-    Enum.map(row_chunks, fn row ->
-      Enum.map(row, &Adjutant.Library.LibObj.to_btn(&1, disabled)) |> ActionRow.action_row()
-    end)
-  end
-
-  @doc """
-  Creates a list of ActionRows on the input by calling `Adjutant.Library.LibObj.to_btn/3`
-  on each list item.
-
-  Expects an integer uuid to associate with the buttons which must be within the range 0 and 16,777,215 (0xFF_FF_FF)
-
-  Raises if there are more than 25 buttons, if the list is empty, or if the uuid is out of range
-  """
-  @spec generate_msg_buttons_with_uuid([struct()], boolean(), pos_integer()) ::
-          [ActionRow.t()] | no_return()
-  def generate_msg_buttons_with_uuid(buttons, disabled \\ false, uuid)
-
-  def generate_msg_buttons_with_uuid([], _disabled, _uuid) do
-    raise "Empty List"
-  end
-
-  def generate_msg_buttons_with_uuid(content, _disabled, _uuid) when length(content) > 25 do
-    raise "Too many buttons"
-  end
-
-  def generate_msg_buttons_with_uuid(content, disabled, uuid) when uuid in 0..0xFF_FF_FF do
-    # uuid = System.unique_integer([:positive]) |> rem(1000)
-    row_chunks = Enum.chunk_every(content, 5)
-
-    Enum.map(row_chunks, fn row ->
-      Enum.map(row, &Adjutant.Library.LibObj.to_btn_with_uuid(&1, disabled, uuid))
-      |> ActionRow.action_row()
-    end)
-  end
-
-  @spec generate_persistent_buttons([struct()], boolean()) ::
-          [ActionRow.t()] | no_return()
-  def generate_persistent_buttons(buttons, disabled \\ false)
-
-  def generate_persistent_buttons([], _disabled) do
-    raise "Empty List"
-  end
-
-  def generate_persistent_buttons(content, _disabled) when length(content) > 25 do
-    raise "Too many buttons"
-  end
-
-  def generate_persistent_buttons(content, disabled) do
-    row_chunks = Enum.chunk_every(content, 5)
-
-    Enum.map(row_chunks, fn row ->
-      Enum.map(row, &Adjutant.Library.LibObj.to_persistent_btn(&1, disabled))
-      |> ActionRow.action_row()
-    end)
-  end
 
   def make_yes_no_buttons(uuid) when uuid in 0..0xFF_FF_FF do
     uuid_str =
@@ -233,32 +155,6 @@ defmodule Adjutant.ButtonAwait do
           }
         )
     end
-  end
-
-  def resp_to_persistent_btn(%Nostrum.Struct.Interaction{} = inter, kind, name) do
-    res =
-      case kind do
-        ?c -> Battlechip.get(name)
-        ?n -> NCP.get(name)
-        ?v -> Virus.get(name)
-      end
-
-    resp =
-      if is_nil(res) do
-        "Seems that one couldn't be found, please inform Major"
-      else
-        to_string(res)
-      end
-
-    Nostrum.Api.create_interaction_response!(
-      inter,
-      %{
-        type: 4,
-        data: %{
-          content: resp
-        }
-      }
-    )
   end
 
   # default timeout is 30 seconds

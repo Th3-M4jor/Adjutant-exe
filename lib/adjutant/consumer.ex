@@ -36,18 +36,23 @@ defmodule Adjutant.Consumer do
   end
 
   def handle_event({:MESSAGE_CREATE, %Message{} = msg, _ws_state}) do
-    Task.start(fn ->
-      try do
-        Adjutant.PsychoEffects.maybe_resolve_random_effect(msg)
-        Adjutant.PsychoEffects.maybe_resolve_user_effect(msg)
-      rescue
-        e ->
-          Logger.error(Exception.format(:error, e, __STACKTRACE__))
-          Adjutant.Util.dm_owner("An error has occurred", true)
-      end
-    end)
-
     Adjutant.Command.dispatch(msg)
+  end
+
+  def handle_event({:MESSAGE_UPDATE, {nil, new_msg}, _ws_state}) do
+    Logger.debug("Got a message update event and the old was not cached\n#{inspect(new_msg)}")
+  end
+
+  def handle_event({:MESSAGE_UPDATE, {old_msg, new_msg}, _ws_state}) do
+    Logger.debug("Got a message update event\n#{inspect(old_msg)}\n#{inspect(new_msg)}")
+  end
+
+  def handle_event({:MESSAGE_DELETE, %{deleted_message: nil}, _ws_state}) do
+    Logger.debug("Got a message delete event and the message was not cached")
+  end
+
+  def handle_event({:MESSAGE_DELETE, %{deleted_message: msg}, _ws_state}) do
+    Logger.debug("Got a message delete event and the message was cached\n#{inspect(msg)}")
   end
 
   def handle_event({:GUILD_MEMBER_ADD, {@primary_guild_id, %Guild.Member{} = member}, _ws_state}) do
@@ -108,9 +113,6 @@ defmodule Adjutant.Consumer do
       <<id::binary-size(6), "_yn_", yn::binary>> when yn in ["yes", "no"] ->
         id = String.to_integer(id, 16)
         Adjutant.ButtonAwait.resp_to_btn(inter, id, yn)
-
-      <<kind::utf8, "r_", name::binary>> when kind in [?c, ?n, ?v] ->
-        Adjutant.ButtonAwait.resp_to_persistent_btn(inter, kind, name)
 
       <<"r_", id::binary>> ->
         Adjutant.RoleBtn.handle_role_btn_click(inter, id)

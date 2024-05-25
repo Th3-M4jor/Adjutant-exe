@@ -42,6 +42,7 @@ nohup.out
 
 #database files
 db/*
+!db/.keep
 dev_db.db
 prod_db.db
 priv/repo/structure.sql

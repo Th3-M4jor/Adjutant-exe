@@ -22,8 +22,6 @@ defmodule Adjutant.Command do
     Adjutant.Command.Slash.Ping,
     Adjutant.Command.Slash.Shuffle,
     Adjutant.Command.Slash.Hidden,
-    Adjutant.Command.Slash.Insults,
-    Adjutant.Command.Slash.PsychoEffects,
     Adjutant.Command.Slash.RemindMe,
     Adjutant.Command.Slash.HOTG.Team
   ]

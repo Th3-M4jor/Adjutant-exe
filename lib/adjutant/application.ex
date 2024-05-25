@@ -7,8 +7,8 @@ defmodule Adjutant.Application do
 
   def start(_type, _args) do
     children = [
-      Adjutant.BotSupervisor,
-      Adjutant.Repo.Supervisor
+      Adjutant.Repo.Supervisor,
+      Adjutant.BotSupervisor
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one)

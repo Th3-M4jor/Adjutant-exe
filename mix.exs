@@ -31,10 +31,10 @@ defmodule ElixirBot.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:nostrum,
-       git: "https://github.com/Th3-M4jor/nostrum.git",
-       ref: "391d5dca4e678e6175ebf2f1837643f83dcfa988"},
-      # {:nostrum, path: "../nostrum"},
+      # {:nostrum,
+      #  git: "https://github.com/Th3-M4jor/nostrum.git",
+      #  ref: "aaa1df57714d514e37df2844c6660720de284e4a"},
+      {:nostrum, path: "../nostrum"},
       {:jason, "~> 1.2"},
       {:ecto_sql, "~> 3.0"},
       {:ecto_sqlite3, "~> 0.15"},
