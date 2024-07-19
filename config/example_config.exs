@@ -24,8 +24,7 @@ config :mnesia,
 config :logger,
   level: :info,
   backends: [
-    :console,
-    {Adjutant.LogBackend, :log_backend}
+    :console
   ],
   compile_time_purge_matching: [
     [module: Nostrum, level_lower_than: :warn],
@@ -40,8 +39,7 @@ config :adjutant, Oban,
   engine: Oban.Engines.Lite,
   queues: [
     remind_me: [limit: 5, paused: true],
-    edit_message: [limit: 2, paused: true],
-    log_cleaner: [limit: 1, paused: false]
+    edit_message: [limit: 2, paused: true]
   ],
   plugins: [
     {Oban.Plugins.Pruner, max_age: 50 * 60, interval: :timer.minutes(500)},
@@ -62,7 +60,6 @@ config :adjutant,
   ecto_shard_count: 1,
   remind_me_queue: :remind_me,
   edit_message_queue: :edit_message,
-  log_cleaner_queue: :log_cleaner,
   prefix: "!",
   owner_id: 666,
   admins: [667, 668],

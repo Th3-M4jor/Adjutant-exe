@@ -3,7 +3,7 @@ defmodule Adjutant.Command.Text do
   Defines the behaviour to be used by text based commands.
   """
 
-  alias Adjutant.Command.Text.{Audit, Debug, Die, ShutUp}
+  alias Adjutant.Command.Text.{Debug, Die, ShutUp}
   alias Nostrum.Struct.Message
 
   @typedoc """
@@ -49,10 +49,6 @@ defmodule Adjutant.Command.Text do
 
   defp cmd_call("shut_up", msg, args) do
     ShutUp.call(msg, args)
-  end
-
-  defp cmd_call("audit", msg, args) do
-    Audit.call(msg, args)
   end
 
   # default

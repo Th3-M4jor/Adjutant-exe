@@ -4,8 +4,8 @@ defmodule ElixirBot.MixProject do
   def project do
     [
       app: :adjutant,
-      version: "0.1.5",
-      elixir: "~> 1.16",
+      version: "0.1.6",
+      elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       releases: [
@@ -34,7 +34,7 @@ defmodule ElixirBot.MixProject do
       # {:nostrum,
       #  git: "https://github.com/Th3-M4jor/nostrum.git",
       #  ref: "aaa1df57714d514e37df2844c6660720de284e4a"},
-      {:nostrum, path: "../nostrum"},
+      {:nostrum, "~> 0.10"},
       {:jason, "~> 1.2"},
       {:ecto_sql, "~> 3.0"},
       {:ecto_sqlite3, "~> 0.15"},

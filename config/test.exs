@@ -20,8 +20,7 @@ config :nostrum,
 config :logger,
   level: :info,
   backends: [
-    :console,
-    {Adjutant.LogBackend, :log_backend}
+    :console
   ],
   compile_time_purge_matching: [
     [module: Nostrum, level_lower_than: :warn],
@@ -49,7 +48,6 @@ config :adjutant,
   ecto_shard_count: 1,
   remind_me_queue: :dev_remind_me,
   edit_message_queue: :dev_edit_message,
-  log_cleaner_queue: :dev_log_cleanup,
   prefix: "!",
   owner_id: 666,
   admins: [667, 668],

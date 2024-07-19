@@ -6,6 +6,8 @@ defmodule Adjutant.Application do
   use Application
 
   def start(_type, _args) do
+    Logger.add_handlers(:adjutant)
+
     children = [
       Adjutant.Repo.Supervisor,
       Adjutant.BotSupervisor
