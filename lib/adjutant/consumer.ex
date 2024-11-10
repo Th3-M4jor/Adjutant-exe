@@ -59,18 +59,18 @@ defmodule Adjutant.Consumer do
     text = "Welcome to the Busters & Battlechips Discord <@#{member.user_id}>. \
         Assign yourself roles in <##{@primary_guild_role_channel_id}>"
 
-    Api.create_message!(@primary_guild_channel_id, text)
+    {:ok} = Api.Message.create(@primary_guild_channel_id, text)
   end
 
   def handle_event({:GUILD_MEMBER_REMOVE, {guild_id, %Guild.Member{} = member}, _ws_state}) do
     text = "#{member.user_id} has left #{guild_id}"
-    Api.create_message!(@log_channel_id, text)
+    {:ok} = Api.Message.create(@log_channel_id, text)
   end
 
   def handle_event({:READY, %ReadyEvent{} = ready_data, _ws_state}) do
     Logger.debug("Bot ready")
 
-    Api.update_status(:online, "Now with Slash Commands")
+    Api.Self.update_status(:online, "Now with Slash Commands")
 
     {dm_msg, override} =
       case :persistent_term.get({:bnb_bot_data, :first_ready}, nil) do
@@ -137,7 +137,7 @@ defmodule Adjutant.Consumer do
     e ->
       Logger.error(Exception.format(:error, e, __STACKTRACE__))
 
-      Api.create_message(
+      Api.Message.create(
         inter.channel_id,
         "An error has occurred, inform Major\n#{Exception.message(e)}"
       )
@@ -152,7 +152,7 @@ defmodule Adjutant.Consumer do
     e ->
       Logger.error(Exception.format(:error, e, __STACKTRACE__))
 
-      Api.create_message(
+      Api.Message.create(
         inter.channel_id,
         "An error has occurred, inform Major\n#{Exception.message(e)}"
       )

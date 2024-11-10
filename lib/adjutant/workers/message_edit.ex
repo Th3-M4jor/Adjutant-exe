@@ -19,7 +19,7 @@ defmodule Adjutant.Workers.MessageEdit do
         }
       }) do
     res =
-      Api.edit_message(channel_id, message_id, %{
+      Api.Message.edit(channel_id, message_id, %{
         content: content,
         components: components
       })
@@ -37,7 +37,7 @@ defmodule Adjutant.Workers.MessageEdit do
   def perform(%Oban.Job{
         args: %{"channel_id" => channel_id, "message_id" => message_id, "content" => content}
       }) do
-    Api.edit_message(channel_id, message_id, %{
+    Api.Message.edit(channel_id, message_id, %{
       content: content
     })
     |> case do

@@ -27,7 +27,7 @@ defmodule Adjutant.Workers.Reminder do
         "<t:#{original_timestamp}:R> you wanted a reminder to: #{msg}"
       end
 
-    Api.create_message!(channel_id, text)
+    Api.Message.create(channel_id, text)
 
     if args["repeat"] == true do
       [period, units] = args["interval"]

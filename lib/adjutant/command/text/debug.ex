@@ -35,7 +35,7 @@ defmodule Adjutant.Command.Text.Debug do
     if Adjutant.Util.owner_msg?(msg) do
       Logger.info(["Got a debug cmd with bad args: " | Enum.intersperse(args, " ")])
 
-      Api.create_message(
+      Api.Message.create(
         msg.channel_id,
         "I'm sorry, that is not a valid argument to the Debug command"
       )

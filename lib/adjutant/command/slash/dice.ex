@@ -31,7 +31,7 @@ defmodule Adjutant.Command.Slash.Dice do
 
     case roll_result do
       {:error, text} ->
-        Api.create_interaction_response!(inter, %{
+        Api.Interaction.create_response(inter, %{
           type: 4,
           data: %{
             content: text,
@@ -40,7 +40,7 @@ defmodule Adjutant.Command.Slash.Dice do
         })
 
       {:ok, roll} ->
-        Api.create_interaction_response!(inter, %{
+        Api.Interaction.create_response(inter, %{
           type: 4,
           data: %{
             content: roll

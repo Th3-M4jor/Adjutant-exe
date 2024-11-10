@@ -4,13 +4,13 @@ defmodule ElixirBot.MixProject do
   def project do
     [
       app: :adjutant,
-      version: "0.1.6",
+      version: "0.1.7",
       elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       releases: [
         adjutant: [
-          version: "0.3.1",
+          version: "0.3.2",
           applications: [
             adjutant: :permanent
           ],
@@ -31,10 +31,10 @@ defmodule ElixirBot.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # {:nostrum,
-      #  git: "https://github.com/Th3-M4jor/nostrum.git",
-      #  ref: "aaa1df57714d514e37df2844c6660720de284e4a"},
-      {:nostrum, "~> 0.10"},
+      {:nostrum,
+       git: "https://github.com/kyleboe/nostrum.git",
+       ref: "ef45f06c6696dbc2288d62203ff291089dddc897"},
+      # {:nostrum, "~> 0.10"},
       {:jason, "~> 1.2"},
       {:ecto_sql, "~> 3.0"},
       {:ecto_sqlite3, "~> 0.15"},

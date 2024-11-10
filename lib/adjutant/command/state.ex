@@ -71,7 +71,7 @@ defmodule Adjutant.Command.State do
 
   # returns {:global, id} for insertion
   defp create_command({:global, cmd_map}) do
-    {:ok, %{id: id}} = Api.create_global_application_command(cmd_map)
+    {:ok, %{id: id}} = Api.ApplicationCommand.create_global_command(cmd_map)
     id = Nostrum.Snowflake.cast!(id)
     {:global, id}
   end
@@ -79,7 +79,7 @@ defmodule Adjutant.Command.State do
   defp create_command({guild_ids, cmd_map}) when is_list(guild_ids) do
     ids =
       Enum.map(guild_ids, fn guild_id ->
-        {:ok, %{id: id}} = Api.create_guild_application_command(guild_id, cmd_map)
+        {:ok, %{id: id}} = Api.ApplicationCommand.create_guild_command(guild_id, cmd_map)
         id = Nostrum.Snowflake.cast!(id)
         {guild_id, id}
       end)
@@ -88,18 +88,18 @@ defmodule Adjutant.Command.State do
   end
 
   defp create_command({guild_id, cmd_map}) do
-    {:ok, %{id: id}} = Api.create_guild_application_command(guild_id, cmd_map)
+    {:ok, %{id: id}} = Api.ApplicationCommand.create_guild_command(guild_id, cmd_map)
     id = Nostrum.Snowflake.cast!(id)
     {:guild, [{guild_id, id}]}
   end
 
   defp delete_command({:global, id}) do
-    {:ok} = Api.delete_global_application_command(id)
+    {:ok} = Api.ApplicationCommand.delete_global_command(id)
   end
 
   defp delete_command({:guild, ids}) do
     for {guild_id, id} <- ids do
-      {:ok} = Api.delete_guild_application_command(guild_id, id)
+      {:ok} = Api.ApplicationCommand.delete_guild_command(guild_id, id)
     end
   end
 end

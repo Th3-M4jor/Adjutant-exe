@@ -127,8 +127,8 @@ defmodule Adjutant.Command.Slash.RemindMe do
         {period, units}
       end
 
-    msg =
-      Api.create_message!(channel_id, %{
+    {:ok, msg} =
+      Api.Message.create(channel_id, %{
         content: "Should I remind you again in #{msg_period} #{msg_units}?",
         components: buttons
       })
@@ -161,7 +161,7 @@ defmodule Adjutant.Command.Slash.RemindMe do
       nil ->
         Logger.debug("No response received, assuming true")
 
-        Api.edit_message!(msg, %{
+        Api.Message.edit(msg, %{
           content:
             "Timed out waiting for response, I'll remind you again in #{msg_period} #{msg_units}",
           components: []
@@ -175,12 +175,14 @@ defmodule Adjutant.Command.Slash.RemindMe do
     if is_nil(inter.guild_id) do
       inter.channel_id
     else
-      Api.create_dm!(inter.member.user_id).id
+      {:ok, %{id: id}} = Api.User.create_dm(inter.member.user_id)
+
+      id
     end
   end
 
   defp edit_btn_response(inter, msg) do
-    Api.create_interaction_response!(inter, %{
+    Api.Interaction.create_response(inter, %{
       type: 7,
       data: %{
         content: msg,
@@ -234,7 +236,7 @@ defmodule Adjutant.Command.Slash.RemindMe do
     if String.length(reminder_to) > 1500 do
       Logger.info("Reminder too long, sending error message")
 
-      Api.create_interaction_response!(inter, %{
+      Api.Interaction.create_response(inter, %{
         type: 4,
         data: %{
           content: "Your reminder was too long to send, please try again with a shorter message",
@@ -244,7 +246,7 @@ defmodule Adjutant.Command.Slash.RemindMe do
 
       {:error, "Reminder too long"}
     else
-      Api.create_interaction_response!(inter, %{
+      Api.Interaction.create_response(inter, %{
         type: 4,
         data: %{
           content: "In #{reminder_in} #{reminder_in_units} I'll remind you to:\n\n#{reminder_to}",
@@ -257,7 +259,7 @@ defmodule Adjutant.Command.Slash.RemindMe do
   end
 
   defp too_short_interval_response(inter) do
-    Api.create_interaction_response!(inter, %{
+    Api.Interaction.create_response(inter, %{
       type: 4,
       data: %{
         content:

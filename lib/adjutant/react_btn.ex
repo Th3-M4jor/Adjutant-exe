@@ -3,6 +3,7 @@ defmodule Adjutant.ButtonAwait do
   Module for creating buttons that wait for a response from the user.
   """
 
+  alias Nostrum.Api
   alias Nostrum.Struct.Component.{ActionRow, Button}
 
   require Logger
@@ -58,7 +59,7 @@ defmodule Adjutant.ButtonAwait do
       |> ActionRow.action_row()
       |> List.wrap()
 
-    Nostrum.Api.create_interaction_response!(
+    {:ok} = Api.Interaction.create_response(
       inter,
       %{
         type: 4,
@@ -74,7 +75,7 @@ defmodule Adjutant.ButtonAwait do
 
     case btn_response do
       {btn_inter, yn} when yn in ["yes", "no"] ->
-        Nostrum.Api.create_interaction_response(btn_inter, %{
+        Api.Interaction.create_response(btn_inter, %{
           type: 7,
           data: %{
             components: []
@@ -84,7 +85,7 @@ defmodule Adjutant.ButtonAwait do
         yn == "yes"
 
       nil ->
-        Nostrum.Api.edit_interaction_response(inter, %{
+        Api.Interaction.edit_response(inter, %{
           content: "Timed out waiting for response",
           components: []
         })
@@ -142,7 +143,7 @@ defmodule Adjutant.ButtonAwait do
       _ ->
         Logger.debug("Interaction wasn't registered, or wasn't for said user")
 
-        Nostrum.Api.create_interaction_response!(
+        Api.Interaction.create_response(
           inter,
           %{
             type: 4,

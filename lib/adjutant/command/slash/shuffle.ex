@@ -25,7 +25,7 @@ defmodule Adjutant.Command.Slash.Shuffle do
 
     case res do
       {:ok, resp_str} ->
-        Api.create_interaction_response!(
+        Api.Interaction.create_response(
           inter,
           %{
             type: 4,
@@ -36,7 +36,7 @@ defmodule Adjutant.Command.Slash.Shuffle do
         )
 
       {:error, str} ->
-        Api.create_interaction_response!(
+        Api.Interaction.create_response(
           inter,
           %{
             type: 4,

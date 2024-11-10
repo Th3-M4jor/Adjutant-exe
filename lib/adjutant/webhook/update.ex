@@ -28,14 +28,18 @@ defmodule Adjutant.Webhook.Update do
   @spec announce(non_neg_integer | Nostrum.Struct.Message.t(), binary | keyword | map) ::
           Nostrum.Struct.Message.t()
   def announce(channel_id, content) do
-    Api.create_message!(channel_id, content)
+    {:ok, msg} = Api.Message.create(channel_id, content)
+
+    msg
   end
 
   @spec dm_error(binary | keyword | map, non_neg_integer) :: Nostrum.Struct.Message.t()
   def dm_error(msg, user_id) do
     dm_channel_id = Adjutant.Util.find_dm_channel_id(user_id)
 
-    Api.create_message!(dm_channel_id, msg)
+    {:ok, msg} = Api.Message.create(dm_channel_id, msg)
+
+    msg
   end
 
   defp ask_question(question, user_id, responses) do
@@ -50,8 +54,8 @@ defmodule Adjutant.Webhook.Update do
 
     dm_channel_id = Adjutant.Util.find_dm_channel_id(user_id)
 
-    msg =
-      Api.create_message!(dm_channel_id, %{
+    {:ok, msg} =
+      Api.Message.create(dm_channel_id, %{
         content: question,
         components: buttons
       })
@@ -71,7 +75,7 @@ defmodule Adjutant.Webhook.Update do
         Logger.debug("No response received, assuming false")
 
         Task.start(fn ->
-          Api.edit_message!(msg, %{
+          Api.Message.edit(msg, %{
             content: timeout,
             components: []
           })
@@ -83,7 +87,7 @@ defmodule Adjutant.Webhook.Update do
 
   defp edit_btn_response(inter, content) do
     Task.start(fn ->
-      Api.create_interaction_response!(inter, %{
+      Api.Interaction.create_response(inter, %{
         type: 7,
         data: %{
           content: content,

@@ -8,7 +8,7 @@ defmodule Adjutant.Command.Slash.HOTG.Team do
 
   use Adjutant.Command.Slash, permissions: :everyone
 
-  @asset_path "./lib/command/slash/hotg/hotg_assets.json"
+  @asset_path "./lib/adjutant/command/slash/hotg/hotg_assets.json"
 
   @impl true
   def call_slash(%Nostrum.Struct.Interaction{} = inter) do
@@ -58,7 +58,7 @@ defmodule Adjutant.Command.Slash.HOTG.Team do
         boss
       ]
 
-    Api.create_interaction_response!(
+    {:ok} = Api.Interaction.create_response(
       inter,
       %{
         type: 4,

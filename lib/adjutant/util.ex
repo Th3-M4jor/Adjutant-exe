@@ -21,17 +21,17 @@ defmodule Adjutant.Util do
 
   def react(%Message{channel_id: channel_id, id: msg_id}, true) do
     Logger.debug("Reacting with \u{2705}")
-    Api.create_reaction(channel_id, msg_id, "\u{2705}")
+    Api.Message.react(channel_id, msg_id, "\u{2705}")
   end
 
   def react(%Message{channel_id: channel_id, id: msg_id}, false) do
     Logger.debug("Reacting with \u{274E}")
-    Api.create_reaction(channel_id, msg_id, "\u{274E}")
+    Api.Message.react(channel_id, msg_id, "\u{274E}")
   end
 
   def react(%Message{channel_id: channel_id, id: msg_id}, emote) do
     Logger.debug("Reacting with #{emote}")
-    Api.create_reaction(channel_id, msg_id, emote)
+    Api.Message.react(channel_id, msg_id, emote)
   end
 
   @doc """
@@ -107,7 +107,7 @@ defmodule Adjutant.Util do
       owner_id = @owner_id |> Nostrum.Snowflake.cast!()
 
       dm_channel_id = find_dm_channel_id(owner_id)
-      Api.create_message(dm_channel_id, to_say)
+      Api.Message.create(dm_channel_id, to_say)
     end
   end
 
@@ -116,8 +116,8 @@ defmodule Adjutant.Util do
   """
   @spec find_dm_channel_id(Nostrum.Snowflake.t()) :: Nostrum.Snowflake.t()
   def find_dm_channel_id(user_id) when is_snowflake(user_id) do
-    channel = Api.create_dm!(user_id)
-    channel.id
+    {:ok, %{id: id}} = Api.User.create_dm(user_id)
+    id
   end
 
   def slash_args_to_map([%{type: 1, name: name, options: options}]) do

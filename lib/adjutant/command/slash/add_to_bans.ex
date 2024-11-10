@@ -26,7 +26,7 @@ defmodule Adjutant.Command.Slash.AddToBans do
     if Adjutant.Util.owner_msg?(inter) or Adjutant.Util.admin_msg?(inter) do
       add_id_to_list(inter, inter.member.user_id, to_add)
     else
-      Api.create_interaction_response(inter, %{
+      Api.Interaction.create_response(inter, %{
         type: 4,
         data: %{
           content: "You don't have permission to do that",
@@ -40,7 +40,7 @@ defmodule Adjutant.Command.Slash.AddToBans do
     if Adjutant.Util.owner_msg?(inter) or Adjutant.Util.admin_msg?(inter) do
       send_id_list(inter)
     else
-      Api.create_interaction_response(inter, %{
+      Api.Interaction.create_response(inter, %{
         type: 4,
         data: %{
           content: "You don't have permission to do that",
@@ -56,7 +56,7 @@ defmodule Adjutant.Command.Slash.AddToBans do
         salt_the_earth_inner(inter)
       end
     else
-      Api.create_interaction_response(inter, %{
+      Api.Interaction.create_response(inter, %{
         type: 4,
         data: %{
           content: "You don't have permission to do that",
@@ -106,7 +106,7 @@ defmodule Adjutant.Command.Slash.AddToBans do
 
     content = IO.iodata_to_binary(list)
 
-    Api.create_interaction_response(inter, %{
+    Api.Interaction.create_response(inter, %{
       type: 4,
       data: %{
         content: content,
@@ -135,7 +135,7 @@ defmodule Adjutant.Command.Slash.AddToBans do
         "Added <@#{to_add}> to the banlist"
       end
 
-    Api.create_interaction_response(inter, %{
+    Api.Interaction.create_response(inter, %{
       type: 4,
       data: %{
         content: resp,

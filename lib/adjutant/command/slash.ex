@@ -33,7 +33,7 @@ defmodule Adjutant.Command.Slash do
   defp deprecated_call do
     quote do
       if inter.type == 2 do
-        Nostrum.Api.create_followup_message(inter.token, %{
+        Nostrum.Api.Interaction.create_followup_message(inter.token, %{
           content: "Note: This is a deprecated command, it may break in the future",
           flags: 64
         })
@@ -74,7 +74,7 @@ defmodule Adjutant.Command.Slash do
           call_slash(inter)
           unquote(deprecated_code)
         else
-          Nostrum.Api.create_interaction_response(inter, %{
+          Nostrum.Api.Interaction.create_response(inter, %{
             type: 4,
             data: %{
               content: "You don't have permission to do that",
@@ -103,7 +103,7 @@ defmodule Adjutant.Command.Slash do
           call_slash(inter)
           unquote(deprected_macro_code)
         else
-          Nostrum.Api.create_interaction_response(inter, %{
+          Nostrum.Api.Interaction.create_response(inter, %{
             type: 4,
             data: %{
               content: "You don't have permission to do that",

@@ -68,7 +68,7 @@ defmodule Adjutant.Command.Slash.Hidden do
       _ ->
         Logger.debug("Adjutant.Commands.Hidden.call_slash: unknown")
 
-        Api.create_interaction_response(inter, %{
+        Api.Interaction.create_response(inter, %{
           type: 4,
           data: %{
             content: "You don't have permission to do that",
@@ -101,7 +101,7 @@ defmodule Adjutant.Command.Slash.Hidden do
         %{name: cmd, value: cmd}
       end)
 
-    Api.create_interaction_response!(inter, %{
+    Api.Interaction.create_response(inter, %{
       type: 8,
       data: %{
         choices: resp
@@ -137,7 +137,7 @@ defmodule Adjutant.Command.Slash.Hidden do
 
   defp die(inter) do
     if Adjutant.Util.owner_msg?(inter) or Adjutant.Util.admin_msg?(inter) do
-      Api.create_interaction_response(inter, %{
+      Api.Interaction.create_response(inter, %{
         type: 4,
         data: %{
           content: "Shutting down",
@@ -161,7 +161,7 @@ defmodule Adjutant.Command.Slash.Hidden do
 
       System.stop(0)
     else
-      Api.create_interaction_response(inter, %{
+      Api.Interaction.create_response(inter, %{
         type: 4,
         data: %{
           content: "You don't have permission to do that",
@@ -187,7 +187,7 @@ defmodule Adjutant.Command.Slash.Hidden do
     if Adjutant.Util.owner_msg?(inter) do
       Logger.configure(level: :debug)
 
-      Api.create_interaction_response(inter, %{
+      Api.Interaction.create_response(inter, %{
         type: 4,
         data: %{
           content: "Debug logging on",
@@ -195,7 +195,7 @@ defmodule Adjutant.Command.Slash.Hidden do
         }
       })
     else
-      Api.create_interaction_response(inter, %{
+      Api.Interaction.create_response(inter, %{
         type: 4,
         data: %{
           content: "You don't have permission to do that",
@@ -213,7 +213,7 @@ defmodule Adjutant.Command.Slash.Hidden do
     if Adjutant.Util.owner_msg?(inter) do
       Logger.configure(level: :warning)
 
-      Api.create_interaction_response(inter, %{
+      Api.Interaction.create_response(inter, %{
         type: 4,
         data: %{
           content: "Debug logging off",
@@ -221,7 +221,7 @@ defmodule Adjutant.Command.Slash.Hidden do
         }
       })
     else
-      Api.create_interaction_response(inter, %{
+      Api.Interaction.create_response(inter, %{
         type: 4,
         data: %{
           content: "You don't have permission to do that",
@@ -233,7 +233,7 @@ defmodule Adjutant.Command.Slash.Hidden do
 
   defp debug(inter, _unknown) do
     if Adjutant.Util.owner_msg?(inter) do
-      Api.create_interaction_response(inter, %{
+      Api.Interaction.create_response(inter, %{
         type: 4,
         data: %{
           content: "That is an invalid argument type",
@@ -241,7 +241,7 @@ defmodule Adjutant.Command.Slash.Hidden do
         }
       })
     else
-      Api.create_interaction_response(inter, %{
+      Api.Interaction.create_response(inter, %{
         type: 4,
         data: %{
           content: "You don't have permission to do that",
@@ -263,7 +263,7 @@ defmodule Adjutant.Command.Slash.Hidden do
       new_val = not res
       :persistent_term.put({:bnb_bot_data, :dm_owner}, new_val)
 
-      Api.create_interaction_response(inter, %{
+      Api.Interaction.create_response(inter, %{
         type: 4,
         data: %{
           content: "Shutting up",
@@ -271,7 +271,7 @@ defmodule Adjutant.Command.Slash.Hidden do
         }
       })
     else
-      Api.create_interaction_response(inter, %{
+      Api.Interaction.create_response(inter, %{
         type: 4,
         data: %{
           content: "You don't have permission to do that",

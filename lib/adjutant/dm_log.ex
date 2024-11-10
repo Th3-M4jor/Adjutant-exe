@@ -5,6 +5,8 @@ defmodule Adjutant.DmLogger do
 
   require Logger
 
+  alias Nostrum.Api
+
   @dm_log_id Application.compile_env!(:adjutant, :dm_log_id)
 
   def log_dm(%Nostrum.Struct.Message{} = msg) do
@@ -13,7 +15,7 @@ defmodule Adjutant.DmLogger do
 
       embed = make_embed(msg)
 
-      Nostrum.Api.create_message(@dm_log_id, embeds: [embed])
+      Api.Message.create(@dm_log_id, embeds: [embed])
     end
   end
 
@@ -23,8 +25,9 @@ defmodule Adjutant.DmLogger do
 
     if (msg.content =~ link_regex or not Enum.empty?(msg.attachments)) and
          :rand.uniform(100) == 1 do
+        channel_id = msg.channel_id
       Task.start(fn ->
-        Nostrum.Api.create_message(msg.channel_id, "I ain't clicking that shit")
+        Api.Message.create(channel_id, "I ain't clicking that shit")
       end)
     end
   end

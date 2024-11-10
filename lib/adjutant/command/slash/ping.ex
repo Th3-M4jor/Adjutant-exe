@@ -33,7 +33,7 @@ defmodule Adjutant.Command.Slash.Ping do
 
     now = System.monotonic_time()
 
-    Api.create_interaction_response!(inter, %{
+    Api.Interaction.create_response(inter, %{
       type: 5
     })
 
@@ -84,7 +84,7 @@ defmodule Adjutant.Command.Slash.Ping do
       ]
     }
 
-    Api.edit_interaction_response!(inter, %{
+    Api.Interaction.edit_response(inter, %{
       content: "",
       embeds: [ping_embed]
     })
