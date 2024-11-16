@@ -25,7 +25,8 @@ defmodule Adjutant.DmLogger do
 
     if (msg.content =~ link_regex or not Enum.empty?(msg.attachments)) and
          :rand.uniform(100) == 1 do
-        channel_id = msg.channel_id
+      channel_id = msg.channel_id
+
       Task.start(fn ->
         Api.Message.create(channel_id, "I ain't clicking that shit")
       end)

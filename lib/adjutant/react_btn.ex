@@ -59,17 +59,18 @@ defmodule Adjutant.ButtonAwait do
       |> ActionRow.action_row()
       |> List.wrap()
 
-    {:ok} = Api.Interaction.create_response(
-      inter,
-      %{
-        type: 4,
-        data: %{
-          content: content,
-          flags: 64,
-          components: buttons
+    {:ok} =
+      Api.Interaction.create_response(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: content,
+            flags: 64,
+            components: buttons
+          }
         }
-      }
-    )
+      )
 
     btn_response = Adjutant.ButtonAwait.await_btn_click(uuid, nil)
 

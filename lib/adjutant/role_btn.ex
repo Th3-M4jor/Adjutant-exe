@@ -32,7 +32,7 @@ defmodule Adjutant.RoleBtn do
   @spec send_role_btns(Nostrum.Snowflake.t(), String.t()) :: :ignore
   def send_role_btns(channel_id, msg) do
     buttons = generate_role_btns()
-    {:ok} = Api.Message.create(channel_id, content: msg, components: buttons)
+    {:ok, _} = Api.Message.create(channel_id, content: msg, components: buttons)
 
     :ignore
   end
@@ -43,12 +43,12 @@ defmodule Adjutant.RoleBtn do
     add_or_remove =
       if Enum.member?(inter.member.roles, id) do
         {:ok} =
-          Api.Role.remove_member(inter.guild_id, inter.member.user_id, id, "Button Click")
+          Api.Guild.remove_member_role(inter.guild_id, inter.member.user_id, id, "Button Click")
 
         "removed"
       else
         {:ok} =
-          Api.Role.add_member(inter.guild_id, inter.member.user_id, id, "Button Click")
+          Api.Guild.add_member_role(inter.guild_id, inter.member.user_id, id, "Button Click")
 
         "added"
       end

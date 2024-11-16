@@ -47,15 +47,16 @@ defmodule Adjutant.Command do
   defp handle_slash_command(name, %Nostrum.Struct.Interaction{} = inter) do
     Logger.warning("slash command #{name} doesn't exist")
 
-    {:ok} = Api.Interaction.create_response(
-      inter,
-      %{
-        type: 4,
-        data: %{
-          content: "Woops, Major forgot to implement this command",
-          flags: 64
+    {:ok} =
+      Api.Interaction.create_response(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: "Woops, Major forgot to implement this command",
+            flags: 64
+          }
         }
-      }
-    )
+      )
   end
 end

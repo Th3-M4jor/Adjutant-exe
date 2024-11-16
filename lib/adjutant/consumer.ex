@@ -59,12 +59,12 @@ defmodule Adjutant.Consumer do
     text = "Welcome to the Busters & Battlechips Discord <@#{member.user_id}>. \
         Assign yourself roles in <##{@primary_guild_role_channel_id}>"
 
-    {:ok} = Api.Message.create(@primary_guild_channel_id, text)
+    {:ok, _} = Api.Message.create(@primary_guild_channel_id, text)
   end
 
   def handle_event({:GUILD_MEMBER_REMOVE, {guild_id, %Guild.Member{} = member}, _ws_state}) do
     text = "#{member.user_id} has left #{guild_id}"
-    {:ok} = Api.Message.create(@log_channel_id, text)
+    {:ok, _} = Api.Message.create(@log_channel_id, text)
   end
 
   def handle_event({:READY, %ReadyEvent{} = ready_data, _ws_state}) do

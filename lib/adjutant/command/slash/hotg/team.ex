@@ -58,15 +58,16 @@ defmodule Adjutant.Command.Slash.HOTG.Team do
         boss
       ]
 
-    {:ok} = Api.Interaction.create_response(
-      inter,
-      %{
-        type: 4,
-        data: %{
-          content: IO.iodata_to_binary(resp_str)
+    {:ok} =
+      Api.Interaction.create_response(
+        inter,
+        %{
+          type: 4,
+          data: %{
+            content: IO.iodata_to_binary(resp_str)
+          }
         }
-      }
-    )
+      )
 
     :ignore
   end
