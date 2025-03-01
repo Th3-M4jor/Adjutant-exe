@@ -4,18 +4,23 @@
 import Config
 
 config :nostrum,
-  # The token of your bot as a string
-  token: "token_here",
   # The number of shards you want to run your bot under, or :auto.
   num_shards: :auto,
+  caches: %{
+    presences: Nostrum.Cache.PresenceCache.NoOp,
+    messages: Nostrum.Cache.MessageCache.Mnesia
+  }
+
+config :adjutant,
+  token: "token_here",
   gateway_intents: [
-    :direct_messages,
-    :guild_bans,
+    :guilds,
     :guild_members,
-    :guild_message_reactions,
     :guild_messages,
+    :guild_voice_states,
     :guild_presences,
-    :guilds
+    :direct_messages,
+    :message_content
   ]
 
 config :mnesia,
@@ -50,13 +55,17 @@ config :adjutant, Oban,
      ]}
   ]
 
-# uses sqlite for logging
 config :adjutant, Adjutant.Repo.SQLite,
   database: "./db/dev_db.db",
   priv: "priv/sqlite"
 
+config :adjutant, Adjutant.Repo.MessageCacheRepo,
+  database: "./db/dev_message_cache.db",
+  priv: "priv/cache",
+  log: false
+
 config :adjutant,
-  ecto_repos: [Adjutant.Repo.SQLite],
+  ecto_repos: [Adjutant.Repo.SQLite, Adjutant.Repo.MessageCacheRepo],
   ecto_shard_count: 1,
   remind_me_queue: :remind_me,
   edit_message_queue: :edit_message,

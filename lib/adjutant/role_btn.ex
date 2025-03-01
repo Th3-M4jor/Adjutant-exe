@@ -42,13 +42,12 @@ defmodule Adjutant.RoleBtn do
 
     add_or_remove =
       if Enum.member?(inter.member.roles, id) do
-        {:ok} =
+        :ok =
           Api.Guild.remove_member_role(inter.guild_id, inter.member.user_id, id, "Button Click")
 
         "removed"
       else
-        {:ok} =
-          Api.Guild.add_member_role(inter.guild_id, inter.member.user_id, id, "Button Click")
+        :ok = Api.Guild.add_member_role(inter.guild_id, inter.member.user_id, id, "Button Click")
 
         "added"
       end

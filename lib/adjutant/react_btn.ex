@@ -59,7 +59,7 @@ defmodule Adjutant.ButtonAwait do
       |> ActionRow.action_row()
       |> List.wrap()
 
-    {:ok} =
+    :ok =
       Api.Interaction.create_response(
         inter,
         %{

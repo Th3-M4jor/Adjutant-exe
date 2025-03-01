@@ -58,7 +58,7 @@ defmodule Adjutant.Command.Slash.HOTG.Team do
         boss
       ]
 
-    {:ok} =
+    :ok =
       Api.Interaction.create_response(
         inter,
         %{

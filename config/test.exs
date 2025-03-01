@@ -38,13 +38,16 @@ config :adjutant, Oban,
     dev_edit_message: [limit: 2, paused: true]
   ]
 
-# uses sqlite for logging
 config :adjutant, Adjutant.Repo.SQLite,
   database: "./db/dev_db.db",
   priv: "priv/sqlite"
 
+config :adjutant, Adjutant.Repo.MessageCacheRepo,
+  database: "./db/dev_message_cache.db",
+  priv: "priv/cache"
+
 config :adjutant,
-  ecto_repos: [Adjutant.Repo.SQLite],
+  ecto_repos: [Adjutant.Repo.SQLite, Adjutant.Repo.MessageCacheRepo],
   ecto_shard_count: 1,
   remind_me_queue: :dev_remind_me,
   edit_message_queue: :dev_edit_message,

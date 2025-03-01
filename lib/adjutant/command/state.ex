@@ -94,12 +94,12 @@ defmodule Adjutant.Command.State do
   end
 
   defp delete_command({:global, id}) do
-    {:ok} = Api.ApplicationCommand.delete_global_command(id)
+    :ok = Api.ApplicationCommand.delete_global_command(id)
   end
 
   defp delete_command({:guild, ids}) do
     for {guild_id, id} <- ids do
-      {:ok} = Api.ApplicationCommand.delete_guild_command(guild_id, id)
+      :ok = Api.ApplicationCommand.delete_guild_command(guild_id, id)
     end
   end
 end

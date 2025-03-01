@@ -12,6 +12,7 @@ defmodule Adjutant.Repo.Supervisor do
   def init(_init_arg) do
     children = [
       Adjutant.Repo.SQLite,
+      Adjutant.Repo.MessageCacheRepo,
       {Oban, oban_config()}
     ]
 
