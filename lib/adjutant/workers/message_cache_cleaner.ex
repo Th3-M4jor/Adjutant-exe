@@ -21,7 +21,7 @@ defmodule Adjutant.Workers.MessageCacheCleaner do
 
     Logger.info("Cleaning up message cache entries older than #{cutoff}")
 
-    query = from(m in MessageSchema, where: m.id < ^snowflake)
+    query = from(m in MessageSchema, where: m.message_id < ^snowflake)
 
     Adjutant.Repo.MessageCacheRepo.delete_all(query)
 
