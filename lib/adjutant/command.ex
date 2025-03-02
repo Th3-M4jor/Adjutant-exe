@@ -44,7 +44,7 @@ defmodule Adjutant.Command do
     end
   end
 
-  defp handle_slash_command(name, %Nostrum.Struct.Interaction{} = inter) do
+  defp handle_slash_command(name, %Interaction{} = inter) do
     Logger.warning("slash command #{name} doesn't exist")
 
     :ok =

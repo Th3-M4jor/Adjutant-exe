@@ -34,6 +34,7 @@ defmodule Adjutant.BotSupervisor do
     intents = Application.fetch_env!(:adjutant, :gateway_intents)
 
     %{
+      name: :adjutant,
       consumer: Adjutant.Consumer,
       intents: intents,
       wrapped_token: fn -> token end

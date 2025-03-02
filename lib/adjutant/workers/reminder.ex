@@ -16,6 +16,7 @@ defmodule Adjutant.Workers.Reminder do
             "timestamp" => original_timestamp
           } = args
       }) do
+    Nostrum.Bot.set_bot_name(:adjutant)
     now = System.os_time(:second)
     time_diff = now - original_timestamp
 

@@ -18,6 +18,8 @@ defmodule Adjutant.Workers.MessageEdit do
           "components" => components
         }
       }) do
+    Nostrum.Bot.set_bot_name(:adjutant)
+
     res =
       Api.Message.edit(channel_id, message_id, %{
         content: content,
@@ -37,6 +39,8 @@ defmodule Adjutant.Workers.MessageEdit do
   def perform(%Oban.Job{
         args: %{"channel_id" => channel_id, "message_id" => message_id, "content" => content}
       }) do
+    Nostrum.Bot.set_bot_name(:adjutant)
+
     Api.Message.edit(channel_id, message_id, %{
       content: content
     })
