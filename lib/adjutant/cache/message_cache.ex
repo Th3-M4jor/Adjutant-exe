@@ -74,8 +74,8 @@ defmodule Adjutant.Cache.MessageCache do
   @impl Nostrum.Cache.MessageCache
   def delete(channel_id, message_id) do
     case MessageCacheRepo.get(MessageSchema, message_id) do
-      %MessageSchema{data: message, channel_id: ^channel_id} ->
-        MessageCacheRepo.delete!(message)
+      %MessageSchema{data: message, channel_id: ^channel_id} = cached_msg ->
+        MessageCacheRepo.delete!(cached_msg)
         {:ok, message}
 
       _ ->
