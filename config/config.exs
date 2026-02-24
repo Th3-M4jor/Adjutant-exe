@@ -1,5 +1,7 @@
 import Config
 
+config :exqlite, force_build: true
+
 config :logger, :default_formatter,
   format: "\n$date $time $metadata[$level] $message\n",
   metadata: [:pid]

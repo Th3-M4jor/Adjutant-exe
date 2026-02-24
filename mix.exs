@@ -33,13 +33,13 @@ defmodule ElixirBot.MixProject do
     [
       {:nostrum,
        git: "https://github.com/Kraigie/nostrum.git",
-       ref: "0eca61ef4c79f1f3d65504443ee6627b30cc4643"},
+       ref: "e63a62fa85934a555251684cf789d81073f68adb"},
       # {:nostrum, "~> 0.10"},
       # {:nostrum, path: "../nostrum"},
       {:telemetry, "~> 1.0"},
       {:jason, "~> 1.2"},
       {:ecto_sql, "~> 3.0"},
-      {:ecto_sqlite3, "~> 0.15"},
+      {:ecto_sqlite3, "~> 0.17"},
       {:oban, "~> 2.12"},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
